@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -6,11 +6,37 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FileText, CheckCircle2, CreditCard, TrendingUp, Shield, Lock } from 'lucide-react';
+import { toast } from 'sonner';
 import pngEmblem from '@/assets/png-emblem.png';
 
 const Index = () => {
-  const { profile, loading } = useAuth();
+  const { profile, loading, signIn } = useAuth();
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSigningIn, setIsSigningIn] = useState(false);
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error('Please enter both email and password');
+      return;
+    }
+
+    setIsSigningIn(true);
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        toast.error(error.message || 'Failed to sign in');
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
 
   useEffect(() => {
     if (loading) return;
@@ -165,38 +191,51 @@ const Index = () => {
                     Access the permit management system with your user credentials
                   </p>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="your.email@cepa.gov.pg"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Enter your password"
-                    />
-                  </div>
-                  <Button 
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                    size="lg"
-                    onClick={() => navigate('/auth')}
-                  >
-                    Sign In
-                  </Button>
-                  <div className="text-center">
-                    <button
-                      onClick={() => navigate('/auth?tab=signup')}
-                      className="text-sm text-primary hover:underline"
+                <CardContent>
+                  <form onSubmit={handleSignIn} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="your.email@cepa.gov.pg"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={isSigningIn}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={isSigningIn}
+                        required
+                      />
+                    </div>
+                    <Button 
+                      type="submit"
+                      className="w-full"
+                      size="lg"
+                      disabled={isSigningIn}
                     >
-                      Need an account? Sign up
-                    </button>
-                  </div>
+                      {isSigningIn ? 'Signing In...' : 'Sign In'}
+                    </Button>
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/auth?tab=signup')}
+                        className="text-sm text-primary hover:underline"
+                        disabled={isSigningIn}
+                      >
+                        Need an account? Sign up
+                      </button>
+                    </div>
+                  </form>
                 </CardContent>
               </Card>
             </div>
