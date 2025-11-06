@@ -73,9 +73,19 @@ export function PermitApplicationsMap({ onPermitClick }: PermitApplicationsMapPr
         keyboard: true,
         doubleClickZoom: true,
         touchZoomRotate: true,
+        touchPitch: true,
       });
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      // Ensure all interaction handlers are enabled
+      map.current.dragPan.enable();
+      map.current.scrollZoom.enable();
+      map.current.boxZoom.enable();
+      map.current.keyboard.enable();
+      map.current.doubleClickZoom.enable();
+      map.current.dragRotate.enable();
+      map.current.touchZoomRotate.enable();
     }
 
     // Clear existing markers
@@ -221,13 +231,13 @@ export function PermitApplicationsMap({ onPermitClick }: PermitApplicationsMapPr
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="relative">
         <div 
           ref={mapContainer} 
-          className="h-96 w-full rounded-lg border border-border overflow-hidden"
+          className="h-96 w-full rounded-lg border border-border overflow-hidden cursor-grab active:cursor-grabbing"
         />
         {applications.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
             <div className="text-center text-muted-foreground">
               <MapPin className="w-12 h-12 mx-auto mb-2 opacity-50" />
               <p>No permit applications to display</p>
