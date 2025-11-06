@@ -86,6 +86,11 @@ export function PermitApplicationsMap({ onPermitClick }: PermitApplicationsMapPr
       map.current.doubleClickZoom.enable();
       map.current.dragRotate.enable();
       map.current.touchZoomRotate.enable();
+
+      // Debug any map interaction issues
+      map.current.on('error', (e) => {
+        console.error('Mapbox GL JS error:', e?.error || e);
+      });
     }
 
     // Clear existing markers
@@ -235,6 +240,7 @@ export function PermitApplicationsMap({ onPermitClick }: PermitApplicationsMapPr
         <div 
           ref={mapContainer} 
           className="h-96 w-full rounded-lg border border-border overflow-hidden cursor-grab active:cursor-grabbing"
+          style={{ touchAction: 'pan-x pan-y' }}
         />
         {applications.length === 0 && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
