@@ -66,6 +66,7 @@ export function PermitApplicationsMap({ onPermitClick }: PermitApplicationsMapPr
         style: 'mapbox://styles/mapbox/satellite-streets-v12',
         center: [147, -6], // PNG center
         zoom: 5.2,
+        interactive: true,
         dragPan: true,
         scrollZoom: true,
         boxZoom: true,
@@ -78,14 +79,21 @@ export function PermitApplicationsMap({ onPermitClick }: PermitApplicationsMapPr
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-      // Ensure all interaction handlers are enabled
-      map.current.dragPan.enable();
-      map.current.scrollZoom.enable();
-      map.current.boxZoom.enable();
-      map.current.keyboard.enable();
-      map.current.doubleClickZoom.enable();
-      map.current.dragRotate.enable();
-      map.current.touchZoomRotate.enable();
+      // Ensure all interaction handlers are enabled after map load
+      const enableInteractions = () => {
+        map.current?.dragPan.enable();
+        map.current?.scrollZoom.enable();
+        map.current?.boxZoom.enable();
+        map.current?.keyboard.enable();
+        map.current?.doubleClickZoom.enable();
+        map.current?.dragRotate.enable();
+        map.current?.touchZoomRotate.enable();
+      };
+      if (map.current.loaded()) {
+        enableInteractions();
+      } else {
+        map.current.on('load', enableInteractions);
+      }
 
       // Debug any map interaction issues
       map.current.on('error', (e) => {
@@ -239,8 +247,8 @@ export function PermitApplicationsMap({ onPermitClick }: PermitApplicationsMapPr
       <CardContent className="relative">
         <div 
           ref={mapContainer} 
-          className="h-96 w-full rounded-lg border border-border overflow-hidden cursor-grab active:cursor-grabbing"
-          style={{ touchAction: 'pan-x pan-y' }}
+          className="h-96 w-full rounded-lg border border-border overflow-hidden cursor-grab active:cursor-grabbing pointer-events-auto select-none"
+          style={{ touchAction: 'none' }}
         />
         {applications.length === 0 && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
