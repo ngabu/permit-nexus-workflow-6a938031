@@ -66,11 +66,11 @@ export function PermitApplicationsMap({ onPermitClick }: PermitApplicationsMapPr
         style: 'mapbox://styles/mapbox/satellite-streets-v12',
         center: [147, -6], // PNG center
         zoom: 5.2,
-        dragPan: false,
+        dragPan: true,
         scrollZoom: true,
         boxZoom: true,
-        dragRotate: false,
-        keyboard: false,
+        dragRotate: true,
+        keyboard: true,
         doubleClickZoom: true,
         touchZoomRotate: true,
       });
