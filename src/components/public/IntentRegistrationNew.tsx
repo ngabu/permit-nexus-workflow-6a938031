@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { useEntities } from '@/hooks/useEntities';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useDocuments } from '@/hooks/useDocuments';
+import { useDocuments, DocumentInfo } from '@/hooks/useDocuments';
 import { Building, User, Calendar, AlertCircle, FileText, Upload, Trash2, Download } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -19,7 +19,7 @@ export function IntentRegistrationNew() {
   const { entities, loading: entitiesLoading } = useEntities();
   const { toast } = useToast();
   const [submittedIntentId, setSubmittedIntentId] = useState<string | undefined>();
-  const { documents, loading: docsLoading, uploadDocument, deleteDocument } = useDocuments(undefined, submittedIntentId);
+  const { documents, loading: docsLoading, uploadDocument, deleteDocument, uploadDraftDocument, fetchUserDraftDocuments, linkDraftsToIntent, deleteDocumentRecordOnly, refreshDocuments } = useDocuments(undefined, submittedIntentId);
   
   const [formData, setFormData] = useState({
     entity_id: '',
@@ -33,6 +33,18 @@ export function IntentRegistrationNew() {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [currentIntent, setCurrentIntent] = useState<any>(null);
+  const [pendingDocuments, setPendingDocuments] = useState<DocumentInfo[]>([]);
+  const [pendingLoading, setPendingLoading] = useState(false);
+  useEffect(() => {
+    const loadDrafts = async () => {
+      if (!user) return;
+      setPendingLoading(true);
+      const drafts = await fetchUserDraftDocuments('intent_draft');
+      setPendingDocuments(drafts);
+      setPendingLoading(false);
+    };
+    loadDrafts();
+  }, [user?.id, fetchUserDraftDocuments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +90,16 @@ export function IntentRegistrationNew() {
       setSubmittedIntentId(data.id);
       setCurrentIntent(data);
 
+      // Link any pre-submission draft documents to this intent
+      if (pendingDocuments.length > 0) {
+        const linked = await linkDraftsToIntent(pendingDocuments, data.id);
+        // Remove draft DB rows without deleting storage files
+        await Promise.all(pendingDocuments.map((d) => deleteDocumentRecordOnly(d.id)));
+        setPendingDocuments([]);
+        toast({ title: 'Documents Linked', description: `${linked.length} document(s) linked to this intent.` });
+        await refreshDocuments?.();
+      }
+
       toast({
         title: "Intent Registration Submitted",
         description: "Your registration of intent has been submitted successfully. You can now upload supporting documents.",
@@ -105,12 +127,20 @@ export function IntentRegistrationNew() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0 || !submittedIntentId) return;
+    if (!files || files.length === 0) return;
 
     setUploading(true);
     try {
-      for (let i = 0; i < files.length; i++) {
-        await uploadDocument(files[i], undefined, submittedIntentId);
+      if (submittedIntentId) {
+        for (let i = 0; i < files.length; i++) {
+          await uploadDocument(files[i], undefined, submittedIntentId);
+        }
+      } else {
+        for (let i = 0; i < files.length; i++) {
+          await uploadDraftDocument(files[i], 'intent_draft');
+        }
+        const drafts = await fetchUserDraftDocuments('intent_draft');
+        setPendingDocuments(drafts);
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -119,13 +149,12 @@ export function IntentRegistrationNew() {
       e.target.value = '';
     }
   };
-
   const handleDeleteDocument = async (docId: string) => {
     if (confirm('Are you sure you want to delete this document?')) {
       await deleteDocument(docId);
+      setPendingDocuments(prev => prev.filter(d => d.id !== docId));
     }
   };
-
   const handleDownloadDocument = async (filePath: string, filename: string) => {
     try {
       const { data, error } = await supabase.storage
@@ -311,7 +340,7 @@ export function IntentRegistrationNew() {
                         type="file"
                         multiple
                         onChange={handleFileUpload}
-                        disabled={!submittedIntentId || uploading}
+                        disabled={uploading}
                         className="hidden"
                         id="file-upload"
                       />
@@ -319,27 +348,59 @@ export function IntentRegistrationNew() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        disabled={!submittedIntentId || uploading}
+                        disabled={uploading}
                         onClick={() => document.getElementById('file-upload')?.click()}
                       >
                         <Upload className="w-4 h-4 mr-2" />
-                        {uploading ? 'Uploading...' : (!submittedIntentId ? 'Submit first to enable uploads' : 'Upload Documents')}
+                        {uploading ? 'Uploading...' : 'Upload Documents'}
                       </Button>
                     </div>
                   </div>
 
-                  {!submittedIntentId && (
-                    <p className="text-sm text-muted-foreground">
-                      Submit the registration details above to enable document uploads for this intent.
-                    </p>
-                  )}
-
-                  {submittedIntentId && (
+                  {submittedIntentId ? (
                     docsLoading ? (
                       <p className="text-sm text-muted-foreground">Loading documents...</p>
                     ) : documents.length > 0 ? (
                       <div className="space-y-2">
                         {documents.map((doc) => (
+                          <div key={doc.id} className="flex items-center justify-between p-3 bg-glass/30 rounded-lg">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <FileText className="w-4 h-4 text-primary flex-shrink-0" />
+                              <span className="text-sm truncate">{doc.filename}</span>
+                              <span className="text-xs text-muted-foreground flex-shrink-0">
+                                ({(doc.file_size / 1024).toFixed(1)} KB)
+                              </span>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownloadDocument(doc.file_path, doc.filename)}
+                              >
+                                <Download className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteDocument(doc.id)}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
+                    )
+                  ) : (
+                    pendingLoading ? (
+                      <p className="text-sm text-muted-foreground">Loading documents...</p>
+                    ) : pendingDocuments.length > 0 ? (
+                      <div className="space-y-2">
+                        {pendingDocuments.map((doc) => (
                           <div key={doc.id} className="flex items-center justify-between p-3 bg-glass/30 rounded-lg">
                             <div className="flex items-center gap-2 flex-1 min-w-0">
                               <FileText className="w-4 h-4 text-primary flex-shrink-0" />
