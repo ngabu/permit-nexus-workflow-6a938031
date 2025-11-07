@@ -218,9 +218,9 @@ export function EntityManagement() {
                       </TableCell>
                     </TableRow>
                     {selectedEntity?.id === entity.id && (
-                      <TableRow>
+                      <TableRow className="bg-glass/50 backdrop-blur-md hover:bg-glass/50">
                         <TableCell colSpan={6} className="p-0">
-                          <div className="border-t bg-sidebar p-4">
+                          <div className="border-t border-glass/30 bg-white/80 dark:bg-primary/5 backdrop-blur-md p-6">
                             <EntityDetailsReadOnly entity={selectedEntity} />
                           </div>
                         </TableCell>

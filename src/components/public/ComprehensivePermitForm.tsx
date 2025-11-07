@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DashboardLayout } from '@/components/Layout/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
-import BasicInfoTab from '@/components/permit-application-form/BasicInfoTab';
 import ProjectAndSpecificDetailsTab from '@/components/permit-application-form/ProjectAndSpecificDetailsTab';
 import LocationTab from '@/components/permit-application-form/LocationTab';
 import DocumentsTab from '@/components/permit-application-form/DocumentsTab';
@@ -217,7 +216,7 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
     }
   }, [applicationNumber, draftId, permitId]);
 
-  const [activeTab, setActiveTab] = useState('basic');
+  const [activeTab, setActiveTab] = useState('project');
 
   const handleInputChange = (field: string, value: any) => {
     console.log('🔄 ComprehensivePermitForm - handleInputChange:', { field, value, currentFormData: formData });
@@ -557,7 +556,6 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
   };
 
   const tabComponents = {
-    basic: <BasicInfoTab formData={formData} handleInputChange={handleInputChange} />,
     classification: (
       <div className="space-y-4">
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
@@ -601,7 +599,25 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
       </div>
     ),
     permitspecific: <PermitSpecificFieldsStep data={formData} onChange={(updates) => setFormData(prev => ({ ...prev, ...updates }))} />,
-    compliance: <ComplianceTab formData={formData} handleComplianceChange={handleComplianceChange} />,
+    compliance: (
+      <div className="space-y-4">
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Eye className="w-5 h-5 text-amber-600" />
+            <div>
+              <h4 className="font-medium text-amber-800">Read-Only: Compliance Assessment Required</h4>
+              <p className="text-sm text-amber-700 mt-1">
+                Compliance requirements will be assessed and verified by the Compliance division staff during the review process. You can view the compliance status once it has been evaluated.
+              </p>
+            </div>
+          </div>
+        </div>
+        <ComplianceTab 
+          formData={formData} 
+          handleComplianceChange={() => {}} // Disabled for public users
+        />
+      </div>
+    ),
     review: <ReviewSubmitStep data={formData} onChange={(updates) => setFormData(prev => ({ ...prev, ...updates }))} />,
   };
 
@@ -632,17 +648,7 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
 
       <div className="bg-card rounded-lg border border-border p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full grid-cols-5 md:grid-cols-10 ${isStandalone ? 'mb-8' : 'mb-6'} bg-muted/50 h-auto p-1`}>
-            <TabsTrigger value="basic" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
-              <User className="w-4 h-4" />
-              <span className="hidden sm:inline">Basic Info</span>
-              <span className="sm:hidden">Basic</span>
-            </TabsTrigger>
-            <TabsTrigger value="classification" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
-              <Activity className="w-4 h-4" />
-              <span className="hidden sm:inline">Classification</span>
-              <span className="sm:hidden">Class</span>
-            </TabsTrigger>
+          <TabsList className={`grid w-full grid-cols-5 md:grid-cols-9 ${isStandalone ? 'mb-8' : 'mb-6'} bg-muted/50 h-auto p-1`}>
             <TabsTrigger value="project" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
               <Building className="w-4 h-4" />
               <span className="hidden sm:inline">Project</span>
@@ -653,30 +659,35 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
               <span className="hidden sm:inline">Location</span>
               <span className="sm:hidden">Location</span>
             </TabsTrigger>
-            <TabsTrigger value="consultation" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Consultation</span>
-              <span className="sm:hidden">Consult</span>
-            </TabsTrigger>
             <TabsTrigger value="permitspecific" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
               <Settings className="w-4 h-4" />
               <span className="hidden sm:inline">Permit Details</span>
               <span className="sm:hidden">Details</span>
+            </TabsTrigger>
+            <TabsTrigger value="consultation" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Consultation</span>
+              <span className="sm:hidden">Consult</span>
             </TabsTrigger>
             <TabsTrigger value="documents" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
               <Upload className="w-4 h-4" />
               <span className="hidden sm:inline">Documents</span>
               <span className="sm:hidden">Docs</span>
             </TabsTrigger>
-            <TabsTrigger value="fees" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
-              <DollarSign className="w-4 h-4" />
-              <span className="hidden sm:inline">Fees</span>
-              <span className="sm:hidden">Fees</span>
+            <TabsTrigger value="classification" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+              <Activity className="w-4 h-4" />
+              <span className="hidden sm:inline">Classification</span>
+              <span className="sm:hidden">Class</span>
             </TabsTrigger>
             <TabsTrigger value="compliance" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Compliance</span>
               <span className="sm:hidden">Comply</span>
+            </TabsTrigger>
+            <TabsTrigger value="fees" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">Fees</span>
+              <span className="sm:hidden">Fees</span>
             </TabsTrigger>
             <TabsTrigger value="review" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
               <Eye className="w-4 h-4" />

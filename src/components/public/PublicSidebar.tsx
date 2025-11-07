@@ -52,6 +52,15 @@ const publicNavigationItems: PublicNavigationItem[] = [
   { title: "Dashboard", value: "dashboard", icon: LayoutDashboard },
   { title: "Entities", value: "entities", icon: Building2 },
   { 
+    title: "Intent Registration", 
+    value: "intent-registration", 
+    icon: FilePlus,
+    subItems: [
+      { title: "New Intent", value: "intent-registration-new", icon: FilePlus },
+      { title: "Existing Intents", value: "intent-registration-existing", icon: List },
+    ]
+  },
+  { 
     title: "Permits Management", 
     value: "permits", 
     icon: FileText,

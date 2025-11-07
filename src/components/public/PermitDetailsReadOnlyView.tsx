@@ -138,7 +138,7 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">{permit.title}</h3>
+          <h3 className="text-lg font-semibold text-foreground">{permit.title}</h3>
           {permit.permit_number && (
             <p className="text-sm text-muted-foreground">Permit #{permit.permit_number}</p>
           )}
@@ -149,7 +149,7 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
       </div>
 
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-6 bg-glass border-glass">
           <TabsTrigger value="basic" className="text-xs">Basic Info</TabsTrigger>
           <TabsTrigger value="classification" className="text-xs">Classification</TabsTrigger>
           <TabsTrigger value="location" className="text-xs">Location</TabsTrigger>
@@ -170,37 +170,37 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Permit Type</label>
-                  <p className="text-sm">{permit.permit_type}</p>
+                  <p className="text-sm text-foreground">{permit.permit_type}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Entity</label>
-                  <p className="text-sm">{permit.entity_name || 'No Entity'} ({permit.entity_type || 'Unknown'})</p>
+                  <p className="text-sm text-foreground">{permit.entity_name || 'No Entity'} ({permit.entity_type || 'Unknown'})</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Application Date</label>
-                  <p className="text-sm">{formatDate(permit.application_date)}</p>
+                  <p className="text-sm text-foreground">{formatDate(permit.application_date)}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Permit Period</label>
-                  <p className="text-sm">{permit.permit_period || 'Not specified'}</p>
+                  <p className="text-sm text-foreground">{permit.permit_period || 'Not specified'}</p>
                 </div>
                 {permit.approval_date && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Approval Date</label>
-                    <p className="text-sm">{formatDate(permit.approval_date)}</p>
+                    <p className="text-sm text-foreground">{formatDate(permit.approval_date)}</p>
                   </div>
                 )}
                 {permit.expiry_date && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Expiry Date</label>
-                    <p className="text-sm">{formatDate(permit.expiry_date)}</p>
+                    <p className="text-sm text-foreground">{formatDate(permit.expiry_date)}</p>
                   </div>
                 )}
               </div>
               {permit.description && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Description</label>
-                  <p className="text-sm mt-1">{permit.description}</p>
+                  <p className="text-sm mt-1 text-foreground">{permit.description}</p>
                 </div>
               )}
             </CardContent>
@@ -219,19 +219,19 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Activity Classification</label>
-                  <p className="text-sm">{permit.activity_classification || 'Not specified'}</p>
+                  <p className="text-sm text-foreground">{permit.activity_classification || 'Not specified'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Activity Category</label>
-                  <p className="text-sm">{permit.activity_category || 'Not specified'}</p>
+                  <p className="text-sm text-foreground">{permit.activity_category || 'Not specified'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Activity Subcategory</label>
-                  <p className="text-sm">{permit.activity_subcategory || 'Not specified'}</p>
+                  <p className="text-sm text-foreground">{permit.activity_subcategory || 'Not specified'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Activity Level</label>
-                  <p className="text-sm">{permit.activity_level || 'Not specified'}</p>
+                  <p className="text-sm text-foreground">{permit.activity_level || 'Not specified'}</p>
                 </div>
               </div>
               
@@ -243,7 +243,7 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
                     ) : (
                       <CheckCircle className="w-4 h-4 text-green-500" />
                     )}
-                    <span className="text-sm">EIA Required: {permit.eia_required ? 'Yes' : 'No'}</span>
+                    <span className="text-sm text-foreground">EIA Required: {permit.eia_required ? 'Yes' : 'No'}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     {permit.eis_required ? (
@@ -251,7 +251,7 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
                     ) : (
                       <CheckCircle className="w-4 h-4 text-green-500" />
                     )}
-                    <span className="text-sm">EIS Required: {permit.eis_required ? 'Yes' : 'No'}</span>
+                    <span className="text-sm text-foreground">EIS Required: {permit.eis_required ? 'Yes' : 'No'}</span>
                   </div>
                 </div>
               )}
@@ -259,7 +259,7 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
               {(permit.consultation_period_start || permit.consultation_period_end) && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Public Consultation Period</label>
-                  <p className="text-sm">
+                  <p className="text-sm text-foreground">
                     {formatDate(permit.consultation_period_start)} - {formatDate(permit.consultation_period_end)}
                   </p>
                 </div>
@@ -280,14 +280,14 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
               {permit.activity_location && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Activity Location</label>
-                  <p className="text-sm">{permit.activity_location}</p>
+                  <p className="text-sm text-foreground">{permit.activity_location}</p>
                 </div>
               )}
               
               {permit.coordinates && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Coordinates</label>
-                  <p className="text-sm">
+                  <p className="text-sm text-foreground">
                     Latitude: {permit.coordinates.lat}, Longitude: {permit.coordinates.lng}
                   </p>
                 </div>
@@ -296,7 +296,7 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
               {permit.proposed_works_description && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Proposed Works Description</label>
-                  <p className="text-sm mt-1">{permit.proposed_works_description}</p>
+                  <p className="text-sm mt-1 text-foreground">{permit.proposed_works_description}</p>
                 </div>
               )}
             </CardContent>
@@ -338,35 +338,35 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
                   {permit.operational_capacity && (
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Operational Capacity</label>
-                      <p className="text-sm">{permit.operational_capacity}</p>
+                      <p className="text-sm text-foreground">{permit.operational_capacity}</p>
                     </div>
                   )}
                   
                   {permit.operating_hours && (
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Operating Hours</label>
-                      <p className="text-sm">{permit.operating_hours}</p>
+                      <p className="text-sm text-foreground">{permit.operating_hours}</p>
                     </div>
                   )}
 
                   {permit.commencement_date && (
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Commencement Date</label>
-                      <p className="text-sm">{formatDate(permit.commencement_date)}</p>
+                      <p className="text-sm text-foreground">{formatDate(permit.commencement_date)}</p>
                     </div>
                   )}
 
                   {permit.completion_date && (
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Completion Date</label>
-                      <p className="text-sm">{formatDate(permit.completion_date)}</p>
+                      <p className="text-sm text-foreground">{formatDate(permit.completion_date)}</p>
                     </div>
                   )}
 
                   {permit.estimated_cost_kina && (
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Estimated Project Cost</label>
-                      <p className="text-sm">{formatCurrency(permit.estimated_cost_kina)}</p>
+                      <p className="text-sm text-foreground">{formatCurrency(permit.estimated_cost_kina)}</p>
                     </div>
                   )}
                 </div>
@@ -374,21 +374,21 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
                 {permit.operational_details && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Operational Details</label>
-                    <p className="text-sm mt-1">{permit.operational_details}</p>
+                    <p className="text-sm mt-1 text-foreground">{permit.operational_details}</p>
                   </div>
                 )}
 
                 {permit.environmental_impact && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Environmental Impact</label>
-                    <p className="text-sm mt-1">{permit.environmental_impact}</p>
+                    <p className="text-sm mt-1 text-foreground">{permit.environmental_impact}</p>
                   </div>
                 )}
 
                 {permit.mitigation_measures && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Mitigation Measures</label>
-                    <p className="text-sm mt-1">{permit.mitigation_measures}</p>
+                    <p className="text-sm mt-1 text-foreground">{permit.mitigation_measures}</p>
                   </div>
                 )}
               </CardContent>
@@ -408,12 +408,12 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Application Fee</label>
-                  <p className="text-sm">{formatCurrency(permit.application_fee)}</p>
+                  <p className="text-sm text-foreground">{formatCurrency(permit.application_fee)}</p>
                 </div>
                 
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Total Fee Amount</label>
-                  <p className="text-sm">{formatCurrency(permit.fee_amount)}</p>
+                  <p className="text-sm text-foreground">{formatCurrency(permit.fee_amount)}</p>
                 </div>
 
                 <div>

@@ -208,7 +208,7 @@ export function PermitManagement({ onNavigateToNewApplication }: PermitManagemen
                       key={permit.id} 
                       className={`cursor-pointer transition-colors ${
                         selectedPermitForPreview?.id === permit.id 
-                          ? 'bg-sidebar-accent hover:bg-sidebar-accent/90' 
+                          ? 'bg-accent hover:bg-accent/90' 
                           : 'hover:bg-muted/50'
                       }`}
                       onClick={() => setSelectedPermitForPreview(selectedPermitForPreview?.id === permit.id ? null : permit)}
@@ -290,9 +290,9 @@ export function PermitManagement({ onNavigateToNewApplication }: PermitManagemen
                       </TableCell>
                     </TableRow>
                     {selectedPermitForPreview?.id === permit.id && (
-                      <TableRow>
+                      <TableRow className="bg-glass/50 backdrop-blur-md hover:bg-glass/50">
                         <TableCell colSpan={6} className="p-0">
-                          <div className="border-t bg-sidebar p-4">
+                          <div className="border-t border-glass/30 bg-white/80 dark:bg-primary/5 backdrop-blur-md p-6">
                             <PermitDetailsReadOnlyView permit={selectedPermitForPreview} />
                           </div>
                         </TableCell>

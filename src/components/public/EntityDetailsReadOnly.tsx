@@ -35,7 +35,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
                 <User className="w-4 h-4" />
                 Entity Name
               </label>
-              <div className="bg-sidebar border rounded-md px-3 py-2 text-sm">
+              <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
                 {entity.name}
               </div>
             </div>
@@ -44,7 +44,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
                 <Building className="w-4 h-4" />
                 Entity Type
               </label>
-              <div className="bg-sidebar border rounded-md px-3 py-2 text-sm">
+              <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
                 {entity.entity_type === 'company' ? 'Company' : 'Individual'}
               </div>
             </div>
@@ -62,7 +62,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
                 <Mail className="w-4 h-4" />
                 Email Address
               </label>
-              <div className="bg-sidebar border rounded-md px-3 py-2 text-sm">
+              <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
                 {entity.email || 'Not provided'}
               </div>
             </div>
@@ -71,7 +71,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
                 <Phone className="w-4 h-4" />
                 Phone Number
               </label>
-              <div className="bg-sidebar border rounded-md px-3 py-2 text-sm">
+              <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
                 {entity.phone || 'Not provided'}
               </div>
             </div>
@@ -88,7 +88,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
               <MapPin className="w-4 h-4" />
               Address
             </label>
-            <div className="bg-sidebar border rounded-md px-3 py-2 text-sm min-h-[2.5rem]">
+            <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm min-h-[2.5rem]">
               {entity.address || 'Not provided'}
             </div>
           </div>
@@ -106,7 +106,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
                   <FileText className="w-4 h-4" />
                   Registration Number
                 </label>
-                <div className="bg-sidebar border rounded-md px-3 py-2 text-sm">
+                <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
                   {entity.registration_number || 'Not provided'}
                 </div>
               </div>
@@ -115,7 +115,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
                   <Hash className="w-4 h-4" />
                   Tax Number
                 </label>
-                <div className="bg-sidebar border rounded-md px-3 py-2 text-sm">
+                <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
                   {entity.tax_number || 'Not provided'}
                 </div>
               </div>
@@ -126,7 +126,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
                   <UserCheck className="w-4 h-4" />
                   Contact Person
                 </label>
-                <div className="bg-sidebar border rounded-md px-3 py-2 text-sm">
+                <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
                   {entity.contact_person}
                 </div>
               </div>
@@ -144,7 +144,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
               <label className="text-sm font-medium text-muted-foreground">
                 Created Date
               </label>
-              <div className="bg-sidebar border rounded-md px-3 py-2 text-sm">
+              <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
                 {new Date(entity.created_at).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
@@ -158,7 +158,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
               <label className="text-sm font-medium text-muted-foreground">
                 Last Updated
               </label>
-              <div className="bg-sidebar border rounded-md px-3 py-2 text-sm">
+              <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
                 {new Date(entity.updated_at).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',

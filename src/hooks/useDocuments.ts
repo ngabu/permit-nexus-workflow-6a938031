@@ -13,19 +13,19 @@ export interface DocumentInfo {
   permit_id?: string;
 }
 
-export function useDocuments(permitId?: string) {
+export function useDocuments(permitId?: string, intentRegistrationId?: string) {
   const [documents, setDocuments] = useState<DocumentInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (permitId) {
+    if (permitId || intentRegistrationId) {
       loadDocuments();
     }
-  }, [permitId]);
+  }, [permitId, intentRegistrationId]);
 
   const loadDocuments = async () => {
-    if (!permitId) {
+    if (!permitId && !intentRegistrationId) {
       setDocuments([]);
       setLoading(false);
       return;
@@ -33,11 +33,17 @@ export function useDocuments(permitId?: string) {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('permit_id', permitId)
-        .order('uploaded_at', { ascending: false });
+      let query = supabase.from('documents').select('*');
+      
+      if (permitId) {
+        query = query.eq('permit_id', permitId);
+      }
+      
+      if (intentRegistrationId) {
+        query = query.eq('intent_registration_id', intentRegistrationId);
+      }
+      
+      const { data, error } = await query.order('uploaded_at', { ascending: false });
 
       if (error) throw error;
       setDocuments(data || []);
@@ -53,14 +59,15 @@ export function useDocuments(permitId?: string) {
     }
   };
 
-  const uploadDocument = async (file: File, permitId: string) => {
+  const uploadDocument = async (file: File, permitId?: string, intentRegistrationId?: string) => {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Not authenticated');
 
       // Upload file to storage
       const fileName = `${Date.now()}-${Math.random()}.${file.name.split('.').pop()}`;
-      const filePath = `${user.user.id}/permit-documents/${fileName}`;
+      const folder = intentRegistrationId ? 'intent-documents' : 'permit-documents';
+      const filePath = `${user.user.id}/${folder}/${fileName}`;
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('documents')
@@ -72,16 +79,20 @@ export function useDocuments(permitId?: string) {
       if (uploadError) throw uploadError;
 
       // Save document record to database
+      const insertData: any = {
+        filename: file.name,
+        file_path: filePath,
+        file_size: file.size,
+        mime_type: file.type,
+        user_id: user.user.id,
+      };
+      
+      if (permitId) insertData.permit_id = permitId;
+      if (intentRegistrationId) insertData.intent_registration_id = intentRegistrationId;
+      
       const { data: docData, error: docError } = await supabase
         .from('documents')
-        .insert({
-          filename: file.name,
-          file_path: filePath,
-          file_size: file.size,
-          mime_type: file.type,
-          user_id: user.user.id,
-          permit_id: permitId
-        })
+        .insert(insertData)
         .select()
         .single();
 

@@ -466,6 +466,7 @@ export type Database = {
           file_size: number | null
           filename: string
           id: string
+          intent_registration_id: string | null
           mime_type: string | null
           permit_id: string | null
           uploaded_at: string
@@ -479,6 +480,7 @@ export type Database = {
           file_size?: number | null
           filename: string
           id?: string
+          intent_registration_id?: string | null
           mime_type?: string | null
           permit_id?: string | null
           uploaded_at?: string
@@ -492,6 +494,7 @@ export type Database = {
           file_size?: number | null
           filename?: string
           id?: string
+          intent_registration_id?: string | null
           mime_type?: string | null
           permit_id?: string | null
           uploaded_at?: string
@@ -510,6 +513,13 @@ export type Database = {
             columns: ["entity_id"]
             isOneToOne: false
             referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_intent_registration_id_fkey"
+            columns: ["intent_registration_id"]
+            isOneToOne: false
+            referencedRelation: "intent_registrations"
             referencedColumns: ["id"]
           },
         ]
@@ -905,6 +915,68 @@ export type Database = {
             columns: ["permit_application_id"]
             isOneToOne: false
             referencedRelation: "permit_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intent_registrations: {
+        Row: {
+          activity_description: string
+          activity_level: string
+          commencement_date: string
+          completion_date: string
+          created_at: string
+          entity_id: string
+          id: string
+          official_feedback_attachments: Json | null
+          preparatory_work_description: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_description: string
+          activity_level: string
+          commencement_date: string
+          completion_date: string
+          created_at?: string
+          entity_id: string
+          id?: string
+          official_feedback_attachments?: Json | null
+          preparatory_work_description: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_description?: string
+          activity_level?: string
+          commencement_date?: string
+          completion_date?: string
+          created_at?: string
+          entity_id?: string
+          id?: string
+          official_feedback_attachments?: Json | null
+          preparatory_work_description?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intent_registrations_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
             referencedColumns: ["id"]
           },
         ]
