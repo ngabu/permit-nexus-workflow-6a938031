@@ -303,33 +303,39 @@ export function IntentRegistrationNew() {
                 </div>
 
                 {/* Document Upload Section */}
-                {submittedIntentId && (
-                  <div className="space-y-4 pt-6 border-t border-glass">
-                    <div className="flex items-center justify-between">
-                      <Label>Supporting Documents</Label>
-                      <div className="relative">
-                        <Input
-                          type="file"
-                          multiple
-                          onChange={handleFileUpload}
-                          disabled={uploading}
-                          className="hidden"
-                          id="file-upload"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={uploading}
-                          onClick={() => document.getElementById('file-upload')?.click()}
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          {uploading ? 'Uploading...' : 'Upload Documents'}
-                        </Button>
-                      </div>
+                <div className="space-y-4 pt-6 border-t border-glass">
+                  <div className="flex items-center justify-between">
+                    <Label>Supporting Documents</Label>
+                    <div className="relative">
+                      <Input
+                        type="file"
+                        multiple
+                        onChange={handleFileUpload}
+                        disabled={!submittedIntentId || uploading}
+                        className="hidden"
+                        id="file-upload"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={!submittedIntentId || uploading}
+                        onClick={() => document.getElementById('file-upload')?.click()}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {uploading ? 'Uploading...' : (!submittedIntentId ? 'Submit first to enable uploads' : 'Upload Documents')}
+                      </Button>
                     </div>
+                  </div>
 
-                    {docsLoading ? (
+                  {!submittedIntentId && (
+                    <p className="text-sm text-muted-foreground">
+                      Submit the registration details above to enable document uploads for this intent.
+                    </p>
+                  )}
+
+                  {submittedIntentId && (
+                    docsLoading ? (
                       <p className="text-sm text-muted-foreground">Loading documents...</p>
                     ) : documents.length > 0 ? (
                       <div className="space-y-2">
@@ -365,9 +371,9 @@ export function IntentRegistrationNew() {
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
-                    )}
-                  </div>
-                )}
+                    )
+                  )}
+                </div>
 
                 <div className="flex justify-end gap-4 pt-6 border-t border-glass">
                   <Button
