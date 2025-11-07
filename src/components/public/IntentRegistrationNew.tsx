@@ -32,6 +32,7 @@ export function IntentRegistrationNew() {
   
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [currentIntent, setCurrentIntent] = useState<any>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +76,7 @@ export function IntentRegistrationNew() {
       if (error) throw error;
 
       setSubmittedIntentId(data.id);
+      setCurrentIntent(data);
 
       toast({
         title: "Intent Registration Submitted",
@@ -405,13 +407,67 @@ export function IntentRegistrationNew() {
                 Registry team feedback will appear here after your submission is reviewed
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Submit your intent registration to receive official feedback from the Registry team.
-                </AlertDescription>
-              </Alert>
+            <CardContent className="space-y-4">
+              {!submittedIntentId ? (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Submit your intent registration to receive official feedback from the Registry team.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <>
+                  {currentIntent?.review_notes && (
+                    <div className="space-y-2">
+                      <Label>Review Notes</Label>
+                      <div className="p-4 bg-glass/30 rounded-lg">
+                        <p className="text-sm whitespace-pre-wrap">{currentIntent.review_notes}</p>
+                      </div>
+                      {currentIntent.reviewed_at && (
+                        <p className="text-xs text-muted-foreground">
+                          Reviewed on {new Date(currentIntent.reviewed_at).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {currentIntent?.official_feedback_attachments && 
+                   currentIntent.official_feedback_attachments.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Official Feedback Documents</Label>
+                      <div className="space-y-2">
+                        {currentIntent.official_feedback_attachments.map((doc: any, index: number) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-glass/30 rounded-lg">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <FileText className="w-4 h-4 text-primary flex-shrink-0" />
+                              <span className="text-sm truncate">{doc.filename || `Document ${index + 1}`}</span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownloadDocument(doc.file_path, doc.filename)}
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {!currentIntent?.review_notes && 
+                   (!currentIntent?.official_feedback_attachments || 
+                    currentIntent.official_feedback_attachments.length === 0) && (
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        No official feedback available yet. The Registry team will provide feedback once they review your submission.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
