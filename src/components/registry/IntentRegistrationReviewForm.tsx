@@ -244,8 +244,32 @@ export function IntentRegistrationReviewForm({ intentId, onBack }: IntentRegistr
 
       if (error) throw error;
 
-      // Send email notification
-      await sendEmailNotification();
+      // Create notification for the applicant
+      const reviewerName = profile?.first_name && profile?.last_name 
+        ? `${profile.first_name} ${profile.last_name}`
+        : profile?.email || 'Registry Officer';
+
+      const notificationTitle = reviewStatus === 'approved' 
+        ? 'Intent Registration Approved' 
+        : reviewStatus === 'rejected'
+        ? 'Intent Registration Rejected'
+        : 'Intent Registration Updated';
+
+      const notificationMessage = `Your intent registration has been reviewed by ${reviewerName}. Status: ${reviewStatus.replace(/_/g, ' ')}. ${reviewNotes ? 'Review notes have been added.' : ''}`;
+
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: intent?.user_id,
+          title: notificationTitle,
+          message: notificationMessage,
+          type: reviewStatus === 'approved' ? 'success' : reviewStatus === 'rejected' ? 'error' : 'info',
+          is_read: false,
+        });
+
+      if (notificationError) {
+        console.error('Error creating notification:', notificationError);
+      }
 
       toast({
         title: "Review Submitted",

@@ -2,63 +2,71 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Bell, CheckCircle, AlertTriangle, Info, Settings } from "lucide-react";
-
-const notifications = [
-  {
-    id: 1,
-    title: "Application Approved",
-    message: "Your environmental permit application APP-2024-001 has been approved.",
-    type: "success",
-    timestamp: "2024-01-25 10:30 AM",
-    read: false
-  },
-  {
-    id: 2,
-    title: "Payment Due Reminder",
-    message: "Payment of $1,200.00 is due on February 15th for compliance monitoring.",
-    type: "warning",
-    timestamp: "2024-01-20 2:15 PM",
-    read: false
-  },
-  {
-    id: 3,
-    title: "Document Uploaded",
-    message: "New assessment report has been uploaded for your review.",
-    type: "info",
-    timestamp: "2024-01-18 9:45 AM",
-    read: true
-  },
-  {
-    id: 4,
-    title: "Assessment Scheduled",
-    message: "Site assessment scheduled for February 20th, 2024 at 10:00 AM.",
-    type: "info",
-    timestamp: "2024-01-15 4:20 PM",
-    read: true
-  }
-];
+import { Bell, CheckCircle, AlertTriangle, Info, Settings, XCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserNotifications } from "@/hooks/useUserNotifications";
+import { markUserNotificationRead, markAllUserNotificationsRead } from "@/services/userNotificationsService";
+import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
     case "success": return <CheckCircle className="w-5 h-5 text-green-600" />;
     case "warning": return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
+    case "error": return <XCircle className="w-5 h-5 text-red-600" />;
     case "info": return <Info className="w-5 h-5 text-blue-600" />;
-    default: return <Bell className="w-5 h-5 text-gray-600" />;
+    default: return <Bell className="w-5 h-5 text-muted-foreground" />;
   }
 };
 
 const getNotificationBadge = (type: string) => {
   switch (type) {
-    case "success": return "bg-green-100 text-green-800";
-    case "warning": return "bg-yellow-100 text-yellow-800";
-    case "info": return "bg-blue-100 text-blue-800";
-    default: return "bg-gray-100 text-gray-800";
+    case "success": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+    case "warning": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+    case "error": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+    case "info": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+    default: return "bg-muted text-muted-foreground";
   }
 };
 
 export default function Notifications() {
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { notifications, loading, unreadCount, refetch } = useUserNotifications(user?.id);
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await markUserNotificationRead(notificationId);
+      refetch();
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark notification as read",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    if (!user?.id) return;
+    
+    try {
+      await markAllUserNotificationsRead(user.id);
+      refetch();
+      toast({
+        title: "Success",
+        description: "All notifications marked as read"
+      });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark all notifications as read",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -83,39 +91,58 @@ export default function Notifications() {
                     {unreadCount > 0 ? `${unreadCount} unread notifications` : "All notifications read"}
                   </CardDescription>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleMarkAllAsRead}
+                  disabled={unreadCount === 0 || loading}
+                >
                   Mark All Read
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {notifications.map((notification) => (
-                  <div 
-                    key={notification.id} 
-                    className={`p-4 border border-border rounded-lg ${!notification.read ? 'bg-accent/50' : ''}`}
-                  >
-                    <div className="flex items-start space-x-3">
-                      {getNotificationIcon(notification.type)}
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-semibold text-foreground">{notification.title}</h3>
-                          <div className="flex items-center space-x-2">
-                            {!notification.read && (
-                              <Badge variant="secondary" className="text-xs">New</Badge>
-                            )}
-                            <Badge className={getNotificationBadge(notification.type)}>
-                              {notification.type}
-                            </Badge>
+              {loading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="text-center py-8">
+                  <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No notifications yet</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {notifications.map((notification) => (
+                    <div 
+                      key={notification.id} 
+                      className={`p-4 border border-border rounded-lg transition-colors ${!notification.is_read ? 'bg-accent/50' : ''}`}
+                      onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
+                    >
+                      <div className="flex items-start space-x-3">
+                        {getNotificationIcon(notification.type)}
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-semibold text-foreground">{notification.title}</h3>
+                            <div className="flex items-center space-x-2">
+                              {!notification.is_read && (
+                                <Badge variant="secondary" className="text-xs">New</Badge>
+                              )}
+                              <Badge className={getNotificationBadge(notification.type)}>
+                                {notification.type}
+                              </Badge>
+                            </div>
                           </div>
+                          <p className="text-muted-foreground mb-2">{notification.message}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                          </p>
                         </div>
-                        <p className="text-muted-foreground mb-2">{notification.message}</p>
-                        <p className="text-xs text-muted-foreground">{notification.timestamp}</p>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
