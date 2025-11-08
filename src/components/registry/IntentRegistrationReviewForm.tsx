@@ -161,12 +161,15 @@ export function IntentRegistrationReviewForm({ intentId, onBack }: IntentRegistr
     
     for (const file of feedbackFiles) {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${intentId}/${Date.now()}_${file.name}`;
-      const filePath = `feedback/${fileName}`;
+      const fileName = `${Date.now()}_${file.name}`;
+      const filePath = `${profile?.user_id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('documents')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          upsert: false,
+          contentType: file.type,
+        });
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
