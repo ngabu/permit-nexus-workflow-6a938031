@@ -156,7 +156,7 @@ export function ComplianceSidebar({ activeTab, onTabChange }: ComplianceSidebarP
                 <SidebarMenuButton asChild>
                   <button
                     onClick={handleSignOut}
-                    className="w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 text-destructive hover:bg-destructive/10"
+                    className="w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 text-amber-600 hover:bg-amber-500/10"
                   >
                     <LogOut className="w-5 h-5 shrink-0" />
                     {!isCollapsed && <span className="ml-3 flex-1 text-left">Sign Out</span>}

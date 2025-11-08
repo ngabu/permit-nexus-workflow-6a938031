@@ -19,6 +19,7 @@ export function IntentRegistrationList() {
   const { toast } = useToast();
   const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<string>('details');
   const { documents, loading: docsLoading } = useDocuments(undefined, selectedIntent || undefined);
 
   const filteredIntents = statusFilter === 'all' 
@@ -175,8 +176,12 @@ export function IntentRegistrationList() {
               </CardHeader>
               
               {selectedIntent === intent.id && selectedIntentData && (
-                <CardContent>
-                  <Tabs defaultValue="details" className="w-full">
+                <CardContent
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                >
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="details">Registration Details</TabsTrigger>
                       <TabsTrigger value="feedback">Official Feedback</TabsTrigger>
@@ -258,15 +263,8 @@ export function IntentRegistrationList() {
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="feedback" className="space-y-4">
-                      <Card className="bg-glass/30 border-glass">
-                        <CardHeader>
-                          <CardTitle className="text-base">Official Registry Feedback</CardTitle>
-                          <CardDescription>
-                            Assessment and feedback from the Registry team (Read-only)
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
+                    <TabsContent value="feedback" className="space-y-4 mt-4">
+                      <div className="space-y-4">
                           {selectedIntentData.status === 'pending' ? (
                             <Alert>
                               <Clock className="h-4 w-4" />
@@ -356,8 +354,7 @@ export function IntentRegistrationList() {
                               )}
                             </>
                           )}
-                        </CardContent>
-                      </Card>
+                      </div>
                     </TabsContent>
                   </Tabs>
                 </CardContent>

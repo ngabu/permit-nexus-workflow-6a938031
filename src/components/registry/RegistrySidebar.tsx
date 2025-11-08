@@ -8,6 +8,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
@@ -22,8 +25,11 @@ import {
   User,
   Cog,
   LogOut,
-  ClipboardList
+  ClipboardList,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react"
+import { useState } from "react"
 import { useUnitNotifications } from "@/hooks/useUnitNotifications"
 import { useAuth } from "@/contexts/AuthContext"
 
@@ -36,7 +42,6 @@ interface RegistryNavigationItem {
 
 const registryNavigationItems: RegistryNavigationItem[] = [
   { title: "Dashboard", value: "dashboard", icon: LayoutDashboard },
-  { title: "Applications", value: "applications", icon: FileText },
   { title: "Assessments", value: "assessments", icon: ClipboardList },
   { title: "Team Management", value: "team", icon: Users, managerOnly: true },
   { title: "Reports", value: "reports", icon: BarChart3 },
@@ -57,6 +62,7 @@ export function RegistrySidebar({ activeTab, onTabChange }: RegistrySidebarProps
   const { user, profile, signOut } = useAuth()
   const { notifications } = useUnitNotifications('registry')
   const { state, isMobile } = useSidebar()
+  const [applicationsOpen, setApplicationsOpen] = useState(false)
   
   const isManager = profile?.staff_position && ['manager', 'director', 'managing_director'].includes(profile.staff_position)
   const unreadCount = notifications.filter(n => !n.is_read).length
@@ -128,6 +134,51 @@ export function RegistrySidebar({ activeTab, onTabChange }: RegistrySidebarProps
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Applications Reviews with submenu */}
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={() => setApplicationsOpen(!applicationsOpen)}
+                  className="w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200"
+                >
+                  <FileText className="w-5 h-5 shrink-0" />
+                  {!isCollapsed && (
+                    <>
+                      <span className="ml-3 flex-1 text-left">Applications Reviews</span>
+                      {applicationsOpen ? 
+                        <ChevronDown className="w-4 h-4" /> : 
+                        <ChevronRight className="w-4 h-4" />
+                      }
+                    </>
+                  )}
+                </SidebarMenuButton>
+                {applicationsOpen && !isCollapsed && (
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild>
+                        <button
+                          onClick={() => onTabChange('intent-reviews')}
+                          className={`w-full ${getNavCls(activeTab === 'intent-reviews')}`}
+                        >
+                          <ClipboardList className="w-4 h-4 shrink-0" />
+                          <span className="ml-2">Intent Application Review</span>
+                        </button>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild>
+                        <button
+                          onClick={() => onTabChange('permit-reviews')}
+                          className={`w-full ${getNavCls(activeTab === 'permit-reviews')}`}
+                        >
+                          <FileText className="w-4 h-4 shrink-0" />
+                          <span className="ml-2">Permit Application Review</span>
+                        </button>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                )}
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -153,7 +204,7 @@ export function RegistrySidebar({ activeTab, onTabChange }: RegistrySidebarProps
                 <SidebarMenuButton asChild>
                   <button
                     onClick={handleSignOut}
-                    className="w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 text-destructive hover:bg-destructive/10"
+                    className="w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 text-amber-600 hover:bg-amber-500/10"
                   >
                     <LogOut className="w-5 h-5 shrink-0" />
                     {!isCollapsed && <span className="ml-3 flex-1 text-left">Sign Out</span>}

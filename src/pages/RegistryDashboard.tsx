@@ -15,6 +15,8 @@ import { TeamManagement } from "@/components/registry/TeamManagement";
 import { ProfileSettings } from "@/components/public/ProfileSettings";
 import { AppSettings } from "@/components/public/AppSettings";
 import RegistryReports from "@/components/registry/RegistryReports";
+import { IntentApplicationReview } from "@/components/registry/IntentApplicationReview";
+import { PermitApplicationsList } from "@/components/registry/PermitApplicationsList";
 
 const RegistryDashboard = () => {
   const { profile } = useAuth();
@@ -243,6 +245,8 @@ const RegistryDashboard = () => {
             )}
 
             {activeTab === 'assessments' && <InitialAssessmentsList />}
+            {activeTab === 'intent-reviews' && <IntentApplicationReview />}
+            {activeTab === 'permit-reviews' && <PermitApplicationsList />}
             {activeTab === 'reports' && <RegistryReports />}
             {activeTab === 'team' && isManager && <TeamManagement />}
             {activeTab === 'profile' && <ProfileSettings />}

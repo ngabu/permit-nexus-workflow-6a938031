@@ -11,15 +11,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useDocuments, DocumentInfo } from '@/hooks/useDocuments';
-import { Building, User, Calendar, AlertCircle, FileText, Upload, Trash2, Download } from 'lucide-react';
+import { useIntentDrafts } from '@/hooks/useIntentDrafts';
+import { Building, User, Calendar, AlertCircle, FileText, Upload, Trash2, Download, Save, FolderOpen } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export function IntentRegistrationNew() {
   const { user } = useAuth();
   const { entities, loading: entitiesLoading } = useEntities();
   const { toast } = useToast();
-  const [submittedIntentId, setSubmittedIntentId] = useState<string | undefined>();
-  const { documents, loading: docsLoading, uploadDocument, deleteDocument, uploadDraftDocument, fetchUserDraftDocuments, linkDraftsToIntent, deleteDocumentRecordOnly, refreshDocuments } = useDocuments(undefined, submittedIntentId);
+  const { uploadDraftDocument, fetchUserDraftDocuments, linkDraftsToIntent, deleteDocument: deleteDocumentFn } = useDocuments();
+  const { drafts, loading: draftsLoading, saveDraft, deleteDraft } = useIntentDrafts(user?.id);
   
   const [formData, setFormData] = useState({
     entity_id: '',
@@ -32,19 +34,63 @@ export function IntentRegistrationNew() {
   
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [currentIntent, setCurrentIntent] = useState<any>(null);
-  const [pendingDocuments, setPendingDocuments] = useState<DocumentInfo[]>([]);
-  const [pendingLoading, setPendingLoading] = useState(false);
-  useEffect(() => {
-    const loadDrafts = async () => {
-      if (!user) return;
-      setPendingLoading(true);
-      const drafts = await fetchUserDraftDocuments('intent_draft');
-      setPendingDocuments(drafts);
-      setPendingLoading(false);
-    };
-    loadDrafts();
-  }, [user?.id, fetchUserDraftDocuments]);
+  const [draftDocuments, setDraftDocuments] = useState<DocumentInfo[]>([]);
+  const [currentDraftId, setCurrentDraftId] = useState<string | undefined>(undefined);
+  const [showDrafts, setShowDrafts] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [draftToDelete, setDraftToDelete] = useState<string | null>(null);
+
+  const handleSaveDraft = async () => {
+    try {
+      const draft = await saveDraft({
+        entity_id: formData.entity_id || null,
+        activity_level: formData.activity_level || null,
+        activity_description: formData.activity_description || null,
+        preparatory_work_description: formData.preparatory_work_description || null,
+        commencement_date: formData.commencement_date || null,
+        completion_date: formData.completion_date || null,
+      }, currentDraftId);
+      
+      if (!currentDraftId) {
+        setCurrentDraftId(draft.id);
+      }
+    } catch (error) {
+      console.error('Error saving draft:', error);
+    }
+  };
+
+  const handleLoadDraft = (draftId: string) => {
+    const draft = drafts.find(d => d.id === draftId);
+    if (draft) {
+      setFormData({
+        entity_id: draft.entity_id || '',
+        activity_level: draft.activity_level || '',
+        activity_description: draft.activity_description || '',
+        preparatory_work_description: draft.preparatory_work_description || '',
+        commencement_date: draft.commencement_date || '',
+        completion_date: draft.completion_date || '',
+      });
+      setCurrentDraftId(draft.id);
+      setShowDrafts(false);
+      toast({
+        title: "Draft Loaded",
+        description: "Your draft has been loaded successfully"
+      });
+    }
+  };
+
+  const handleDeleteDraftClick = (draftId: string) => {
+    setDraftToDelete(draftId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (draftToDelete) {
+      await deleteDraft(draftToDelete);
+      setDeleteDialogOpen(false);
+      setDraftToDelete(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,22 +133,19 @@ export function IntentRegistrationNew() {
 
       if (error) throw error;
 
-      setSubmittedIntentId(data.id);
-      setCurrentIntent(data);
+      // Link uploaded draft documents to the intent
+      if (draftDocuments.length > 0) {
+        await linkDraftsToIntent(draftDocuments, data.id);
+      }
 
-      // Link any pre-submission draft documents to this intent
-      if (pendingDocuments.length > 0) {
-        const linked = await linkDraftsToIntent(pendingDocuments, data.id);
-        // Remove draft DB rows without deleting storage files
-        await Promise.all(pendingDocuments.map((d) => deleteDocumentRecordOnly(d.id)));
-        setPendingDocuments([]);
-        toast({ title: 'Documents Linked', description: `${linked.length} document(s) linked to this intent.` });
-        await refreshDocuments?.();
+      // Delete the draft after successful submission
+      if (currentDraftId) {
+        await deleteDraft(currentDraftId);
       }
 
       toast({
         title: "Intent Registration Submitted",
-        description: "Your registration of intent has been submitted successfully. You can now upload supporting documents.",
+        description: "Your registration of intent has been submitted successfully with all documents.",
       });
 
       setFormData({
@@ -113,6 +156,8 @@ export function IntentRegistrationNew() {
         commencement_date: '',
         completion_date: '',
       });
+      setDraftDocuments([]);
+      setCurrentDraftId(undefined);
     } catch (error) {
       console.error('Error submitting intent registration:', error);
       toast({
@@ -131,17 +176,14 @@ export function IntentRegistrationNew() {
 
     setUploading(true);
     try {
-      if (submittedIntentId) {
-        for (let i = 0; i < files.length; i++) {
-          await uploadDocument(files[i], undefined, submittedIntentId);
-        }
-      } else {
-        for (let i = 0; i < files.length; i++) {
-          await uploadDraftDocument(files[i], 'intent_draft');
-        }
-        const drafts = await fetchUserDraftDocuments('intent_draft');
-        setPendingDocuments(drafts);
+      for (let i = 0; i < files.length; i++) {
+        const uploadedDoc = await uploadDraftDocument(files[i], 'intent_draft');
+        setDraftDocuments(prev => [uploadedDoc, ...prev]);
       }
+      toast({
+        title: "Documents Uploaded",
+        description: "Documents will be attached when you submit the form.",
+      });
     } catch (error) {
       console.error('Upload error:', error);
     } finally {
@@ -149,10 +191,11 @@ export function IntentRegistrationNew() {
       e.target.value = '';
     }
   };
+
   const handleDeleteDocument = async (docId: string) => {
     if (confirm('Are you sure you want to delete this document?')) {
-      await deleteDocument(docId);
-      setPendingDocuments(prev => prev.filter(d => d.id !== docId));
+      await deleteDocumentFn(docId);
+      setDraftDocuments(prev => prev.filter(doc => doc.id !== docId));
     }
   };
   const handleDownloadDocument = async (filePath: string, filename: string) => {
@@ -183,12 +226,70 @@ export function IntentRegistrationNew() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-foreground">New Intent Registration</h2>
-        <p className="text-muted-foreground mt-2">
-          Register your intention to carry out preparatory work for Level 2 or Level 3 activities (Section 48, Environment Act 2000)
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">New Intent Registration</h2>
+          <p className="text-muted-foreground mt-2">
+            Register your intention to carry out preparatory work for Level 2 or Level 3 activities (Section 48, Environment Act 2000)
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowDrafts(!showDrafts)}
+            disabled={draftsLoading}
+          >
+            <FolderOpen className="w-4 h-4 mr-2" />
+            My Drafts {drafts.length > 0 && `(${drafts.length})`}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleSaveDraft}
+          >
+            <Save className="w-4 h-4 mr-2" />
+            Save Draft
+          </Button>
+        </div>
       </div>
+
+      {showDrafts && drafts.length > 0 && (
+        <Card className="bg-glass/50 backdrop-blur-sm border-glass">
+          <CardHeader>
+            <CardTitle>Saved Drafts</CardTitle>
+            <CardDescription>Load a previous draft to continue working on it</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {drafts.map((draft) => (
+              <div key={draft.id} className="flex items-center justify-between p-3 bg-glass/30 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">
+                    {draft.draft_name || `Draft - ${new Date(draft.created_at).toLocaleDateString()}`}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Last updated: {new Date(draft.updated_at).toLocaleString()}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleLoadDraft(draft.id)}
+                  >
+                    Load
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleDeleteDraftClick(draft.id)}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Alert className="bg-primary/5 border-primary/20">
         <AlertCircle className="h-4 w-4 text-primary" />
@@ -357,82 +458,40 @@ export function IntentRegistrationNew() {
                     </div>
                   </div>
 
-                  {submittedIntentId ? (
-                    docsLoading ? (
-                      <p className="text-sm text-muted-foreground">Loading documents...</p>
-                    ) : documents.length > 0 ? (
-                      <div className="space-y-2">
-                        {documents.map((doc) => (
-                          <div key={doc.id} className="flex items-center justify-between p-3 bg-glass/30 rounded-lg">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <FileText className="w-4 h-4 text-primary flex-shrink-0" />
-                              <span className="text-sm truncate">{doc.filename}</span>
-                              <span className="text-xs text-muted-foreground flex-shrink-0">
-                                ({(doc.file_size / 1024).toFixed(1)} KB)
-                              </span>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDownloadDocument(doc.file_path, doc.filename)}
-                              >
-                                <Download className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteDocument(doc.id)}
-                              >
-                                <Trash2 className="w-4 h-4 text-destructive" />
-                              </Button>
-                            </div>
+                  {draftDocuments.length > 0 ? (
+                    <div className="space-y-2">
+                      {draftDocuments.map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between p-3 bg-glass/30 rounded-lg">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <FileText className="w-4 h-4 text-primary flex-shrink-0" />
+                            <span className="text-sm truncate">{doc.filename}</span>
+                            <span className="text-xs text-muted-foreground flex-shrink-0">
+                              ({(doc.file_size / 1024).toFixed(1)} KB)
+                            </span>
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
-                    )
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownloadDocument(doc.file_path, doc.filename)}
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteDocument(doc.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    pendingLoading ? (
-                      <p className="text-sm text-muted-foreground">Loading documents...</p>
-                    ) : pendingDocuments.length > 0 ? (
-                      <div className="space-y-2">
-                        {pendingDocuments.map((doc) => (
-                          <div key={doc.id} className="flex items-center justify-between p-3 bg-glass/30 rounded-lg">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <FileText className="w-4 h-4 text-primary flex-shrink-0" />
-                              <span className="text-sm truncate">{doc.filename}</span>
-                              <span className="text-xs text-muted-foreground flex-shrink-0">
-                                ({(doc.file_size / 1024).toFixed(1)} KB)
-                              </span>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDownloadDocument(doc.file_path, doc.filename)}
-                              >
-                                <Download className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteDocument(doc.id)}
-                              >
-                                <Trash2 className="w-4 h-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
-                    )
+                    <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
                   )}
                 </div>
 
@@ -449,10 +508,19 @@ export function IntentRegistrationNew() {
                         commencement_date: '',
                         completion_date: '',
                       });
-                      setSubmittedIntentId(undefined);
+                      setDraftDocuments([]);
+                      setCurrentDraftId(undefined);
                     }}
                   >
                     Clear Form
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleSaveDraft}
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Draft
                   </Button>
                   <Button type="submit" disabled={submitting || entitiesLoading}>
                     {submitting ? 'Submitting...' : 'Submit Registration'}
@@ -475,70 +543,33 @@ export function IntentRegistrationNew() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!submittedIntentId ? (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Submit your intent registration to receive official feedback from the Registry team.
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <>
-                  {currentIntent?.review_notes && (
-                    <div className="space-y-2">
-                      <Label>Review Notes</Label>
-                      <div className="p-4 bg-glass/30 rounded-lg">
-                        <p className="text-sm whitespace-pre-wrap">{currentIntent.review_notes}</p>
-                      </div>
-                      {currentIntent.reviewed_at && (
-                        <p className="text-xs text-muted-foreground">
-                          Reviewed on {new Date(currentIntent.reviewed_at).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {currentIntent?.official_feedback_attachments && 
-                   currentIntent.official_feedback_attachments.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Official Feedback Documents</Label>
-                      <div className="space-y-2">
-                        {currentIntent.official_feedback_attachments.map((doc: any, index: number) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-glass/30 rounded-lg">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <FileText className="w-4 h-4 text-primary flex-shrink-0" />
-                              <span className="text-sm truncate">{doc.filename || `Document ${index + 1}`}</span>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDownloadDocument(doc.file_path, doc.filename)}
-                            >
-                              <Download className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {!currentIntent?.review_notes && 
-                   (!currentIntent?.official_feedback_attachments || 
-                    currentIntent.official_feedback_attachments.length === 0) && (
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        No official feedback available yet. The Registry team will provide feedback once they review your submission.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </>
-              )}
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Submit your intent registration to receive official feedback from the Registry team.
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this draft? This action cannot be undone and all saved progress will be permanently lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

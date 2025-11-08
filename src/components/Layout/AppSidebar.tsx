@@ -110,9 +110,9 @@ export function AppSidebar() {
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         <div className="flex items-center justify-between">
           <div className="text-sm">
-            <p className="text-sidebar-foreground font-medium">{user?.email}</p>
+            <p className="text-amber-600 font-medium">{user?.email}</p>
             {profile?.role && (
-              <p className="text-sidebar-foreground text-xs">
+              <p className="text-amber-700 text-xs">
                 {getRoleDisplayName(profile.role)}
               </p>
             )}
@@ -124,7 +124,7 @@ export function AppSidebar() {
               await signOut();
               window.location.href = '/login'; // ✅ hard redirect avoids React re-render race
             }}
-            className="text-sidebar-foreground hover:text-sidebar-primary hover:bg-sidebar-accent"
+            className="text-amber-600 hover:text-amber-700 hover:bg-amber-500/10"
           >
             <LogOut className="w-4 h-4" />
           </Button>
