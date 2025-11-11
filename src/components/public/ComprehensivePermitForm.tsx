@@ -200,17 +200,24 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
 
   const [activeTab, setActiveTab] = useState('project');
 
-  const handleInputChange = (field: string | Record<string, any>, value?: any) => {
+  const handleInputChange = async (field: string | Record<string, any>, value?: any) => {
     console.log('🔄 ComprehensivePermitForm - handleInputChange:', { field, value, currentFormData: formData });
     
     setFormData(prev => {
       // Handle object with multiple fields (from steps that update multiple fields at once)
       if (typeof field === 'object' && field !== null) {
         console.log('📦 Multiple fields update:', field);
-        return {
+        const updatedData = {
           ...prev,
           ...field
         };
+        
+        // Auto-save draft when editing existing permit/draft
+        if (lastSavedDraftId || permitId) {
+          saveDraftChanges(updatedData);
+        }
+        
+        return updatedData;
       }
       
       // Handle single field update
@@ -223,8 +230,78 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
       
       console.log('🔄 ComprehensivePermitForm - Updated formData:', newFormData);
       
+      // Auto-save draft when editing existing permit/draft
+      if (lastSavedDraftId || permitId) {
+        saveDraftChanges(newFormData);
+      }
+      
       return newFormData;
     });
+  };
+
+  // Auto-save function for draft changes
+  const saveDraftChanges = async (updatedFormData: typeof formData) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const updateId = permitId || lastSavedDraftId;
+      if (!updateId) return;
+
+      const applicationData = {
+        title: updatedFormData.applicationTitle,
+        permit_type: updatedFormData.prescribedActivity || 'General Permit',
+        description: updatedFormData.projectDescription,
+        status: 'draft',
+        user_id: user.id,
+        entity_id: updatedFormData.entity_id || null,
+        entity_name: updatedFormData.entity_name || updatedFormData.organizationName,
+        entity_type: updatedFormData.entity_type || (updatedFormData.organizationName ? 'COMPANY' : 'INDIVIDUAL'),
+        existing_permit_id: updatedFormData.existing_permit_id || null,
+        project_description: updatedFormData.projectDescription,
+        project_start_date: updatedFormData.projectStartDate || null,
+        project_end_date: updatedFormData.projectEndDate || null,
+        environmental_impact: updatedFormData.environmentalImpact || null,
+        mitigation_measures: updatedFormData.mitigationMeasures || null,
+        activity_location: updatedFormData.projectLocation,
+        estimated_cost_kina: 0,
+        compliance_checks: updatedFormData.complianceChecks,
+        coordinates: updatedFormData.coordinates,
+        uploaded_files: updatedFormData.uploadedFiles,
+        is_draft: true,
+        current_step: 10,
+        application_number: updatedFormData.applicationNumber,
+        activity_level: updatedFormData.activity_level || null,
+        activity_id: updatedFormData.prescribed_activity_id || null,
+        activity_category: updatedFormData.activity_category || null,
+        activity_subcategory: updatedFormData.activity_subcategory || null,
+        activity_classification: updatedFormData.activity_description || null,
+        permit_category: updatedFormData.permit_category || null,
+        permit_type_id: updatedFormData.permit_type_id || null,
+        eia_required: updatedFormData.eia_required,
+        eis_required: updatedFormData.eis_required,
+        public_consultation_proof: updatedFormData.public_consultation_proof,
+        consultation_period_start: updatedFormData.consultation_period_start || null,
+        consultation_period_end: updatedFormData.consultation_period_end || null,
+        legal_declaration_accepted: updatedFormData.legal_declaration_accepted,
+        compliance_commitment: updatedFormData.compliance_commitment,
+        payment_status: updatedFormData.payment_status,
+        mandatory_fields_complete: updatedFormData.mandatory_fields_complete,
+        commencement_date: updatedFormData.projectStartDate || null,
+        completion_date: updatedFormData.projectEndDate || null,
+        fee_amount: updatedFormData.fee_amount || 0,
+        fee_breakdown: updatedFormData.fee_breakdown || null,
+      };
+
+      await supabase
+        .from('permit_applications')
+        .update(applicationData)
+        .eq('id', updateId);
+
+      console.log('💾 Auto-saved draft changes');
+    } catch (error) {
+      console.error('Error auto-saving draft:', error);
+    }
   };
 
   const handleComplianceChange = (field: string, checked: boolean) => {
