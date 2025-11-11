@@ -17,6 +17,10 @@ import { AppSettings } from "@/components/public/AppSettings";
 import RegistryReports from "@/components/registry/RegistryReports";
 import { IntentApplicationReview } from "@/components/registry/IntentApplicationReview";
 import { PermitApplicationsList } from "@/components/registry/PermitApplicationsList";
+import { PermitRenewalReview } from "@/components/registry/PermitRenewalReview";
+import { PermitAmendmentReview } from "@/components/registry/PermitAmendmentReview";
+import { PermitTransferReview } from "@/components/registry/PermitTransferReview";
+import { PermitSurrenderReview } from "@/components/registry/PermitSurrenderReview";
 
 const RegistryDashboard = () => {
   const { profile } = useAuth();
@@ -246,6 +250,13 @@ const RegistryDashboard = () => {
 
             {activeTab === 'intent-reviews' && <IntentApplicationReview />}
             {activeTab === 'permit-reviews' && <InitialAssessmentsList />}
+            {activeTab === 'permit-amalgamation' && <div className="p-6"><h2 className="text-2xl font-bold">Permit Amalgamation Reviews</h2><p className="text-muted-foreground mt-2">Coming soon...</p></div>}
+            {activeTab === 'permit-amendments' && <PermitAmendmentReview />}
+            {activeTab === 'permit-compliance' && <div className="p-6"><h2 className="text-2xl font-bold">Permit Compliance Reviews</h2><p className="text-muted-foreground mt-2">Coming soon...</p></div>}
+            {activeTab === 'permit-enforcement' && <div className="p-6"><h2 className="text-2xl font-bold">Permit Enforcement Reviews</h2><p className="text-muted-foreground mt-2">Coming soon...</p></div>}
+            {activeTab === 'permit-renewal' && <PermitRenewalReview />}
+            {activeTab === 'permit-surrender' && <PermitSurrenderReview />}
+            {activeTab === 'permit-transfer' && <PermitTransferReview />}
             {activeTab === 'reports' && <RegistryReports />}
             {activeTab === 'team' && isManager && <TeamManagement />}
             {activeTab === 'profile' && <ProfileSettings />}
