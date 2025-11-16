@@ -95,19 +95,19 @@ export function RegistrySidebar({ activeTab, onTabChange }: RegistrySidebarProps
 
   return (
     <Sidebar
-      className="w-80 border-r border-white/30 bg-primary/95 backdrop-blur-2xl shadow-xl"
+      className="border-r border-white/30 bg-primary/95 backdrop-blur-2xl shadow-xl"
       collapsible="icon"
     >
       <SidebarContent className="p-0 bg-gradient-to-b from-primary/90 to-primary/80 backdrop-blur-2xl">
         {/* Branding */}
-        <div className="p-6 pb-8 bg-primary-glow/90 backdrop-blur-xl rounded-br-[4rem] mb-4 shadow-glow">
+        <div className="p-4 md:p-6 pb-6 md:pb-8 bg-primary-glow/90 backdrop-blur-xl rounded-br-[3rem] md:rounded-br-[4rem] mb-4 shadow-glow">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-glow-accent p-1">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-glow-accent p-1">
               <img src={pngEmblem} alt="PNG Emblem" className="w-full h-full object-contain" />
             </div>
             {!isCollapsed && (
               <div>
-                <h2 className="font-bold text-white text-lg">PNG CEPA E-permit</h2>
+                <h2 className="font-bold text-white text-base md:text-lg">PNG CEPA E-permit</h2>
                 <p className="text-xs text-white/70">Registry Unit</p>
               </div>
             )}

@@ -55,17 +55,17 @@ const RegistryDashboard = () => {
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
         <RegistrySidebar activeTab={activeTab} onTabChange={setActiveTab} />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col overflow-x-hidden">
           {/* Header */}
-          <header className="border-b border-sidebar-border bg-background p-6">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
+          <header className="border-b border-sidebar-border bg-background p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <div className="flex items-center gap-3 md:gap-4">
                 <SidebarTrigger className="hover:bg-sidebar-accent" />
                 <div>
-                  <h1 className="text-3xl font-bold text-card-foreground">
+                  <h1 className="text-xl md:text-3xl font-bold text-card-foreground">
                     Registry {isManager ? 'Management' : 'Unit'} Dashboard
                   </h1>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-xs md:text-sm text-muted-foreground mt-1">
                     {isManager 
                       ? 'Manage permit assessments and allocate work to registry officers'
                       : 'Conduct initial permit assessments and reviews'
@@ -80,86 +80,86 @@ const RegistryDashboard = () => {
             </div>
           </header>
 
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 p-4 md:p-6 overflow-auto">
             {activeTab === 'dashboard' && (
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 {/* Status-based Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-sm text-card-foreground">
-                <Clock className="w-4 h-4 mr-2 text-blue-500" />
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="flex items-center text-xs md:text-sm text-card-foreground">
+                <Clock className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 text-blue-500" />
                 Pending
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.pendingAssessments}</div>
-              <p className="text-xs text-muted-foreground">Awaiting assessment</p>
+              <div className="text-xl md:text-2xl font-bold text-blue-600">{stats.pendingAssessments}</div>
+              <p className="text-[10px] md:text-xs text-muted-foreground">Awaiting</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-sm text-card-foreground">
-                <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="flex items-center text-xs md:text-sm text-card-foreground">
+                <CheckCircle className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 text-green-500" />
                 Passed
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.passedAssessments}</div>
-              <p className="text-xs text-muted-foreground">Assessment passed</p>
+              <div className="text-xl md:text-2xl font-bold text-green-600">{stats.passedAssessments}</div>
+              <p className="text-[10px] md:text-xs text-muted-foreground">Approved</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-sm text-card-foreground">
-                <AlertCircle className="w-4 h-4 mr-2 text-red-500" />
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="flex items-center text-xs md:text-sm text-card-foreground">
+                <AlertCircle className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 text-red-500" />
                 Failed
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.failedAssessments}</div>
-              <p className="text-xs text-muted-foreground">Assessment failed</p>
+              <div className="text-xl md:text-2xl font-bold text-red-600">{stats.failedAssessments}</div>
+              <p className="text-[10px] md:text-xs text-muted-foreground">Rejected</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-sm text-card-foreground">
-                <Clock className="w-4 h-4 mr-2 text-amber-500" />
-                Clarification
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="flex items-center text-xs md:text-sm text-card-foreground">
+                <Clock className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 text-amber-500" />
+                Clarify
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-amber-600">{stats.clarificationAssessments}</div>
-              <p className="text-xs text-muted-foreground">Needs clarification</p>
+              <div className="text-xl md:text-2xl font-bold text-amber-600">{stats.clarificationAssessments}</div>
+              <p className="text-[10px] md:text-xs text-muted-foreground">Needs info</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-sm text-card-foreground">
-                <Users className="w-4 h-4 mr-2 text-purple-500" />
-                Forwarded
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="flex items-center text-xs md:text-sm text-card-foreground">
+                <Users className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 text-purple-500" />
+                Forward
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{stats.forwardedAssessments}</div>
-              <p className="text-xs text-muted-foreground">To compliance</p>
+              <div className="text-xl md:text-2xl font-bold text-purple-600">{stats.forwardedAssessments}</div>
+              <p className="text-[10px] md:text-xs text-muted-foreground">Sent</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-sm text-card-foreground">
-                <ClipboardList className="w-4 h-4 mr-2 text-gray-500" />
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="flex items-center text-xs md:text-sm text-card-foreground">
+                <ClipboardList className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 text-gray-500" />
                 Total
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-600">{stats.totalAssessments}</div>
-              <p className="text-xs text-muted-foreground">All assessments</p>
+              <div className="text-xl md:text-2xl font-bold text-gray-600">{stats.totalAssessments}</div>
+              <p className="text-[10px] md:text-xs text-muted-foreground">All</p>
             </CardContent>
           </Card>
                  </div>
@@ -167,19 +167,19 @@ const RegistryDashboard = () => {
                  {/* Recent Activities */}
                  <Card>
                   <CardHeader>
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                       <div>
-                        <CardTitle className="text-card-foreground">Recent Activities</CardTitle>
-                        <CardDescription className="text-muted-foreground">Latest updates and actions in the registry unit</CardDescription>
+                        <CardTitle className="text-base md:text-lg text-card-foreground">Recent Activities</CardTitle>
+                        <CardDescription className="text-xs md:text-sm text-muted-foreground">Latest updates and actions in the registry unit</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div className="space-y-3 md:space-y-4">
                       {loading ? (
-                        <div className="text-center py-8 text-muted-foreground">Loading activities...</div>
+                        <div className="text-center py-6 md:py-8 text-muted-foreground text-sm">Loading activities...</div>
                       ) : assessments.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">No recent activities</div>
+                        <div className="text-center py-6 md:py-8 text-muted-foreground text-sm">No recent activities</div>
                       ) : (
                         assessments.slice(0, 6).map((assessment) => {
                           const getActivityIcon = () => {
