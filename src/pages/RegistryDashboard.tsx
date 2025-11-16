@@ -16,11 +16,14 @@ import { ProfileSettings } from "@/components/public/ProfileSettings";
 import { AppSettings } from "@/components/public/AppSettings";
 import RegistryReports from "@/components/registry/RegistryReports";
 import { IntentApplicationReview } from "@/components/registry/IntentApplicationReview";
-import { PermitApplicationsList } from "@/components/registry/PermitApplicationsList";
+import { PermitApplicationReview } from "@/components/registry/PermitApplicationReview";
 import { PermitRenewalReview } from "@/components/registry/PermitRenewalReview";
 import { PermitAmendmentReview } from "@/components/registry/PermitAmendmentReview";
 import { PermitTransferReview } from "@/components/registry/PermitTransferReview";
 import { PermitSurrenderReview } from "@/components/registry/PermitSurrenderReview";
+import { PermitAmalgamationReview } from "@/components/registry/PermitAmalgamationReview";
+import { PermitComplianceReview } from "@/components/registry/PermitComplianceReview";
+import { PermitEnforcementReview } from "@/components/registry/PermitEnforcementReview";
 
 const RegistryDashboard = () => {
   const { profile } = useAuth();
@@ -49,7 +52,7 @@ const RegistryDashboard = () => {
   }, [assessments]);
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
         <RegistrySidebar activeTab={activeTab} onTabChange={setActiveTab} />
         <div className="flex-1 flex flex-col">
@@ -249,11 +252,11 @@ const RegistryDashboard = () => {
             )}
 
             {activeTab === 'intent-reviews' && <IntentApplicationReview />}
-            {activeTab === 'permit-reviews' && <InitialAssessmentsList />}
-            {activeTab === 'permit-amalgamation' && <div className="p-6"><h2 className="text-2xl font-bold">Permit Amalgamation Reviews</h2><p className="text-muted-foreground mt-2">Coming soon...</p></div>}
+            {activeTab === 'permit-reviews' && <PermitApplicationReview />}
+            {activeTab === 'permit-amalgamation' && <PermitAmalgamationReview />}
             {activeTab === 'permit-amendments' && <PermitAmendmentReview />}
-            {activeTab === 'permit-compliance' && <div className="p-6"><h2 className="text-2xl font-bold">Permit Compliance Reviews</h2><p className="text-muted-foreground mt-2">Coming soon...</p></div>}
-            {activeTab === 'permit-enforcement' && <div className="p-6"><h2 className="text-2xl font-bold">Permit Enforcement Reviews</h2><p className="text-muted-foreground mt-2">Coming soon...</p></div>}
+            {activeTab === 'permit-compliance' && <PermitComplianceReview />}
+            {activeTab === 'permit-enforcement' && <PermitEnforcementReview />}
             {activeTab === 'permit-renewal' && <PermitRenewalReview />}
             {activeTab === 'permit-surrender' && <PermitSurrenderReview />}
             {activeTab === 'permit-transfer' && <PermitTransferReview />}

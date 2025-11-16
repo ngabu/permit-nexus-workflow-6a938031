@@ -38,19 +38,29 @@ export function PermitTransferReview() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-card-foreground">Permit Transfer Reviews</h2>
-        <p className="text-muted-foreground">Review and assess permit transfer applications</p>
-      </div>
-
+    <>
       <Card>
         <CardHeader>
-          <CardTitle>Pending Transfer Requests</CardTitle>
+          <CardTitle className="flex items-center">
+            <ArrowRightLeft className="w-5 h-5 mr-2" />
+            Permit Transfer Reviews ({transferRequests.length})
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Review and assess permit transfer applications
+          </p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {transferRequests.map((request) => (
+        <CardContent className="space-y-4">
+          {transferRequests.length === 0 ? (
+            <div className="text-center py-12">
+              <ArrowRightLeft className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-medium mb-2">No transfer requests</h3>
+              <p className="text-muted-foreground">
+                No transfer requests have been submitted yet.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {transferRequests.map((request) => (
               <div
                 key={request.id}
                 onClick={() => setSelectedRequest(request.id)}
@@ -74,6 +84,7 @@ export function PermitTransferReview() {
               </div>
             ))}
           </div>
+        )}
         </CardContent>
       </Card>
 
@@ -148,7 +159,7 @@ export function PermitTransferReview() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-accent/50">
             <CardHeader>
               <CardTitle>Registry Review & Assessment</CardTitle>
             </CardHeader>
@@ -192,6 +203,6 @@ export function PermitTransferReview() {
           </Card>
         </>
       )}
-    </div>
+    </>
   );
 }

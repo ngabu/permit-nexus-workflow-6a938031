@@ -7,6 +7,7 @@ import Dashboard from "@/pages/Dashboard";
 import PublicDashboard from "@/pages/PublicDashboard";
 import StaffDashboard from "@/pages/StaffDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
+import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 import RegistryDashboard from "@/pages/RegistryDashboard";
 import RevenueDashboard from "@/pages/RevenueDashboard";
 import ComplianceDashboard from "@/pages/ComplianceDashboard";
@@ -33,8 +34,10 @@ import PermitTransfer from "@/pages/permit-management/PermitTransfer";
 import PermitSurrender from "@/pages/permit-management/PermitSurrender";
 import ComplianceReports from "@/pages/permit-management/ComplianceReports";
 import PermitAmalgamation from "@/pages/permit-management/PermitAmalgamation";
+import PermitEnforcementInspections from "@/pages/permit-management/PermitEnforcementInspections";
 import EIAReviewDetail from "@/pages/eia/EIAReviewDetail";
 import RegistryApplicationDetail from "@/pages/RegistryApplicationDetail";
+import Inspections from "@/pages/Inspections";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -181,12 +184,22 @@ export const AppRoutes = () => {
         } 
       />
       
-      {/* Admin dashboard - only for admin and system_admin */}
+      {/* Admin dashboard - only for admin and super_admin */}
       <Route 
         path="/admin-dashboard" 
         element={
-          <RoleBasedRoute allowedRoles={['admin']}>
+          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
             <AdminDashboard />
+          </RoleBasedRoute>
+        }
+      />
+      
+      {/* Super Admin dashboard - only for super_admin */}
+      <Route 
+        path="/super-admin-dashboard" 
+        element={
+          <RoleBasedRoute allowedRoles={['super_admin']}>
+            <SuperAdminDashboard />
           </RoleBasedRoute>
         }
       />
@@ -315,6 +328,20 @@ export const AppRoutes = () => {
       <Route path="/permit-surrender" element={<ProtectedRoute><PermitSurrender /></ProtectedRoute>} />
       <Route path="/compliance-reports" element={<ProtectedRoute><ComplianceReports /></ProtectedRoute>} />
       <Route path="/permit-amalgamation" element={<ProtectedRoute><PermitAmalgamation /></ProtectedRoute>} />
+      <Route path="/permit-management/enforcement-inspections" element={<ProtectedRoute><PermitEnforcementInspections /></ProtectedRoute>} />
+
+      {/* Compliance Routes */}
+      <Route 
+        path="/Inspections" 
+        element={
+          <RoleBasedRoute 
+            allowedRoles={['cepa_staff', 'admin', 'system_admin']}
+            allowedUnits={['compliance']}
+          >
+            <Inspections />
+          </RoleBasedRoute>
+        } 
+      />
 
       <Route 
         path="/eia-reviews/:id" 

@@ -51,20 +51,29 @@ export function PermitRenewalReview() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-card-foreground">Permit Renewal Reviews</h2>
-        <p className="text-muted-foreground">Review and assess permit renewal applications</p>
-      </div>
-
-      {/* Renewal Requests List */}
+    <>
       <Card>
         <CardHeader>
-          <CardTitle>Pending Renewal Requests</CardTitle>
+          <CardTitle className="flex items-center">
+            <RefreshCw className="w-5 h-5 mr-2" />
+            Permit Renewal Reviews ({renewalRequests.length})
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Review and assess permit renewal applications
+          </p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {renewalRequests.map((request) => (
+        <CardContent className="space-y-4">
+          {renewalRequests.length === 0 ? (
+            <div className="text-center py-12">
+              <RefreshCw className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-medium mb-2">No renewal requests</h3>
+              <p className="text-muted-foreground">
+                No renewal requests have been submitted yet.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {renewalRequests.map((request) => (
               <div
                 key={request.id}
                 onClick={() => setSelectedRequest(request.id)}
@@ -89,6 +98,7 @@ export function PermitRenewalReview() {
               </div>
             ))}
           </div>
+        )}
         </CardContent>
       </Card>
 
@@ -154,7 +164,7 @@ export function PermitRenewalReview() {
           </Card>
 
           {/* Registry Review Section */}
-          <Card>
+          <Card className="bg-accent/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-primary" />
@@ -201,6 +211,6 @@ export function PermitRenewalReview() {
           </Card>
         </>
       )}
-    </div>
+    </>
   );
 }

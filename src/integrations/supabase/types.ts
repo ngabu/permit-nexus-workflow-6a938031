@@ -543,6 +543,7 @@ export type Database = {
           email: string | null
           entity_type: string
           id: string
+          is_suspended: boolean | null
           name: string
           phone: string | null
           postal_address: string | null
@@ -560,6 +561,7 @@ export type Database = {
           email?: string | null
           entity_type: string
           id?: string
+          is_suspended?: boolean | null
           name: string
           phone?: string | null
           postal_address?: string | null
@@ -577,6 +579,7 @@ export type Database = {
           email?: string | null
           entity_type?: string
           id?: string
+          is_suspended?: boolean | null
           name?: string
           phone?: string | null
           postal_address?: string | null
@@ -928,6 +931,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      inspections: {
+        Row: {
+          accommodation_cost: number | null
+          completed_date: string | null
+          created_at: string
+          created_by: string | null
+          daily_allowance: number | null
+          findings: string | null
+          id: string
+          inspection_type: string
+          inspector_id: string | null
+          notes: string | null
+          number_of_days: number | null
+          permit_application_id: string
+          permit_category: string | null
+          province: string | null
+          scheduled_date: string
+          status: string
+          total_travel_cost: number | null
+          transportation_cost: number | null
+          updated_at: string
+        }
+        Insert: {
+          accommodation_cost?: number | null
+          completed_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          daily_allowance?: number | null
+          findings?: string | null
+          id?: string
+          inspection_type: string
+          inspector_id?: string | null
+          notes?: string | null
+          number_of_days?: number | null
+          permit_application_id: string
+          permit_category?: string | null
+          province?: string | null
+          scheduled_date: string
+          status?: string
+          total_travel_cost?: number | null
+          transportation_cost?: number | null
+          updated_at?: string
+        }
+        Update: {
+          accommodation_cost?: number | null
+          completed_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          daily_allowance?: number | null
+          findings?: string | null
+          id?: string
+          inspection_type?: string
+          inspector_id?: string | null
+          notes?: string | null
+          number_of_days?: number | null
+          permit_application_id?: string
+          permit_category?: string | null
+          province?: string | null
+          scheduled_date?: string
+          status?: string
+          total_travel_cost?: number | null
+          transportation_cost?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       intent_registration_drafts: {
         Row: {
@@ -1402,6 +1471,7 @@ export type Database = {
           fee_amount: number | null
           fee_breakdown: Json | null
           forest_product_details: Json | null
+          frozen_reason: string | null
           fuel_storage_details: Json | null
           ghg_emission_details: Json | null
           government_agreements_details: string | null
@@ -1410,6 +1480,7 @@ export type Database = {
           id: string
           infrastructure_details: Json | null
           is_draft: boolean | null
+          is_frozen: boolean | null
           land_clearing_details: Json | null
           landowner_negotiation_status: string | null
           legal_declaration_accepted: boolean | null
@@ -1500,6 +1571,7 @@ export type Database = {
           fee_amount?: number | null
           fee_breakdown?: Json | null
           forest_product_details?: Json | null
+          frozen_reason?: string | null
           fuel_storage_details?: Json | null
           ghg_emission_details?: Json | null
           government_agreements_details?: string | null
@@ -1508,6 +1580,7 @@ export type Database = {
           id?: string
           infrastructure_details?: Json | null
           is_draft?: boolean | null
+          is_frozen?: boolean | null
           land_clearing_details?: Json | null
           landowner_negotiation_status?: string | null
           legal_declaration_accepted?: boolean | null
@@ -1598,6 +1671,7 @@ export type Database = {
           fee_amount?: number | null
           fee_breakdown?: Json | null
           forest_product_details?: Json | null
+          frozen_reason?: string | null
           fuel_storage_details?: Json | null
           ghg_emission_details?: Json | null
           government_agreements_details?: string | null
@@ -1606,6 +1680,7 @@ export type Database = {
           id?: string
           infrastructure_details?: Json | null
           is_draft?: boolean | null
+          is_frozen?: boolean | null
           land_clearing_details?: Json | null
           landowner_negotiation_status?: string | null
           legal_declaration_accepted?: boolean | null
@@ -1908,6 +1983,7 @@ export type Database = {
           first_name: string | null
           id: string
           is_active: boolean
+          is_suspended: boolean | null
           last_name: string | null
           must_change_password: boolean | null
           organization: string | null
@@ -1915,6 +1991,9 @@ export type Database = {
           phone: string | null
           staff_position: Database["public"]["Enums"]["staff_position"] | null
           staff_unit: Database["public"]["Enums"]["staff_unit"] | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspension_reason: string | null
           two_fa_enabled: boolean
           updated_at: string
           user_id: string
@@ -1927,6 +2006,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           is_active?: boolean
+          is_suspended?: boolean | null
           last_name?: string | null
           must_change_password?: boolean | null
           organization?: string | null
@@ -1934,6 +2014,9 @@ export type Database = {
           phone?: string | null
           staff_position?: Database["public"]["Enums"]["staff_position"] | null
           staff_unit?: Database["public"]["Enums"]["staff_unit"] | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           two_fa_enabled?: boolean
           updated_at?: string
           user_id: string
@@ -1946,6 +2029,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           is_active?: boolean
+          is_suspended?: boolean | null
           last_name?: string | null
           must_change_password?: boolean | null
           organization?: string | null
@@ -1953,6 +2037,9 @@ export type Database = {
           phone?: string | null
           staff_position?: Database["public"]["Enums"]["staff_position"] | null
           staff_unit?: Database["public"]["Enums"]["staff_unit"] | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           two_fa_enabled?: boolean
           updated_at?: string
           user_id?: string
@@ -2173,6 +2260,14 @@ export type Database = {
         Args: { new_role: string; target_user_id: string }
         Returns: boolean
       }
+      freeze_entity_records: {
+        Args: {
+          entity_id_param: string
+          freeze_reason?: string
+          should_freeze: boolean
+        }
+        Returns: undefined
+      }
       generate_secure_password: { Args: never; Returns: string }
       generate_secure_password_v2: { Args: never; Returns: string }
       get_activities: { Args: never; Returns: Json }
@@ -2222,8 +2317,12 @@ export type Database = {
         }[]
       }
       get_prescribed_activities: { Args: never; Returns: Json }
+      get_user_staff_position: { Args: never; Returns: string }
+      get_user_staff_unit: { Args: never; Returns: string }
+      get_user_type: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
       is_admin_or_super_admin: { Args: never; Returns: boolean }
+      is_admin_or_super_admin_user: { Args: never; Returns: boolean }
       is_admin_user: { Args: never; Returns: boolean }
       is_public_user: { Args: never; Returns: boolean }
       is_registry_staff: { Args: never; Returns: boolean }

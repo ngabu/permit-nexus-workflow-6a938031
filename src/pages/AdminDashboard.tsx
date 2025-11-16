@@ -4,11 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { KPICard } from '@/components/kpi-card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Settings, Shield, Database, Activity, TrendingUp, UserCheck, AlertCircle, BarChart3, FileText, Monitor, Globe, Server, Lock, Gauge } from 'lucide-react';
+import { Users, Settings, Shield, Database, Activity, TrendingUp, UserCheck, AlertCircle, BarChart3, FileText, Monitor, Globe, Server, Lock, Gauge, Building } from 'lucide-react';
 import { StaffManagement } from '@/components/staff-management';
 import { AuditLogs } from '@/components/audit-logs';
 import { SystemMetrics } from '@/components/system-metrics';
 import { UserManagement } from '@/components/admin/UserManagement';
+import { EntityManagement } from '@/components/admin/EntityManagement';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminStats } from '@/hooks/useAdminStats';
 import { Link } from 'react-router-dom';
@@ -60,11 +61,11 @@ export default function AdminDashboard() {
             icon={<Activity className="w-5 h-5" />}
           />
           <KPICard
-            title="Total Revenue"
-            value={loading ? "..." : `K${stats.totalRevenue.toLocaleString()}`}
-            change={stats.completedTransactions}
+            title="Total Entities"
+            value={loading ? "..." : stats.totalEntities.toString()}
+            change={stats.totalEntities}
             trend="up"
-            icon={<Server className="w-5 h-5" />}
+            icon={<Building className="w-5 h-5" />}
           />
           <KPICard
             title="Security Alerts"
@@ -136,7 +137,7 @@ export default function AdminDashboard() {
 
         {/* Main Admin Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
               Overview
@@ -144,6 +145,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="staff" className="flex items-center gap-2">
               <UserCheck className="w-4 h-4" />
               User Management
+            </TabsTrigger>
+            <TabsTrigger value="entities" className="flex items-center gap-2">
+              <Building className="w-4 h-4" />
+              Entity Management
             </TabsTrigger>
             <TabsTrigger value="audit" className="flex items-center gap-2">
               <Shield className="w-4 h-4" />
@@ -248,6 +253,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="staff" className="space-y-6">
             <UserManagement />
+          </TabsContent>
+
+          <TabsContent value="entities" className="space-y-6">
+            <EntityManagement />
           </TabsContent>
 
           <TabsContent value="audit" className="space-y-6">

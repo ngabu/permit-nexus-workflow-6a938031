@@ -23,7 +23,6 @@ import {
   CreditCard, 
   Bell, 
   Upload,
-  TreePine,
   User,
   Cog,
   LogOut,
@@ -40,6 +39,7 @@ import {
 } from "lucide-react"
 import { useUserNotifications } from "@/hooks/useUserNotifications"
 import { useAuth } from "@/contexts/AuthContext"
+import pngEmblem from "@/assets/png-emblem.png"
 
 interface PublicNavigationItem {
   title: string
@@ -118,32 +118,33 @@ export function PublicSidebar({ activeTab, onTabChange }: PublicSidebarProps) {
 
   const getNavCls = (isActive: boolean) =>
     isActive 
-      ? "bg-gradient-primary text-primary-foreground font-medium shadow-primary" 
-      : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200"
+      ? "bg-white/20 text-white font-medium shadow-glow backdrop-blur-sm" 
+      : "text-white/80 hover:bg-white/10 hover:text-white transition-all duration-200"
 
   return (
     <Sidebar
-      className="w-64 border-r border-sidebar-border bg-sidebar"
+      className="w-64 border-r border-white/30 bg-primary/95 backdrop-blur-2xl shadow-xl"
       collapsible="icon"
     >
-      <SidebarContent className="p-4">
+      <SidebarContent className="p-0 bg-gradient-to-b from-primary/90 to-primary/80 backdrop-blur-2xl">
         {/* Branding */}
-        <div className="mb-8 px-2">
+        <div className="p-6 pb-8 bg-primary-glow/90 backdrop-blur-xl rounded-br-[4rem] mb-4 shadow-glow">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-forest-500 to-nature-600 rounded-lg flex items-center justify-center">
-              <TreePine className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-glow-accent p-1">
+              <img src={pngEmblem} alt="PNG Emblem" className="w-full h-full object-contain" />
             </div>
             {!isCollapsed && (
               <div>
-                <h2 className="font-bold text-sidebar-foreground">PNG CEPA E-permit</h2>
-                <p className="text-xs text-muted-foreground">Public Portal</p>
+                <h2 className="font-bold text-white text-lg">PNG CEPA E-permit</h2>
+                <p className="text-xs text-white/70">Public Portal</p>
               </div>
             )}
           </div>
         </div>
         
-        <SidebarGroup>
-          {!isCollapsed && <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>}
+        <div className="px-4">
+          <SidebarGroup>
+            {!isCollapsed && <SidebarGroupLabel className="text-white/60 text-xs uppercase tracking-wider mb-2">Main Navigation</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {publicNavigationItems.map((item) => (
@@ -154,7 +155,7 @@ export function PublicSidebar({ activeTab, onTabChange }: PublicSidebarProps) {
                       onOpenChange={() => toggleMenu(item.value)}
                     >
                       <CollapsibleTrigger asChild>
-                        <SidebarMenuButton className="w-full">
+                        <SidebarMenuButton className="w-full text-white/80 hover:bg-white/10 hover:text-white transition-all duration-200">
                           <item.icon className="w-5 h-5 shrink-0" />
                           {!isCollapsed && (
                             <>
@@ -195,7 +196,7 @@ export function PublicSidebar({ activeTab, onTabChange }: PublicSidebarProps) {
                           <>
                             <span className="ml-3 flex-1 text-left">{item.title}</span>
                             {item.value === 'notifications' && unreadCount > 0 && (
-                              <span className="bg-destructive text-destructive-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                              <span className="bg-white/30 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center backdrop-blur-sm">
                                 {unreadCount > 99 ? '99+' : unreadCount}
                               </span>
                             )}
@@ -210,37 +211,38 @@ export function PublicSidebar({ activeTab, onTabChange }: PublicSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-8">
-          {!isCollapsed && <SidebarGroupLabel>Account</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {accountItems.map((item) => (
-                <SidebarMenuItem key={item.value}>
+          <SidebarGroup className="mt-6">
+            {!isCollapsed && <SidebarGroupLabel className="text-white/60 text-xs uppercase tracking-wider mb-2">Account</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {accountItems.map((item) => (
+                  <SidebarMenuItem key={item.value}>
+                    <SidebarMenuButton asChild>
+                      <button
+                        onClick={() => onTabChange(item.value)}
+                        className={`w-full ${getNavCls(activeTab === item.value)}`}
+                      >
+                        <item.icon className="w-5 h-5 shrink-0" />
+                        {!isCollapsed && <span className="ml-3 flex-1 text-left">{item.title}</span>}
+                      </button>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+                <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <button
-                      onClick={() => onTabChange(item.value)}
-                      className={`w-full ${getNavCls(activeTab === item.value)}`}
+                      onClick={handleSignOut}
+                      className="w-full text-white/80 hover:bg-red-500/20 hover:text-white transition-all duration-200 backdrop-blur-sm"
                     >
-                      <item.icon className="w-5 h-5 shrink-0" />
-                      {!isCollapsed && <span className="ml-3 flex-1 text-left">{item.title}</span>}
+                      <LogOut className="w-5 h-5 shrink-0" />
+                      {!isCollapsed && <span className="ml-3 flex-1 text-left">Sign Out</span>}
                     </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 text-amber-600 hover:bg-amber-500/10"
-                  >
-                    <LogOut className="w-5 h-5 shrink-0" />
-                    {!isCollapsed && <span className="ml-3 flex-1 text-left">Sign Out</span>}
-                  </button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </div>
       </SidebarContent>
     </Sidebar>
   )

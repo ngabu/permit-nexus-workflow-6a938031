@@ -10,6 +10,15 @@ import { ProfileSettings } from "@/components/public/ProfileSettings";
 import { AppSettings } from "@/components/public/AppSettings";
 import ComplianceReports from "@/components/compliance/ComplianceReports";
 import { TeamManagement } from "@/components/compliance/TeamManagement";
+import { IntentRegistrationComplianceReview } from "@/components/compliance/IntentRegistrationComplianceReview";
+import { PermitRenewalComplianceReview } from "@/components/compliance/PermitRenewalComplianceReview";
+import { PermitTransferComplianceReview } from "@/components/compliance/PermitTransferComplianceReview";
+import { PermitSurrenderComplianceReview } from "@/components/compliance/PermitSurrenderComplianceReview";
+import { PermitAmendmentComplianceReview } from "@/components/compliance/PermitAmendmentComplianceReview";
+import { PermitAmalgamationComplianceReview } from "@/components/compliance/PermitAmalgamationComplianceReview";
+import { PermitComplianceReportReview } from "@/components/compliance/PermitComplianceReportReview";
+import { PermitEnforcementComplianceReview } from "@/components/compliance/PermitEnforcementComplianceReview";
+import { InspectionsManagement } from "@/components/compliance/InspectionsManagement";
 import { Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -50,11 +59,21 @@ const ComplianceDashboardView = () => {
 
           <main className="flex-1 p-6 overflow-auto">
             {activeTab === 'dashboard' && <EnvironmentAssessmentDashboard isManager={isManager} />}
-            {activeTab === 'applications' && <ComplianceApplicationsList />}
+            {activeTab === 'inspections' && <InspectionsManagement />}
+            {activeTab === 'permit-applications' && <ComplianceApplicationsList />}
             {activeTab === 'team' && isManager && <TeamManagement />}
             {activeTab === 'reports' && <ComplianceReports />}
             {activeTab === 'profile' && <ProfileSettings />}
             {activeTab === 'settings' && <AppSettings />}
+            {/* Assessment submenu views with Registry + Compliance review sections */}
+            {activeTab === 'intent-reviews' && <IntentRegistrationComplianceReview />}
+            {activeTab === 'permit-amalgamation' && <PermitAmalgamationComplianceReview />}
+            {activeTab === 'permit-amendments' && <PermitAmendmentComplianceReview />}
+            {activeTab === 'permit-compliance' && <PermitComplianceReportReview />}
+            {activeTab === 'permit-enforcement' && <PermitEnforcementComplianceReview />}
+            {activeTab === 'permit-renewal' && <PermitRenewalComplianceReview />}
+            {activeTab === 'permit-surrender' && <PermitSurrenderComplianceReview />}
+            {activeTab === 'permit-transfer' && <PermitTransferComplianceReview />}
           </main>
         </div>
       </div>

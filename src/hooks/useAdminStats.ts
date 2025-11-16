@@ -18,7 +18,7 @@ interface AdminStats {
   totalTransactions: number;
   pendingTransactions: number;
   completedTransactions: number;
-  totalRevenue: number;
+  totalEntities: number;
 }
 
 export function useAdminStats() {
@@ -39,7 +39,7 @@ export function useAdminStats() {
     totalTransactions: 0,
     pendingTransactions: 0,
     completedTransactions: 0,
-    totalRevenue: 0,
+    totalEntities: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +74,13 @@ export function useAdminStats() {
 
       if (transactionError) throw transactionError;
 
+      // Fetch entities statistics
+      const { data: entitiesStats, error: entitiesError } = await supabase
+        .from('entities')
+        .select('id');
+
+      if (entitiesError) throw entitiesError;
+
       // Calculate user statistics
       const totalUsers = userStats?.length || 0;
       const activeUsers = userStats?.filter(u => u.is_active).length || 0;
@@ -95,12 +102,9 @@ export function useAdminStats() {
       const totalTransactions = transactionStats?.length || 0;
       const pendingTransactions = transactionStats?.filter(t => t.status === 'pending').length || 0;
       const completedTransactions = transactionStats?.filter(t => t.status === 'completed').length || 0;
-      const totalRevenue = transactionStats?.reduce((sum, t) => {
-        if (t.status === 'completed') {
-          return sum + (parseFloat(t.amount?.toString() || '0') || 0);
-        }
-        return sum;
-      }, 0) || 0;
+      
+      // Calculate entities statistics
+      const totalEntities = entitiesStats?.length || 0;
 
       setStats({
         totalUsers,
@@ -119,7 +123,7 @@ export function useAdminStats() {
         totalTransactions,
         pendingTransactions,
         completedTransactions,
-        totalRevenue,
+        totalEntities,
       });
     } catch (err) {
       console.error('Error fetching admin stats:', err);

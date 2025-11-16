@@ -35,26 +35,36 @@ export function PermitSurrenderReview() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-card-foreground">Permit Surrender Reviews</h2>
-        <p className="text-muted-foreground">Review and assess permit surrender applications</p>
-      </div>
-
-      <Alert>
+    <>
+      <Alert className="mb-4">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
           Permit surrender is permanent. Ensure all compliance obligations and site restoration requirements are verified before approval.
         </AlertDescription>
       </Alert>
-
+      
       <Card>
         <CardHeader>
-          <CardTitle>Pending Surrender Requests</CardTitle>
+          <CardTitle className="flex items-center">
+            <FileX className="w-5 h-5 mr-2" />
+            Permit Surrender Reviews ({surrenderRequests.length})
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Review and assess permit surrender applications
+          </p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {surrenderRequests.map((request) => (
+        <CardContent className="space-y-4">
+          {surrenderRequests.length === 0 ? (
+            <div className="text-center py-12">
+              <FileX className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-medium mb-2">No surrender requests</h3>
+              <p className="text-muted-foreground">
+                No surrender requests have been submitted yet.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {surrenderRequests.map((request) => (
               <div
                 key={request.id}
                 onClick={() => setSelectedRequest(request.id)}
@@ -77,6 +87,7 @@ export function PermitSurrenderReview() {
               </div>
             ))}
           </div>
+        )}
         </CardContent>
       </Card>
 
@@ -132,7 +143,7 @@ export function PermitSurrenderReview() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-accent/50">
             <CardHeader>
               <CardTitle>Registry Review & Assessment</CardTitle>
             </CardHeader>
@@ -176,6 +187,6 @@ export function PermitSurrenderReview() {
           </Card>
         </>
       )}
-    </div>
+    </>
   );
 }

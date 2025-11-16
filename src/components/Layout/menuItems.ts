@@ -21,7 +21,8 @@ import {
   Cog,
   TreePine,
   Search,
-  Archive
+  Archive,
+  Eye
 } from "lucide-react";
 
 export interface MenuItem {
@@ -37,6 +38,13 @@ export const publicMenuItems: MenuItem[] = [
   { title: "Submit Application", url: "/submit-application", icon: Plus },
   { title: "My Applications", url: "/applications", icon: ClipboardList },
   { title: "My Permits", url: "/permits", icon: Shield },
+  {
+    title: "Permit Management",
+    icon: Shield,
+    subItems: [
+      { title: "Permit Enforcement", url: "/permit-management/enforcement-inspections", icon: Eye },
+    ]
+  },
   { title: "Documents", url: "/documents", icon: FileText },
   { title: "Payments", url: "/payments", icon: DollarSign },
   { title: "Profile", url: "/profile", icon: User },
@@ -113,6 +121,23 @@ export const staffMenuItems: MenuItem[] = [
   }
 ];
 
+export const superAdminMenuItems: MenuItem[] = [
+  { 
+    title: "Super Admin Dashboard", 
+    url: "/super-admin-dashboard", 
+    icon: Cog 
+  },
+  {
+    title: "Database Management",
+    icon: Settings,
+    subItems: [
+      { title: "User Management", url: "/super-admin-dashboard?tab=users", icon: Users },
+      { title: "Table Browser", url: "/super-admin-dashboard?tab=tables", icon: FileText },
+      { title: "Enum Management", url: "/super-admin-dashboard?tab=enums", icon: Settings },
+    ]
+  },
+];
+
 export const adminMenuItems: MenuItem[] = [
   { 
     title: "Admin Dashboard", 
@@ -150,6 +175,11 @@ export const getMenuItemsForRole = (userRole: string | undefined): MenuItem[] =>
   
   if (['registry', 'compliance', 'finance', 'revenue', 'directorate', 'officer', 'manager'].includes(userRole)) {
     return staffMenuItems;
+  }
+  
+  // Super admin gets all access including super admin items
+  if (userRole === 'super_admin') {
+    return superAdminMenuItems;
   }
   
   // Admin gets full access including admin-specific items
