@@ -18,12 +18,16 @@ interface Entity {
   name: string;
   email?: string;
   phone?: string;
-  address?: string;
+  postal_address?: string;
+  'registered address'?: string;
   registration_number?: string;
   tax_number?: string;
   contact_person?: string;
+  contact_person_email?: string;
+  contact_person_phone?: string;
   created_at: string;
   updated_at: string;
+  user_id: string;
 }
 
 export function EntityManagement() {
@@ -49,8 +53,14 @@ export function EntityManagement() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      // Type assertion to ensure proper typing
-      setEntities(data as Entity[] || []);
+      
+      // Convert contact_person_phone from number to string
+      const formattedData = (data || []).map(entity => ({
+        ...entity,
+        contact_person_phone: entity.contact_person_phone?.toString()
+      }));
+      
+      setEntities(formattedData as Entity[]);
     } catch (error) {
       console.error('Error fetching entities:', error);
       toast({

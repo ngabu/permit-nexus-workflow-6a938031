@@ -594,31 +594,36 @@ export function ProgressivePermitForm({ onSuccess, onCancel, permitId }: Progres
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-8">
-              <TabsTrigger value="basic" className="flex items-center gap-2">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1 mb-8 h-auto">
+              <TabsTrigger value="basic" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
                 {getTabIcon('basic')}
                 <User className="w-4 h-4" />
-                Basic Details
+                <span className="hidden sm:inline">Basic Details</span>
+                <span className="sm:hidden text-xs">Basic</span>
               </TabsTrigger>
-              <TabsTrigger value="project" className="flex items-center gap-2">
+              <TabsTrigger value="project" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
                 {getTabIcon('project')}
                 <Building className="w-4 h-4" />
-                Project Details
+                <span className="hidden sm:inline">Project Details</span>
+                <span className="sm:hidden text-xs">Project</span>
               </TabsTrigger>
-              <TabsTrigger value="location" className="flex items-center gap-2">
+              <TabsTrigger value="location" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
                 {getTabIcon('location')}
                 <MapPin className="w-4 h-4" />
-                Location
+                <span className="hidden sm:inline">Location</span>
+                <span className="sm:hidden text-xs">Location</span>
               </TabsTrigger>
-              <TabsTrigger value="documents" className="flex items-center gap-2">
+              <TabsTrigger value="documents" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
                 {getTabIcon('documents')}
                 <Upload className="w-4 h-4" />
-                Documents
+                <span className="hidden sm:inline">Documents</span>
+                <span className="sm:hidden text-xs">Docs</span>
               </TabsTrigger>
-              <TabsTrigger value="compliance" className="flex items-center gap-2">
+              <TabsTrigger value="compliance" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
                 {getTabIcon('compliance')}
                 <FileText className="w-4 h-4" />
-                Compliance
+                <span className="hidden sm:inline">Compliance</span>
+                <span className="sm:hidden text-xs">Compliance</span>
               </TabsTrigger>
             </TabsList>
 

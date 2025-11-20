@@ -58,29 +58,6 @@ const ProjectDetailsTab: React.FC<ProjectDetailsTabProps> = ({ formData, handleI
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="environmentalImpact">Environmental Impact Assessment *</Label>
-            <Textarea
-              id="environmentalImpact"
-              value={formData.environmentalImpact}
-              onChange={(e) => handleInputChange('environmentalImpact', e.target.value)}
-              placeholder="Describe the potential environmental impacts of your project"
-              rows={3}
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="mitigationMeasures">Mitigation Measures *</Label>
-            <Textarea
-              id="mitigationMeasures"
-              value={formData.mitigationMeasures}
-              onChange={(e) => handleInputChange('mitigationMeasures', e.target.value)}
-              placeholder="Describe the measures you will implement to minimize environmental impacts"
-              rows={3}
-              required
-            />
-          </div>
         </CardContent>
       </Card>
     </div>

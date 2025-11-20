@@ -164,40 +164,6 @@ const ProjectAndSpecificDetailsTab: React.FC<ProjectAndSpecificDetailsTabProps> 
         </CardContent>
       </Card>
 
-      {/* Environmental Assessment */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-primary" />
-            Environmental Assessment
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <Label htmlFor="environmentalImpact">Environmental Impact Assessment *</Label>
-            <Textarea
-              id="environmentalImpact"
-              value={formData.environmentalImpact || ''}
-              onChange={(e) => handleInputChange('environmentalImpact', e.target.value)}
-              placeholder="Describe the potential environmental impacts of your project"
-              rows={3}
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="mitigationMeasures">Mitigation Measures *</Label>
-            <Textarea
-              id="mitigationMeasures"
-              value={formData.mitigationMeasures || ''}
-              onChange={(e) => handleInputChange('mitigationMeasures', e.target.value)}
-              placeholder="Describe the measures you will implement to minimize environmental impacts"
-              rows={3}
-              required
-            />
-          </div>
-        </CardContent>
-      </Card>
 
     </div>
   );

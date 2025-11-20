@@ -1,259 +1,284 @@
-
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CreditCard, Calendar, DollarSign, FileText, ChevronsUpDown, ChevronDown } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { InvoiceDetailView } from './InvoiceDetailView';
 
 interface Invoice {
   id: string;
   invoice_number: string;
-  amount: number;
-  currency: string;
-  status: string;
-  due_date: string;
-  paid_date?: string;
-  created_at: string;
-  permit_applications?: {
-    title: string;
-    permit_number?: string;
-  };
-  permit_activities?: {
-    activity_type: string;
-  };
+  date: string;
+  yourRef: string;
+  contact: string;
+  telephone: string;
+  email: string;
+  client: string;
+  clientAddress: string;
+  items: {
+    quantity: number;
+    itemCode: string;
+    description: string;
+    unitPrice: number;
+    disc: number;
+    totalPrice: number;
+  }[];
+  subtotal: number;
+  freight: number;
+  gst: number;
+  totalInc: number;
+  paidToDate: number;
+  balanceDue: number;
+  status: 'paid' | 'unpaid' | 'partial';
+  permitType: string;
+  activityLevel: string;
+  prescribedActivity: string;
 }
 
+// Mock data for 2 invoices with 3 permit applications
+const MOCK_INVOICES: Invoice[] = [
+  {
+    id: '1',
+    invoice_number: '23-F1-3-188',
+    date: '20/03/2025',
+    yourRef: 'EP-L3(07B)',
+    contact: 'Kavau Diagoro, Manager Revenue',
+    telephone: '(675) 3014665/3014614',
+    email: 'revenuemanager@cepa.gov.pg',
+    client: 'Morobe Consolidates Goldfields Limited',
+    clientAddress: 'P.O Box 4018 Lae, Morobe\nPapua New Guinea',
+    items: [
+      {
+        quantity: 1,
+        itemCode: 'F1',
+        description: 'Annual Fee - Level 3 Mining Operation',
+        unitPrice: 543170.00,
+        disc: 0,
+        totalPrice: 543170.00
+      }
+    ],
+    subtotal: 543170.00,
+    freight: 0.00,
+    gst: 0.00,
+    totalInc: 543170.00,
+    paidToDate: 0.00,
+    balanceDue: 543170.00,
+    status: 'unpaid',
+    permitType: 'Environment Permit',
+    activityLevel: 'Level 3',
+    prescribedActivity: 'Mining and Quarrying Operations'
+  },
+  {
+    id: '2',
+    invoice_number: '23-F2-2A-095',
+    date: '15/03/2025',
+    yourRef: 'EP-L2A(04C)',
+    contact: 'Kavau Diagoro, Manager Revenue',
+    telephone: '(675) 3014665/3014614',
+    email: 'revenuemanager@cepa.gov.pg',
+    client: 'Pacific Industrial Services Ltd',
+    clientAddress: 'Section 117, Allotment 23\nPort Moresby, NCD\nPapua New Guinea',
+    items: [
+      {
+        quantity: 1,
+        itemCode: 'F2',
+        description: 'Annual Fee - Level 2A Waste Management',
+        unitPrice: 125500.00,
+        disc: 0,
+        totalPrice: 125500.00
+      }
+    ],
+    subtotal: 125500.00,
+    freight: 0.00,
+    gst: 0.00,
+    totalInc: 125500.00,
+    paidToDate: 62750.00,
+    balanceDue: 62750.00,
+    status: 'partial',
+    permitType: 'Environment Permit',
+    activityLevel: 'Level 2A',
+    prescribedActivity: 'Waste Treatment and Disposal Facility'
+  },
+  {
+    id: '3',
+    invoice_number: '23-F3-1-042',
+    date: '10/03/2025',
+    yourRef: 'EP-L1(02A)',
+    contact: 'Kavau Diagoro, Manager Revenue',
+    telephone: '(675) 3014665/3014614',
+    email: 'revenuemanager@cepa.gov.pg',
+    client: 'Coastal Aquaculture PNG',
+    clientAddress: 'P.O Box 892\nMadang, Madang Province\nPapua New Guinea',
+    items: [
+      {
+        quantity: 1,
+        itemCode: 'F3',
+        description: 'Annual Fee - Level 1 Aquaculture Operation',
+        unitPrice: 45200.00,
+        disc: 0,
+        totalPrice: 45200.00
+      }
+    ],
+    subtotal: 45200.00,
+    freight: 0.00,
+    gst: 0.00,
+    totalInc: 45200.00,
+    paidToDate: 45200.00,
+    balanceDue: 0.00,
+    status: 'paid',
+    permitType: 'Environment Permit',
+    activityLevel: 'Level 1',
+    prescribedActivity: 'Aquaculture and Fish Farming'
+  }
+];
+
 export function InvoiceManagement() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [invoices] = useState<Invoice[]>(MOCK_INVOICES);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
-
-  const fetchInvoices = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('invoices')
-        .select(`
-          *,
-          permit_activities (
-            activity_type
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Transform data to include permit_applications info
-      const transformedData = await Promise.all((data || []).map(async (invoice: any) => {
-        let permitInfo = null;
-        if (invoice.permit_id) {
-          const { data: permitData } = await (supabase as any)
-            .from('permit_applications')
-            .select('title, permit_number')
-            .eq('id', invoice.permit_id)
-            .single();
-          permitInfo = permitData;
-        }
-        return {
-          ...invoice,
-          permit_applications: permitInfo
-        };
-      }));
-
-      setInvoices(transformedData);
-    } catch (error) {
-      console.error('Error fetching invoices:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load invoices",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchInvoices();
-  }, [user]);
 
   const getStatusColor = (status: string) => {
     const colors = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      paid: 'bg-green-100 text-green-800',
-      overdue: 'bg-red-100 text-red-800',
-      cancelled: 'bg-gray-100 text-gray-800',
+      unpaid: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+      paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      partial: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
     };
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const handlePayment = async (invoiceId: string) => {
-    // This would integrate with a payment gateway
-    // For now, we'll just show a placeholder message
+  const getStatusLabel = (status: string) => {
+    const labels = {
+      unpaid: 'Unpaid',
+      paid: 'Paid',
+      partial: 'Partial Payment',
+    };
+    return labels[status as keyof typeof labels] || status;
+  };
+
+  const handlePayment = (invoice: Invoice) => {
     toast({
       title: "Payment Gateway",
-      description: "Payment functionality will be integrated with your preferred payment provider",
+      description: `Initiating payment for invoice ${invoice.invoice_number}`,
     });
   };
 
-  if (loading) {
-    return <div className="flex justify-center p-8">Loading invoices...</div>;
+  const filteredInvoices = invoices.filter(invoice => {
+    const matchesSearch = 
+      invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.prescribedActivity.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  if (selectedInvoice) {
+    return (
+      <InvoiceDetailView
+        invoice={selectedInvoice}
+        onBack={() => setSelectedInvoice(null)}
+        onPayment={() => handlePayment(selectedInvoice)}
+      />
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-forest-800">Invoice Management</h2>
-          <p className="text-forest-600 font-semibold">View and pay your permit-related fees</p>
+          <h2 className="text-2xl font-bold">Invoice Management</h2>
+          <p className="text-muted-foreground">View and manage your permit-related invoices</p>
         </div>
       </div>
 
-      {invoices.length === 0 ? (
-        <Card className="border-forest-200">
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by invoice number, client, or activity..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="unpaid">Unpaid</SelectItem>
+                <SelectItem value="partial">Partial Payment</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Invoice List */}
+      {filteredInvoices.length === 0 ? (
+        <Card>
           <CardContent className="py-12 text-center">
-            <CreditCard className="w-16 h-16 mx-auto mb-4 text-forest-400" />
-            <h3 className="text-lg font-semibold mb-2 text-forest-800">No Invoices Found</h3>
-            <p className="text-forest-600">Invoices will appear here when permit fees are generated</p>
+            <p className="text-muted-foreground">No invoices found matching your criteria</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-8"></TableHead>
-                  <TableHead>Invoice Number</TableHead>
-                  <TableHead>Permit/Activity</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Invoice Number</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Prescribed Activity</TableHead>
+                <TableHead>Activity Level</TableHead>
+                <TableHead>Permit Type</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredInvoices.map((invoice) => (
+                <TableRow key={invoice.id}>
+                  <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                  <TableCell>{invoice.client}</TableCell>
+                  <TableCell>{invoice.prescribedActivity}</TableCell>
+                  <TableCell>{invoice.activityLevel}</TableCell>
+                  <TableCell>{invoice.permitType}</TableCell>
+                  <TableCell className="text-right font-semibold">
+                    K{invoice.balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(invoice.status)}>
+                      {getStatusLabel(invoice.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSelectedInvoice(invoice)}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invoices.map((invoice) => (
-                  <TableRow 
-                    key={invoice.id} 
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => setSelectedInvoice(selectedInvoice?.id === invoice.id ? null : invoice)}
-                  >
-                    <TableCell>
-                      {selectedInvoice?.id === invoice.id ? (
-                        <ChevronDown className="w-4 h-4 text-primary" />
-                      ) : (
-                        <ChevronsUpDown className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">#{invoice.invoice_number}</TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div>{invoice.permit_applications?.title || 'General Fee'}</div>
-                        {invoice.permit_activities && (
-                          <div className="text-sm text-muted-foreground">
-                            {invoice.permit_activities.activity_type.replace('_', ' ')}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {invoice.currency} {invoice.amount.toFixed(2)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(invoice.status)}>
-                        {invoice.status.toUpperCase()}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{new Date(invoice.due_date).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      {invoice.status === 'pending' && (
-                        <Button
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePayment(invoice.id);
-                          }}
-                          className="bg-gradient-to-r from-forest-600 to-nature-600 hover:from-forest-700 hover:to-nature-700"
-                        >
-                          <CreditCard className="w-4 h-4 mr-1" />
-                          Pay Now
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-
-          {selectedInvoice && (
-            <Card className="border-forest-200">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <CreditCard className="w-5 h-5 mr-2" />
-                  Invoice Details - #{selectedInvoice.invoice_number}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Invoice Number</label>
-                      <p className="text-sm font-medium">#{selectedInvoice.invoice_number}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Related Permit</label>
-                      <p className="text-sm">{selectedInvoice.permit_applications?.title || 'General Fee'}</p>
-                    </div>
-                    {selectedInvoice.permit_activities && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Activity</label>
-                        <p className="text-sm">{selectedInvoice.permit_activities.activity_type.replace('_', ' ')}</p>
-                      </div>
-                    )}
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Status</label>
-                      <Badge className={getStatusColor(selectedInvoice.status)}>
-                        {selectedInvoice.status.toUpperCase()}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Amount</label>
-                      <p className="text-2xl font-bold text-forest-800">
-                        {selectedInvoice.currency} {selectedInvoice.amount.toFixed(2)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Issue Date</label>
-                      <p className="text-sm">{new Date(selectedInvoice.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Due Date</label>
-                      <p className="text-sm">{new Date(selectedInvoice.due_date).toLocaleDateString()}</p>
-                    </div>
-                    {selectedInvoice.paid_date && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Paid Date</label>
-                        <p className="text-sm">{new Date(selectedInvoice.paid_date).toLocaleDateString()}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   );

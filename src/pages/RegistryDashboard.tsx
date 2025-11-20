@@ -2,6 +2,8 @@ import { useState, useMemo } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { RegistrySidebar } from "@/components/registry/RegistrySidebar";
 import { InitialAssessmentsList } from "@/components/registry/InitialAssessmentsList";
+import { EntitiesList } from "@/components/registry/EntitiesList";
+import { PermitsList } from "@/components/registry/PermitsList";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,8 @@ import { PermitSurrenderReview } from "@/components/registry/PermitSurrenderRevi
 import { PermitAmalgamationReview } from "@/components/registry/PermitAmalgamationReview";
 import { PermitComplianceReview } from "@/components/registry/PermitComplianceReview";
 import { PermitEnforcementReview } from "@/components/registry/PermitEnforcementReview";
+import { PermitApplicationsMap } from "@/components/public/PermitApplicationsMap";
+import { RegistryComplianceReporting } from "@/components/registry/RegistryComplianceReporting";
 
 const RegistryDashboard = () => {
   const { profile } = useAuth();
@@ -164,6 +168,12 @@ const RegistryDashboard = () => {
           </Card>
                  </div>
 
+                 {/* Permit Applications Map */}
+                 <PermitApplicationsMap 
+                   showAllApplications={true}
+                   defaultStatuses={['approved', 'pending', 'under_review']}
+                 />
+
                  {/* Recent Activities */}
                  <Card>
                   <CardHeader>
@@ -252,7 +262,10 @@ const RegistryDashboard = () => {
             )}
 
             {activeTab === 'intent-reviews' && <IntentApplicationReview />}
+            {activeTab === 'compliance-reporting' && <RegistryComplianceReporting />}
             {activeTab === 'permit-reviews' && <PermitApplicationReview />}
+            {activeTab === 'entities' && <EntitiesList />}
+            {activeTab === 'permits' && <PermitsList />}
             {activeTab === 'permit-amalgamation' && <PermitAmalgamationReview />}
             {activeTab === 'permit-amendments' && <PermitAmendmentReview />}
             {activeTab === 'permit-compliance' && <PermitComplianceReview />}

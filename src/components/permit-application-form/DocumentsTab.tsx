@@ -137,7 +137,9 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
   const validation = validateRequiredDocuments();
   
   // Group requirements by type
+  // Base requirements (uploadable documents)
   const baseRequirements = requirements.filter(req => req.document_type === 'base');
+  // Activity requirements (informational checklist only)
   const activityRequirements = requirements.filter(req => req.document_type === 'activity');
 
   return (
@@ -149,6 +151,15 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {requirements.length === 0 && !requirementsLoading && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Please select entity type, activity level, and prescribed activity in the Classification tab to see required documents.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {!validation.isValid && requirements.length > 0 && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -253,19 +264,19 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
               </div>
             )}
 
-            {/* Activity Requirements */}
+            {/* Activity-Specific Requirements - Informational Checklist */}
             {activityRequirements.length > 0 && (
-              <div className="space-y-4 bg-muted/30 p-6 rounded-xl border-l-4 border-l-primary">
+              <div className="space-y-4 bg-muted/30 p-6 rounded-xl border-l-4 border-l-accent">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-primary" />
+                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-accent" />
                   </div>
                   <div className="flex-1">
                     <h4 className="font-semibold text-foreground text-lg">Activity-Specific Requirements</h4>
-                    <p className="text-sm text-muted-foreground">Based on your selected activity and level</p>
+                    <p className="text-sm text-muted-foreground">Information Checklist - Include these details in your Full Permit Application</p>
                   </div>
                   <div className="flex gap-2">
-                    <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                    <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20">
                       Level {activityRequirements[0]?.activity_level}
                     </Badge>
                     {formData.activity_category && (
@@ -273,86 +284,50 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
                     )}
                   </div>
                 </div>
-                {activityRequirements.map((requirement) => {
-                  const isUploaded = isDocumentUploaded(requirement.id);
-                  const status = uploadStatuses.find(s => s.requirement_id === requirement.id);
-                  
-                  return (
-                    <div key={requirement.id} className="bg-background border rounded-lg p-4 space-y-3 shadow-sm">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3 flex-1">
-                          {isUploaded ? (
-                            <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                          ) : (
-                            <Upload className="w-5 h-5 text-muted-foreground mt-0.5" />
-                          )}
-                          <div className="flex-1">
-                            <h5 className="font-medium text-foreground">
-                              {requirement.name}
-                              {requirement.is_mandatory && (
-                                <span className="text-destructive ml-1">*</span>
-                              )}
-                            </h5>
-                            {requirement.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{requirement.description}</p>
-                            )}
-                            <div className="flex gap-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                Level {requirement.activity_level}
-                              </Badge>
-                              {requirement.activity_classification && (
-                                <Badge variant="outline" className="text-xs">
-                                  {requirement.activity_classification}
-                                </Badge>
-                              )}
-                            </div>
-                            {status?.uploaded && status.file_name && (
-                              <p className="text-xs text-green-600 mt-1">✓ {status.file_name}</p>
+                
+                <Alert className="bg-blue-50 border-blue-200">
+                  <AlertCircle className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-900">
+                    The following information must be included in your <strong>Full Permit Application</strong> document. Ensure all items are comprehensively addressed.
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="space-y-2">
+                  {activityRequirements.map((requirement, index) => (
+                    <div 
+                      key={requirement.id} 
+                      className="flex gap-3 p-4 bg-background border rounded-lg hover:border-accent/50 transition-colors"
+                    >
+                      <div className="flex-shrink-0 mt-0.5">
+                        <div className="w-7 h-7 rounded-full border-2 border-accent/60 flex items-center justify-center text-xs font-bold text-accent">
+                          {index + 1}
+                        </div>
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="font-semibold text-foreground flex items-center gap-2">
+                            {requirement.name}
+                            {requirement.is_mandatory && (
+                              <Badge variant="destructive" className="text-xs">Required</Badge>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {requirement.template_path && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => downloadTemplate(requirement.template_path!, requirement.name)}
-                            >
-                              <Download className="w-4 h-4 mr-2" />
-                              Template
-                            </Button>
-                          )}
-                          {isUploaded ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveRequiredDocument(requirement.id)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          ) : (
-                            <>
-                              <input
-                                type="file"
-                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                onChange={(e) => handleRequiredDocumentUpload(e, requirement.id)}
-                                className="hidden"
-                                id={`upload-${requirement.id}`}
-                              />
-                              <Button variant="outline" size="sm" asChild>
-                                <label htmlFor={`upload-${requirement.id}`} className="cursor-pointer">
-                                  <Upload className="w-4 h-4 mr-2" />
-                                  Upload
-                                </label>
-                              </Button>
-                            </>
-                          )}
-                        </div>
+                        {requirement.description && (
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {requirement.description}
+                          </p>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
+                
+                <Alert variant="default" className="bg-amber-50 border-amber-200 mt-4">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-900">
+                    <strong>Important:</strong> Upload your comprehensive Full Permit Application document in the Base Requirements section above. Your document must address all these checklist items to ensure proper environmental assessment and regulatory compliance.
+                  </AlertDescription>
+                </Alert>
               </div>
             )}
           </div>

@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DashboardLayout } from '@/components/Layout/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import ProjectAndSpecificDetailsTab from '@/components/permit-application-form/ProjectAndSpecificDetailsTab';
@@ -14,6 +15,7 @@ import ComplianceTab from '@/components/permit-application-form/ComplianceTab';
 import { ActivityClassificationStep } from '@/components/public/steps/ActivityClassificationStep';
 import { ApplicationFeeStep } from '@/components/public/steps/ApplicationFeeStep';
 import { PublicConsultationStep } from '@/components/public/steps/PublicConsultationStep';
+import { useIntentRegistrations } from '@/hooks/useIntentRegistrations';
 
 import { ReviewSubmitStep } from '@/components/public/steps/ReviewSubmitStep';
 
@@ -37,6 +39,20 @@ interface ComprehensivePermitFormProps {
 export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStandalone = false, draftId }: ComprehensivePermitFormProps) {
   const { toast } = useToast();
   const [applicationNumber, setApplicationNumber] = useState('');
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Fetch user ID
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setUserId(user.id);
+    };
+    fetchUser();
+  }, []);
+
+  // Fetch approved intent registrations
+  const { intents, loading: intentsLoading } = useIntentRegistrations(userId || undefined);
+  const approvedIntents = intents.filter(intent => intent.status === 'approved');
 
   useEffect(() => {
     if (!permitId) {
@@ -77,8 +93,11 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
     entity_id: '', // Add entity_id field
     entity_name: '', // Add entity_name field
     existing_permit_id: null, // Add existing permit reference
+    intent_registration_id: null, // Link to approved intent registration
     permit_category: '',
     permit_type_id: '',
+    permit_type: '',
+    permit_type_specific_data: {},
     // PNG Environment Act 2000 fields - Public Consultation
     public_consultation_proof: [],
     consultation_period_start: '',
@@ -153,8 +172,11 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
               entity_id: data.entity_id || '', // Add entity_id mapping
               entity_name: data.entity_name || '', // Add entity_name mapping
               existing_permit_id: data.existing_permit_id || null, // Add existing permit mapping
+              intent_registration_id: null, // Will be set via form selection
               permit_category: data.permit_category || '',
               permit_type_id: data.permit_type_id || '',
+              permit_type: data.permit_type || '',
+              permit_type_specific_data: data.permit_type_specific || {},
               public_consultation_proof: Array.isArray(data.public_consultation_proof) ? data.public_consultation_proof : [],
               consultation_period_start: data.consultation_period_start || '',
               consultation_period_end: data.consultation_period_end || '',
@@ -693,6 +715,34 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
           readOnly
           className={`mt-1 bg-background/70 border-border/50 ${isStandalone ? 'text-lg' : ''} font-semibold`}
         />
+      </div>
+
+      {/* Intent Registration Selection */}
+      <div className={`${isStandalone ? 'mb-6' : 'mb-4'} p-${isStandalone ? '4' : '3'} bg-primary/5 rounded-lg border border-primary/20`}>
+        <Label htmlFor="intentRegistration" className="text-sm font-medium text-primary">
+          Link to Approved Intent Registration *
+        </Label>
+        <p className="text-xs text-muted-foreground mt-1 mb-3">
+          Select an approved Intent Registration to launch this permit application. This is required to link the records and proceed with the permit process.
+        </p>
+        <Select
+          value={formData.intent_registration_id || 'none'}
+          onValueChange={(value) => handleInputChange('intent_registration_id', value === 'none' ? null : value)}
+          disabled={intentsLoading}
+        >
+          <SelectTrigger id="intentRegistration" className="mt-1 bg-background">
+            <SelectValue placeholder={intentsLoading ? "Loading approved intents..." : approvedIntents.length === 0 ? "No approved intent registrations found" : "Select an approved intent registration"} />
+          </SelectTrigger>
+          <SelectContent className="bg-background z-50">
+            <SelectItem value="none">None - New Application</SelectItem>
+            {approvedIntents.map((intent) => (
+              <SelectItem key={intent.id} value={intent.id}>
+                {intent.entity?.name || 'Unknown Entity'} - {intent.activity_description.substring(0, 50)}
+                {intent.activity_description.length > 50 ? '...' : ''} (Level {intent.activity_level})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="bg-card rounded-lg border border-border p-6">

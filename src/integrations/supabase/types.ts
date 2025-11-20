@@ -457,6 +457,188 @@ export type Database = {
           },
         ]
       }
+      compliance_reports: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_path: string | null
+          id: string
+          permit_id: string
+          report_date: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_path?: string | null
+          id?: string
+          permit_id: string
+          report_date?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_path?: string | null
+          id?: string
+          permit_id?: string
+          report_date?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_reports_permit_id_fkey"
+            columns: ["permit_id"]
+            isOneToOne: false
+            referencedRelation: "permit_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      directorate_approvals: {
+        Row: {
+          application_id: string
+          application_type: string
+          approval_notes: string | null
+          approval_status: string
+          created_at: string
+          docusign_envelope_id: string | null
+          id: string
+          intent_registration_id: string | null
+          letter_signed: boolean | null
+          letter_signed_at: string | null
+          priority: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          submitted_at: string
+          submitted_by: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          application_type: string
+          approval_notes?: string | null
+          approval_status?: string
+          created_at?: string
+          docusign_envelope_id?: string | null
+          id?: string
+          intent_registration_id?: string | null
+          letter_signed?: boolean | null
+          letter_signed_at?: string | null
+          priority?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_at?: string
+          submitted_by: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          application_type?: string
+          approval_notes?: string | null
+          approval_status?: string
+          created_at?: string
+          docusign_envelope_id?: string | null
+          id?: string
+          intent_registration_id?: string | null
+          letter_signed?: boolean | null
+          letter_signed_at?: string | null
+          priority?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_at?: string
+          submitted_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "directorate_approvals_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "permit_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "directorate_approvals_intent_registration_id_fkey"
+            columns: ["intent_registration_id"]
+            isOneToOne: false
+            referencedRelation: "intent_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      directorate_notifications: {
+        Row: {
+          action_required: boolean | null
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          priority: string | null
+          related_application_id: string | null
+          related_approval_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_required?: boolean | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          priority?: string | null
+          related_application_id?: string | null
+          related_approval_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          action_required?: boolean | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          priority?: string | null
+          related_application_id?: string | null
+          related_approval_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "directorate_notifications_related_application_id_fkey"
+            columns: ["related_application_id"]
+            isOneToOne: false
+            referencedRelation: "permit_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "directorate_notifications_related_approval_id_fkey"
+            columns: ["related_approval_id"]
+            isOneToOne: false
+            referencedRelation: "directorate_approvals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           activity_id: string | null
@@ -996,7 +1178,15 @@ export type Database = {
           transportation_cost?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inspections_permit_application_id_fkey"
+            columns: ["permit_application_id"]
+            isOneToOne: false
+            referencedRelation: "permit_applications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       intent_registration_drafts: {
         Row: {
@@ -1479,6 +1669,7 @@ export type Database = {
           hazardous_waste_details: Json | null
           id: string
           infrastructure_details: Json | null
+          intent_registration_id: string | null
           is_draft: boolean | null
           is_frozen: boolean | null
           land_clearing_details: Json | null
@@ -1579,6 +1770,7 @@ export type Database = {
           hazardous_waste_details?: Json | null
           id?: string
           infrastructure_details?: Json | null
+          intent_registration_id?: string | null
           is_draft?: boolean | null
           is_frozen?: boolean | null
           land_clearing_details?: Json | null
@@ -1679,6 +1871,7 @@ export type Database = {
           hazardous_waste_details?: Json | null
           id?: string
           infrastructure_details?: Json | null
+          intent_registration_id?: string | null
           is_draft?: boolean | null
           is_frozen?: boolean | null
           land_clearing_details?: Json | null
@@ -1768,10 +1961,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "permit_applications_permit_type_id_fkey"
-            columns: ["permit_type_id"]
+            foreignKeyName: "permit_applications_intent_registration_id_fkey"
+            columns: ["intent_registration_id"]
             isOneToOne: false
-            referencedRelation: "permit_types"
+            referencedRelation: "intent_registrations"
             referencedColumns: ["id"]
           },
         ]
@@ -1843,7 +2036,7 @@ export type Database = {
       }
       permit_type_fields: {
         Row: {
-          created_at: string | null
+          created_at: string
           field_label: string
           field_name: string
           field_options: Json | null
@@ -1851,15 +2044,15 @@ export type Database = {
           help_text: string | null
           id: string
           is_active: boolean
-          is_mandatory: boolean | null
+          is_mandatory: boolean
           permit_type_id: string
           placeholder: string | null
-          sort_order: number | null
-          updated_at: string | null
+          sort_order: number
+          updated_at: string
           validation_rules: Json | null
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           field_label: string
           field_name: string
           field_options?: Json | null
@@ -1867,15 +2060,15 @@ export type Database = {
           help_text?: string | null
           id?: string
           is_active?: boolean
-          is_mandatory?: boolean | null
+          is_mandatory?: boolean
           permit_type_id: string
           placeholder?: string | null
-          sort_order?: number | null
-          updated_at?: string | null
+          sort_order?: number
+          updated_at?: string
           validation_rules?: Json | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           field_label?: string
           field_name?: string
           field_options?: Json | null
@@ -1883,11 +2076,11 @@ export type Database = {
           help_text?: string | null
           id?: string
           is_active?: boolean
-          is_mandatory?: boolean | null
+          is_mandatory?: boolean
           permit_type_id?: string
           placeholder?: string | null
-          sort_order?: number | null
-          updated_at?: string | null
+          sort_order?: number
+          updated_at?: string
           validation_rules?: Json | null
         }
         Relationships: [
@@ -1903,42 +2096,39 @@ export type Database = {
       permit_types: {
         Row: {
           category: string
-          created_at: string | null
-          description: string | null
+          created_at: string
           display_name: string
           icon_name: string | null
           id: string
-          is_active: boolean | null
+          is_active: boolean
           jsonb_column_name: string
           name: string
-          sort_order: number | null
-          updated_at: string | null
+          sort_order: number
+          updated_at: string
         }
         Insert: {
-          category: string
-          created_at?: string | null
-          description?: string | null
+          category?: string
+          created_at?: string
           display_name: string
           icon_name?: string | null
           id?: string
-          is_active?: boolean | null
+          is_active?: boolean
           jsonb_column_name: string
           name: string
-          sort_order?: number | null
-          updated_at?: string | null
+          sort_order?: number
+          updated_at?: string
         }
         Update: {
           category?: string
-          created_at?: string | null
-          description?: string | null
+          created_at?: string
           display_name?: string
           icon_name?: string | null
           id?: string
-          is_active?: boolean | null
+          is_active?: boolean
           jsonb_column_name?: string
           name?: string
-          sort_order?: number | null
-          updated_at?: string | null
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }

@@ -13,6 +13,7 @@ import RevenueDashboard from "@/pages/RevenueDashboard";
 import ComplianceDashboard from "@/pages/ComplianceDashboard";
 import FinanceDashboard from "@/pages/FinanceDashboard";
 import DirectorateDashboard from "@/pages/DirectorateDashboard";
+import ManagingDirectorDashboard from "@/pages/ManagingDirectorDashboard";
 import EntityRegistration from "@/pages/EntityRegistration";
 import SubmitApplication from "@/pages/SubmitApplication";
 import Applications from "@/pages/Applications";
@@ -36,8 +37,11 @@ import ComplianceReports from "@/pages/permit-management/ComplianceReports";
 import PermitAmalgamation from "@/pages/permit-management/PermitAmalgamation";
 import PermitEnforcementInspections from "@/pages/permit-management/PermitEnforcementInspections";
 import EIAReviewDetail from "@/pages/eia/EIAReviewDetail";
+import { EntityDetail } from "@/pages/registry/EntityDetail";
+import { PermitDetail } from "@/pages/registry/PermitDetail";
 import RegistryApplicationDetail from "@/pages/RegistryApplicationDetail";
 import Inspections from "@/pages/Inspections";
+import EditPermitApplication from "@/pages/EditPermitApplication";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -91,8 +95,8 @@ export const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Index />} />
-      <Route path="/auth" element={!user ? <Auth /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/" element={user ? (profile?.staff_position === 'managing_director' || profile?.email === 'md@cepa.gov.pg' ? <Navigate to="/managing-director-dashboard" replace /> : <Navigate to="/dashboard" replace />) : <Index />} />
+      <Route path="/auth" element={!user ? <Auth /> : (profile?.staff_position === 'managing_director' || profile?.email === 'md@cepa.gov.pg' ? <Navigate to="/managing-director-dashboard" replace /> : <Navigate to="/dashboard" replace />)} />
       
       {/* Dashboard Routes - Main dashboard that redirects to appropriate dashboard */}
       <Route 
@@ -132,6 +136,30 @@ export const AppRoutes = () => {
             allowedUnits={['registry']}
           >
             <RegistryDashboard />
+          </RoleBasedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/registry/entities/:id" 
+        element={
+          <RoleBasedRoute 
+            allowedRoles={['registry', 'admin']}
+            allowedUnits={['registry']}
+          >
+            <EntityDetail />
+          </RoleBasedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/registry/permits/:id" 
+        element={
+          <RoleBasedRoute 
+            allowedRoles={['registry', 'admin']}
+            allowedUnits={['registry']}
+          >
+            <PermitDetail />
           </RoleBasedRoute>
         } 
       />
@@ -181,6 +209,16 @@ export const AppRoutes = () => {
           >
             <DirectorateDashboard />
           </RoleBasedRoute>
+        } 
+      />
+      
+      {/* Managing Director dashboard - for managing_director position or admin@cepa.gov.pg */}
+      <Route 
+        path="/managing-director-dashboard" 
+        element={
+          <ProtectedRoute>
+            <ManagingDirectorDashboard />
+          </ProtectedRoute>
         } 
       />
       
@@ -329,6 +367,7 @@ export const AppRoutes = () => {
       <Route path="/compliance-reports" element={<ProtectedRoute><ComplianceReports /></ProtectedRoute>} />
       <Route path="/permit-amalgamation" element={<ProtectedRoute><PermitAmalgamation /></ProtectedRoute>} />
       <Route path="/permit-management/enforcement-inspections" element={<ProtectedRoute><PermitEnforcementInspections /></ProtectedRoute>} />
+      <Route path="/edit-permit/:id" element={<ProtectedRoute><EditPermitApplication /></ProtectedRoute>} />
 
       {/* Compliance Routes */}
       <Route 

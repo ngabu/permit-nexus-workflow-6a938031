@@ -89,7 +89,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
               Address
             </label>
             <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm min-h-[2.5rem]">
-              {entity.address || 'Not provided'}
+              {entity.postal_address || entity['registered address'] || 'Not provided'}
             </div>
           </div>
         </div>

@@ -12,7 +12,12 @@ import { Leaf, Loader2, Eye, EyeOff } from 'lucide-react';
 function getRedirectPath(profile: any) {
   if (!profile) return '/';
 
-  const { user_type, staff_unit, staff_position } = profile;
+  const { user_type, staff_unit, staff_position, email } = profile;
+
+  // Managing Director override by position or specific email
+  if (staff_position === 'managing_director' || email === 'md@cepa.gov.pg') {
+    return '/managing-director-dashboard';
+  }
 
   if (['super_admin', 'admin'].includes(user_type)) return '/admin';
   if (user_type === 'public') return '/dashboard';

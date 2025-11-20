@@ -18,10 +18,10 @@ const PermitAmendment = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Permit Amendment</h1>
-          <p className="text-muted-foreground">Request changes to existing permit conditions</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Permit Amendment</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Request changes to existing permit conditions</p>
         </div>
 
         <Card>
@@ -113,7 +113,7 @@ const PermitAmendment = () => {
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Button type="submit" className="flex-1">
                   Submit Amendment Request
                 </Button>

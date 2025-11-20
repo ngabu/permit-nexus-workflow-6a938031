@@ -42,9 +42,15 @@ const Index = () => {
     if (loading) return;
     
     if (profile) {
-      // Redirect authenticated users to their dashboard
-      const { user_type, staff_unit, staff_position } = profile;
+      const { user_type, staff_unit, staff_position, email } = profile as any;
+
+      // Managing Director override by position or specific email
+      if (staff_position === 'managing_director' || email === 'md@cepa.gov.pg') {
+        navigate('/managing-director-dashboard', { replace: true });
+        return;
+      }
       
+      // Redirect authenticated users to their dashboard
       if (['super_admin', 'admin'].includes(user_type)) {
         navigate('/admin', { replace: true });
       } else if (user_type === 'public') {

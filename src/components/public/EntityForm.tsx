@@ -149,7 +149,7 @@ export function EntityForm({ entity, onSuccess, onCancel }: EntityFormProps) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="email" className="text-card-foreground">Email</Label>
           <Input
@@ -193,7 +193,7 @@ export function EntityForm({ entity, onSuccess, onCancel }: EntityFormProps) {
 
       {formData.entity_type === 'company' && (
         <>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="registration_number" className="text-card-foreground">Registration Number</Label>
               <Input
@@ -212,7 +212,7 @@ export function EntityForm({ entity, onSuccess, onCancel }: EntityFormProps) {
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="contact_person_phone" className="text-card-foreground">Contact Person Phone</Label>
               <Input

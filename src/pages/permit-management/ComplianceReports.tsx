@@ -56,10 +56,10 @@ const ComplianceReports = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Compliance Reports</h1>
-          <p className="text-muted-foreground">Submit periodic compliance reports as required by your permits</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Compliance Reports</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Submit periodic compliance reports as required by your permits</p>
         </div>
 
         {/* Scheduled Reports */}
@@ -74,19 +74,19 @@ const ComplianceReports = () => {
           <CardContent>
             <div className="space-y-4">
               {scheduledReports.map((report) => (
-                <div key={report.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                  <div className="space-y-1">
-                    <h3 className="font-semibold text-foreground">{report.type}</h3>
-                    <p className="text-sm text-muted-foreground">Permit: {report.permit}</p>
-                    <p className="text-sm text-muted-foreground">Due: {new Date(report.dueDate).toLocaleDateString()}</p>
+                <div key={report.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 border border-border rounded-lg">
+                  <div className="space-y-1 flex-1">
+                    <h3 className="font-semibold text-sm sm:text-base text-foreground">{report.type}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Permit: {report.permit}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Due: {new Date(report.dueDate).toLocaleDateString()}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 justify-between sm:justify-end">
                     <Badge variant={getStatusColor(report.status)}>
                       {report.status === "overdue" && <Clock className="w-3 h-3 mr-1" />}
                       {report.status === "submitted" && <CheckCircle className="w-3 h-3 mr-1" />}
                       {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                     </Badge>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" className="shrink-0">
                       Submit Report
                     </Button>
                   </div>
@@ -206,7 +206,7 @@ const ComplianceReports = () => {
                 </CardContent>
               </Card>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Button type="submit" className="flex-1">
                   Submit Compliance Report
                 </Button>

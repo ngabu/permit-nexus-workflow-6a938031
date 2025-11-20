@@ -1,12 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin } from 'lucide-react';
+import { MapPin, Filter } from 'lucide-react';
 import { usePermitApplications } from '@/hooks/usePermitApplications';
+import { Button } from '@/components/ui/button';
 
 interface PermitApplicationsMapProps {
   onPermitClick?: (permitId: string) => void;
+  showAllApplications?: boolean;
+  defaultStatuses?: string[];
 }
 
 // Status to color mapping
@@ -48,65 +51,85 @@ const getStatusLabel = (status: string): string => {
   }
 };
 
-export function PermitApplicationsMap({ onPermitClick }: PermitApplicationsMapProps) {
+export function PermitApplicationsMap({ 
+  onPermitClick,
+  showAllApplications = false,
+  defaultStatuses = ['approved']
+}: PermitApplicationsMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
   const { applications, loading } = usePermitApplications();
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(defaultStatuses);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
+  // Initialize map once
   useEffect(() => {
-    if (!mapContainer.current || loading) return;
+    if (!mapContainer.current) return;
 
-    // Initialize map only once
-    if (!map.current) {
-      mapboxgl.accessToken = 'pk.eyJ1IjoiZ2FidW5vcm1hbiIsImEiOiJjbWJ0emU0cGEwOHR1MmtxdXh2d2wzOTV5In0.RUVMHkS-KaJ6CGWUiB3s4w';
-      
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/satellite-streets-v12',
-        center: [147, -6], // PNG center
-        zoom: 5.2,
-        interactive: true,
-        dragPan: true,
-        scrollZoom: true,
-        boxZoom: true,
-        dragRotate: true,
-        keyboard: true,
-        doubleClickZoom: true,
-        touchZoomRotate: true,
-        touchPitch: true,
-      });
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZ2FidW5vcm1hbiIsImEiOiJjbWJ0emU0cGEwOHR1MmtxdXh2d2wzOTV5In0.RUVMHkS-KaJ6CGWUiB3s4w';
+    
+    const mapInstance = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      center: [147, -6], // PNG center
+      zoom: 5.2,
+      interactive: true,
+      dragPan: true,
+      scrollZoom: true,
+      boxZoom: true,
+      dragRotate: true,
+      keyboard: true,
+      doubleClickZoom: true,
+      touchZoomRotate: true,
+      touchPitch: true,
+    });
 
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-      // Ensure all interaction handlers are enabled after map load
-      const enableInteractions = () => {
-        map.current?.dragPan.enable();
-        map.current?.scrollZoom.enable();
-        map.current?.boxZoom.enable();
-        map.current?.keyboard.enable();
-        map.current?.doubleClickZoom.enable();
-        map.current?.dragRotate.enable();
-        map.current?.touchZoomRotate.enable();
-      };
-      if (map.current.loaded()) {
-        enableInteractions();
-      } else {
-        map.current.on('load', enableInteractions);
+    mapInstance.on('load', () => {
+      setMapLoaded(true);
+      mapInstance.dragPan.enable();
+      mapInstance.scrollZoom.enable();
+      mapInstance.boxZoom.enable();
+      mapInstance.keyboard.enable();
+      mapInstance.doubleClickZoom.enable();
+      mapInstance.dragRotate.enable();
+      mapInstance.touchZoomRotate.enable();
+    });
+
+    mapInstance.on('error', (e) => {
+      console.error('Mapbox GL JS error:', e?.error || e);
+    });
+
+    map.current = mapInstance;
+
+    return () => {
+      if (map.current) {
+        markers.current.forEach(marker => marker.remove());
+        markers.current = [];
+        map.current.remove();
+        map.current = null;
+        setMapLoaded(false);
       }
+    };
+  }, []);
 
-      // Debug any map interaction issues
-      map.current.on('error', (e) => {
-        console.error('Mapbox GL JS error:', e?.error || e);
-      });
-    }
+  // Manage markers separately
+  useEffect(() => {
+    if (!mapLoaded || !map.current || loading) return;
 
     // Clear existing markers
     markers.current.forEach(marker => marker.remove());
     markers.current = [];
 
+    // Filter applications by selected statuses
+    const filteredApplications = applications.filter(app => 
+      selectedStatuses.includes(app.status)
+    );
+
     // Add markers for each permit application
-    applications.forEach((app) => {
+    filteredApplications.forEach((app) => {
       // Get coordinates from the application
       let lat: number | null = null;
       let lng: number | null = null;
@@ -195,20 +218,17 @@ export function PermitApplicationsMap({ onPermitClick }: PermitApplicationsMapPr
 
       markers.current.push(marker);
     });
+  }, [applications, mapLoaded, selectedStatuses, onPermitClick, loading]);
 
-    return () => {
-      // Don't remove the map on cleanup, just the markers
-      // The map will be cleaned up when the component unmounts
-    };
-  }, [applications, loading, onPermitClick]);
+  const availableStatuses = ['approved', 'pending', 'under_review', 'rejected', 'draft', 'submitted'];
 
-  useEffect(() => {
-    // Cleanup on unmount
-    return () => {
-      markers.current.forEach(marker => marker.remove());
-      map.current?.remove();
-    };
-  }, []);
+  const toggleStatus = (status: string) => {
+    setSelectedStatuses(prev => 
+      prev.includes(status) 
+        ? prev.filter(s => s !== status)
+        : [...prev, status]
+    );
+  };
 
   if (loading) {
     return (
@@ -231,55 +251,87 @@ export function PermitApplicationsMap({ onPermitClick }: PermitApplicationsMapPr
     );
   }
 
+  const filteredApplications = applications.filter(app => 
+    selectedStatuses.includes(app.status)
+  );
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="w-5 h-5" />
-          Permit Applications Map
-          {applications.length > 0 && (
-            <span className="text-sm font-normal text-muted-foreground">
-              ({applications.length} application{applications.length !== 1 ? 's' : ''})
-            </span>
-          )}
-        </CardTitle>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="w-5 h-5" />
+            Permit Applications Map
+            {filteredApplications.length > 0 && (
+              <span className="text-sm font-normal text-muted-foreground">
+                ({filteredApplications.length} application{filteredApplications.length !== 1 ? 's' : ''})
+              </span>
+            )}
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Filter by Status</span>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="relative">
+        {/* Status Filter Buttons */}
+        <div className="mb-4 flex flex-wrap gap-2">
+          {availableStatuses.map(status => (
+            <Button
+              key={status}
+              variant={selectedStatuses.includes(status) ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleStatus(status)}
+              className="capitalize"
+            >
+              <div 
+                className="w-3 h-3 rounded-full mr-2 border border-white" 
+                style={{ backgroundColor: getStatusColor(status) }}
+              />
+              {getStatusLabel(status)}
+            </Button>
+          ))}
+        </div>
+
         <div 
           ref={mapContainer} 
-          className="h-96 w-full rounded-lg border border-border overflow-hidden cursor-grab active:cursor-grabbing pointer-events-auto select-none"
+          className="h-[500px] w-full rounded-lg border border-border overflow-hidden cursor-grab active:cursor-grabbing pointer-events-auto select-none"
           style={{ touchAction: 'none' }}
         />
-        {applications.length === 0 && (
+        {filteredApplications.length === 0 && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
             <div className="text-center text-muted-foreground">
               <MapPin className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>No permit applications to display</p>
+              <p>No permit applications match the selected filters</p>
             </div>
           </div>
         )}
         
         {/* Legend */}
-        <div className="mt-4 flex flex-wrap gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#16a34a' }}></div>
-            <span>Approved</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#3b82f6' }}></div>
-            <span>Under Review</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#f59e0b' }}></div>
-            <span>Needs Clarification</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#dc2626' }}></div>
-            <span>Rejected</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#9ca3af' }}></div>
-            <span>Draft</span>
+        <div className="mt-4 pt-4 border-t">
+          <p className="text-sm font-medium mb-3">Status Legend</p>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: '#16a34a' }}></div>
+              <span className="text-xs">Approved</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: '#3b82f6' }}></div>
+              <span className="text-xs">Under Review</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: '#f59e0b' }}></div>
+              <span className="text-xs">Needs Clarification</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: '#dc2626' }}></div>
+              <span className="text-xs">Rejected</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: '#9ca3af' }}></div>
+              <span className="text-xs">Draft</span>
+            </div>
           </div>
         </div>
       </CardContent>

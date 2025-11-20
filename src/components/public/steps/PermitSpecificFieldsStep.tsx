@@ -54,12 +54,19 @@ export function PermitSpecificFieldsStep({ data, onChange }: PermitSpecificField
 
   const renderDynamicField = (field: any) => {
     const value = dynamicFieldsData[field.field_name] || '';
+    
+    // Determine if field should span full width in grid layout
+    const isFullWidth = field.field_type === 'textarea' || 
+                        field.field_label?.toLowerCase().includes('details') ||
+                        field.field_label?.toLowerCase().includes('description');
+
+    const wrapperClass = isFullWidth ? "space-y-2 col-span-full" : "space-y-2";
 
     switch (field.field_type) {
       case 'text':
       case 'number':
         return (
-          <div key={field.id} className="space-y-2">
+          <div key={field.id} className={wrapperClass}>
             <Label htmlFor={field.field_name}>
               {field.field_label}
               {field.is_mandatory && <span className="text-destructive ml-1">*</span>}
@@ -79,7 +86,7 @@ export function PermitSpecificFieldsStep({ data, onChange }: PermitSpecificField
 
       case 'textarea':
         return (
-          <div key={field.id} className="space-y-2">
+          <div key={field.id} className="space-y-2 col-span-full">
             <Label htmlFor={field.field_name}>
               {field.field_label}
               {field.is_mandatory && <span className="text-destructive ml-1">*</span>}
@@ -99,8 +106,9 @@ export function PermitSpecificFieldsStep({ data, onChange }: PermitSpecificField
 
       case 'select':
         const options = Array.isArray(field.field_options) ? field.field_options : [];
+        const selectWrapperClass = isFullWidth ? "space-y-2 col-span-full" : "space-y-2";
         return (
-          <div key={field.id} className="space-y-2">
+          <div key={field.id} className={selectWrapperClass}>
             <Label htmlFor={field.field_name}>
               {field.field_label}
               {field.is_mandatory && <span className="text-destructive ml-1">*</span>}
@@ -128,7 +136,7 @@ export function PermitSpecificFieldsStep({ data, onChange }: PermitSpecificField
 
       case 'checkbox':
         return (
-          <div key={field.id} className="flex items-start space-x-2">
+          <div key={field.id} className="flex items-start space-x-2 col-span-full">
             <Checkbox
               id={field.field_name}
               checked={!!value}
@@ -148,7 +156,7 @@ export function PermitSpecificFieldsStep({ data, onChange }: PermitSpecificField
 
       case 'date':
         return (
-          <div key={field.id} className="space-y-2">
+          <div key={field.id} className={wrapperClass}>
             <Label htmlFor={field.field_name}>
               {field.field_label}
               {field.is_mandatory && <span className="text-destructive ml-1">*</span>}
@@ -338,11 +346,15 @@ export function PermitSpecificFieldsStep({ data, onChange }: PermitSpecificField
                   Complete the following fields for your {selectedPermitType.display_name.toLowerCase()} permit
                 </p>
               </div>
-              {fields.map((field) => (
-                <div key={field.id}>
-                  {renderDynamicField(field)}
-                </div>
-              ))}
+              <div 
+                className={
+                  ['Water Extraction Permit', 'Water Investigation Permit', 'Pesticide Permit'].includes(selectedPermitType.display_name)
+                    ? 'grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4'
+                    : 'space-y-6'
+                }
+              >
+                {fields.map((field) => renderDynamicField(field))}
+              </div>
             </div>
           )}
         </div>

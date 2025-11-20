@@ -228,38 +228,46 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
       </div>
 
       <Tabs defaultValue="project" className="w-full">
-        <TabsList className="grid w-full grid-cols-8 bg-glass border-glass">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-1 bg-glass border-glass h-auto">
           <TabsTrigger value="project" className="text-xs flex flex-col items-center gap-1 py-2">
             <Building className="w-4 h-4" />
-            <span>Project</span>
+            <span className="hidden sm:inline">Project</span>
+            <span className="sm:hidden">Proj</span>
           </TabsTrigger>
           <TabsTrigger value="location" className="text-xs flex flex-col items-center gap-1 py-2">
             <MapPin className="w-4 h-4" />
-            <span>Location</span>
+            <span className="hidden sm:inline">Location</span>
+            <span className="sm:hidden">Loc</span>
           </TabsTrigger>
           <TabsTrigger value="consultation" className="text-xs flex flex-col items-center gap-1 py-2">
             <Users className="w-4 h-4" />
-            <span>Consultation</span>
+            <span className="hidden sm:inline">Consultation</span>
+            <span className="sm:hidden">Consult</span>
           </TabsTrigger>
           <TabsTrigger value="documents" className="text-xs flex flex-col items-center gap-1 py-2">
             <FileText className="w-4 h-4" />
-            <span>Documents</span>
+            <span className="hidden sm:inline">Documents</span>
+            <span className="sm:hidden">Docs</span>
           </TabsTrigger>
           <TabsTrigger value="classification" className="text-xs flex flex-col items-center gap-1 py-2">
             <Activity className="w-4 h-4" />
-            <span>Classification</span>
+            <span className="hidden sm:inline">Classification</span>
+            <span className="sm:hidden">Class</span>
           </TabsTrigger>
           <TabsTrigger value="compliance" className="text-xs flex flex-col items-center gap-1 py-2">
             <CheckCircle className="w-4 h-4" />
-            <span>Compliance</span>
+            <span className="hidden sm:inline">Compliance</span>
+            <span className="sm:hidden">Comp</span>
           </TabsTrigger>
           <TabsTrigger value="fees" className="text-xs flex flex-col items-center gap-1 py-2">
             <DollarSign className="w-4 h-4" />
-            <span>Fees</span>
+            <span className="hidden sm:inline">Fees</span>
+            <span className="sm:hidden">Fees</span>
           </TabsTrigger>
           <TabsTrigger value="review" className="text-xs flex flex-col items-center gap-1 py-2">
             <CheckCircle className="w-4 h-4" />
-            <span>Review</span>
+            <span className="hidden sm:inline">Review</span>
+            <span className="sm:hidden">Rev</span>
           </TabsTrigger>
         </TabsList>
 

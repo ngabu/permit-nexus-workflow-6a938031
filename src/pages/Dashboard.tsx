@@ -66,6 +66,23 @@ const Dashboard = () => {
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Redirect to appropriate dashboard based on user role
+  useEffect(() => {
+    const checkAndRedirect = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user?.email === 'md@cepa.gov.pg' || profile?.staff_position === 'managing_director') {
+        navigate('/managing-director-dashboard', { replace: true });
+        return;
+      }
+      // Add other role-based redirects here if needed
+    };
+    
+    if (profile) {
+      checkAndRedirect();
+    }
+  }, [profile, navigate]);
+
   useEffect(() => {
     fetchDashboardData();
   }, []);

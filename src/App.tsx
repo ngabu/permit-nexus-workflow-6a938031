@@ -23,6 +23,7 @@ import ComplianceDashboard from "./pages/ComplianceDashboard";
 import RevenueDashboard from "./pages/RevenueDashboard";
 import FinanceDashboard from "./pages/FinanceDashboard";
 import DirectorateDashboard from "./pages/DirectorateDashboard";
+import ManagingDirectorDashboard from "./pages/ManagingDirectorDashboard";
 import Revenue from "./pages/Revenue";
 import Finance from "./pages/Finance";
 import Compliance from "./pages/Compliance";
@@ -30,6 +31,7 @@ import UserManagement from "./pages/UserManagement";
 import RegistryApplicationDetail from "./pages/RegistryApplicationDetail";
 import SubmitApplication from "./pages/SubmitApplication";
 import ComplianceAssessmentDetail from "./pages/ComplianceAssessmentDetail";
+import EditPermitApplication from "./pages/EditPermitApplication";
 
 const queryClient = new QueryClient();
 
@@ -222,6 +224,17 @@ function App() {
               />
 
               <Route
+                path="/managing-director-dashboard"
+                element={
+                  <ProtectedRoute
+                    allowedRoles={['public', 'staff', 'admin', 'super_admin']}
+                  >
+                    <ManagingDirectorDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
                 path="/ComplianceDashboard"
                 element={
                   <ProtectedRoute {...ROUTE_CONFIG.COMPLIANCE_MANAGEMENT}>
@@ -266,6 +279,15 @@ function App() {
                 element={
                   <ProtectedRoute {...ROUTE_CONFIG.PUBLIC}>
                     <Profile />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/edit-permit/:id"
+                element={
+                  <ProtectedRoute {...ROUTE_CONFIG.PUBLIC}>
+                    <EditPermitApplication />
                   </ProtectedRoute>
                 }
               />

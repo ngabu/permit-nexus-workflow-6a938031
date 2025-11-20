@@ -36,10 +36,10 @@ const PermitAmalgamation = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Permit Amalgamation</h1>
-          <p className="text-muted-foreground">Combine multiple permits into a single consolidated permit</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Permit Amalgamation</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Combine multiple permits into a single consolidated permit</p>
         </div>
 
         <Alert>
@@ -198,7 +198,7 @@ const PermitAmalgamation = () => {
                 </CardContent>
               </Card>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Button type="submit" className="flex-1" disabled={selectedPermits.length < 2}>
                   Submit Amalgamation Application
                 </Button>

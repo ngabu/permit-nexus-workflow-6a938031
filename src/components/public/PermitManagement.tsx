@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,9 +40,9 @@ export function PermitManagement({ onNavigateToNewApplication }: PermitManagemen
   const [selectedPermit, setSelectedPermit] = useState<Permit | null>(null);
   const [selectedPermitForPreview, setSelectedPermitForPreview] = useState<Permit | null>(null);
   const [showActivities, setShowActivities] = useState(false);
-  const [editingPermitId, setEditingPermitId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchPermits = async () => {
     if (!user) return;
@@ -86,19 +87,16 @@ export function PermitManagement({ onNavigateToNewApplication }: PermitManagemen
   };
 
   const handleEditApplication = (permit: Permit) => {
-    setEditingPermitId(permit.id);
-    setShowForm(true);
+    navigate(`/edit-permit/${permit.id}`);
   };
 
   const handleFormSuccess = () => {
     setShowForm(false);
-    setEditingPermitId(null);
     fetchPermits();
   };
 
   const handleFormCancel = () => {
     setShowForm(false);
-    setEditingPermitId(null);
   };
 
   const handleDeleteApplication = async (permit: Permit) => {
@@ -158,18 +156,6 @@ export function PermitManagement({ onNavigateToNewApplication }: PermitManagemen
           <Plus className="w-4 h-4 mr-2" />
           New Application
         </Button>
-        <Dialog open={showForm} onOpenChange={setShowForm}>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Edit Application</DialogTitle>
-            </DialogHeader>
-            <ComprehensivePermitForm
-              permitId={editingPermitId || undefined}
-              onSuccess={handleFormSuccess}
-              onCancel={handleFormCancel}
-            />
-          </DialogContent>
-        </Dialog>
       </div>
 
       {permits.length === 0 ? (

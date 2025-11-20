@@ -24,7 +24,7 @@ export function AppSidebar() {
   const { user, profile, signOut } = useAuth();
   const [openMenus, setOpenMenus] = useState<string[]>([]);
 
-  const menuItems = getMenuItemsForRole(profile?.role, profile?.operational_unit);
+  const menuItems = getMenuItemsForRole(profile?.role, profile?.operational_unit, profile?.staff_position);
 
   const toggleMenu = (title: string) => {
     setOpenMenus(prev =>
@@ -56,7 +56,8 @@ export function AppSidebar() {
       <SidebarContent className="p-4">
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground text-xs uppercase tracking-wider mb-2 font-semibold">
-            {['registry', 'compliance', 'finance', 'revenue', 'directorate'].includes(profile?.role || '') ? 'Staff Navigation' :
+            {profile?.staff_position === 'managing_director' ? 'Executive Navigation' :
+              ['registry', 'compliance', 'finance', 'revenue', 'directorate'].includes(profile?.role || '') ? 'Staff Navigation' :
               profile?.role === 'admin' ? 'Admin Navigation' :
                 'Main Navigation'}
           </SidebarGroupLabel>

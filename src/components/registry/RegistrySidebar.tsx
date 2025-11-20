@@ -33,7 +33,9 @@ import {
   Gavel,
   RotateCw,
   FileX,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Building,
+  FileCheck
 } from "lucide-react"
 import { useState } from "react"
 import { useUnitNotifications } from "@/hooks/useUnitNotifications"
@@ -49,6 +51,10 @@ interface RegistryNavigationItem {
 
 const registryNavigationItems: RegistryNavigationItem[] = [
   { title: "Dashboard", value: "dashboard", icon: LayoutDashboard },
+  { title: "Compliance Reporting", value: "compliance-reporting", icon: FileCheck },
+]
+
+const endMenuItems: RegistryNavigationItem[] = [
   { title: "Team Management", value: "team", icon: Users, managerOnly: true },
   { title: "Reports", value: "reports", icon: BarChart3 },
   { title: "Notifications", value: "notifications", icon: Bell },
@@ -69,6 +75,7 @@ export function RegistrySidebar({ activeTab, onTabChange }: RegistrySidebarProps
   const { notifications } = useUnitNotifications('registry')
   const { state, isMobile } = useSidebar()
   const [applicationsOpen, setApplicationsOpen] = useState(false)
+  const [entitiesPermitsOpen, setEntitiesPermitsOpen] = useState(false)
   
   const isManager = profile?.staff_position && ['manager', 'director', 'managing_director'].includes(profile.staff_position)
   const unreadCount = notifications.filter(n => !n.is_read).length
@@ -141,6 +148,51 @@ export function RegistrySidebar({ activeTab, onTabChange }: RegistrySidebarProps
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Entities and Permits with submenu */}
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={() => setEntitiesPermitsOpen(!entitiesPermitsOpen)}
+                  className="w-full text-white/80 hover:bg-white/10 hover:text-white transition-all duration-200"
+                >
+                  <Building className="w-5 h-5 shrink-0" />
+                  {!isCollapsed && (
+                    <>
+                      <span className="ml-3 flex-1 text-left">Entities and Permits</span>
+                      {entitiesPermitsOpen ? 
+                        <ChevronDown className="w-4 h-4" /> : 
+                        <ChevronRight className="w-4 h-4" />
+                      }
+                    </>
+                  )}
+                </SidebarMenuButton>
+                {entitiesPermitsOpen && !isCollapsed && (
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild>
+                        <button
+                          onClick={() => onTabChange('entities')}
+                          className={`w-full ${getNavCls(activeTab === 'entities')}`}
+                        >
+                          <Building className="w-4 h-4 shrink-0" />
+                          <span className="ml-2">Entities</span>
+                        </button>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild>
+                        <button
+                          onClick={() => onTabChange('permits')}
+                          className={`w-full ${getNavCls(activeTab === 'permits')}`}
+                        >
+                          <CheckCircle className="w-4 h-4 shrink-0" />
+                          <span className="ml-2">Permits</span>
+                        </button>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                )}
+              </SidebarMenuItem>
 
               {/* Applications Reviews with submenu */}
               <SidebarMenuItem>
@@ -263,6 +315,32 @@ export function RegistrySidebar({ activeTab, onTabChange }: RegistrySidebarProps
                   </SidebarMenuSub>
                 )}
               </SidebarMenuItem>
+
+              {/* End Menu Items - Team Management, Reports, Notifications */}
+              {endMenuItems
+                .filter(item => !item.managerOnly || isManager)
+                .map((item) => (
+                  <SidebarMenuItem key={item.value}>
+                    <SidebarMenuButton asChild>
+                      <button
+                        onClick={() => onTabChange(item.value)}
+                        className={`w-full ${getNavCls(activeTab === item.value)}`}
+                      >
+                        <item.icon className="w-5 h-5 shrink-0" />
+                        {!isCollapsed && (
+                          <>
+                            <span className="ml-3 flex-1 text-left">{item.title}</span>
+                            {item.value === 'notifications' && unreadCount > 0 && (
+                              <span className="bg-white/30 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center backdrop-blur-sm">
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </button>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

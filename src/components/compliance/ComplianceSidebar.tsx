@@ -50,7 +50,11 @@ interface ComplianceNavigationItem {
 
 const complianceNavigationItems: ComplianceNavigationItem[] = [
   { title: "Dashboard", value: "dashboard", icon: LayoutDashboard },
+  { title: "Compliance Reporting", value: "compliance-reporting", icon: FileText },
   { title: "Inspections", value: "inspections", icon: ClipboardCheck },
+]
+
+const endMenuItems: ComplianceNavigationItem[] = [
   { title: "Team Management", value: "team", icon: Users, managerOnly: true },
   { title: "Reports", value: "reports", icon: BarChart3 },
   { title: "Notifications", value: "notifications", icon: Bell },
@@ -95,9 +99,13 @@ export function ComplianceSidebar({ activeTab, onTabChange }: ComplianceSidebarP
     !item.managerOnly || isManager
   )
 
+  const filteredEndItems = endMenuItems.filter(item => 
+    !item.managerOnly || isManager
+  )
+
   return (
     <Sidebar
-      className="w-64 border-r border-white/30 bg-primary/95 backdrop-blur-2xl shadow-xl"
+      className="border-r border-white/30 bg-primary/95 backdrop-blur-2xl shadow-xl"
       collapsible="icon"
     >
       <SidebarContent className="p-0 bg-gradient-to-b from-primary/90 to-primary/80 backdrop-blur-2xl">
@@ -265,6 +273,30 @@ export function ComplianceSidebar({ activeTab, onTabChange }: ComplianceSidebarP
                   </SidebarMenuSub>
                 )}
               </SidebarMenuItem>
+
+              {/* End Menu Items - Team Management, Reports, Notifications */}
+              {filteredEndItems.map((item) => (
+                <SidebarMenuItem key={item.value}>
+                  <SidebarMenuButton asChild>
+                    <button
+                      onClick={() => onTabChange(item.value)}
+                      className={`w-full ${getNavCls(activeTab === item.value)}`}
+                    >
+                      <item.icon className="w-5 h-5 shrink-0" />
+                      {!isCollapsed && (
+                        <>
+                          <span className="ml-3 flex-1 text-left">{item.title}</span>
+                          {item.value === 'notifications' && unreadCount > 0 && (
+                            <span className="bg-white/30 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center backdrop-blur-sm">
+                              {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
