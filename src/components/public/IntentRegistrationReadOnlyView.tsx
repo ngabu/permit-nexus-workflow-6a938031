@@ -313,21 +313,25 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
         </div>
 
         {/* Official Feedback - Print */}
-        {intent.status !== 'pending' && intent.review_notes && (
-          <div className="print-section">
-            <h3 className="print-section-title">Official Feedback from CEPA</h3>
-            {intent.reviewed_at && (
-              <p className="text-sm text-gray-600 mb-2">
-                Reviewed on {format(new Date(intent.reviewed_at), 'MMMM dd, yyyy')}
-                {intent.reviewer && ` by ${intent.reviewer.first_name} ${intent.reviewer.last_name}`}
-              </p>
-            )}
-            <div className="print-field">
-              <p className="print-field-label">Feedback Notes</p>
-              <p className="print-field-value whitespace-pre-wrap">{intent.review_notes}</p>
-            </div>
-          </div>
-        )}
+        <div className="print-section">
+          <h3 className="print-section-title">Official Feedback from CEPA</h3>
+          {intent.status !== 'pending' && intent.review_notes ? (
+            <>
+              {intent.reviewed_at && (
+                <p className="text-sm text-gray-600 mb-2">
+                  Reviewed on {format(new Date(intent.reviewed_at), 'MMMM dd, yyyy')}
+                  {intent.reviewer && ` by ${intent.reviewer.first_name} ${intent.reviewer.last_name}`}
+                </p>
+              )}
+              <div className="print-field">
+                <p className="print-field-label">Feedback Notes</p>
+                <p className="print-field-value whitespace-pre-wrap">{intent.review_notes}</p>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-gray-500 italic">No official feedback provided yet.</p>
+          )}
+        </div>
       </div>
       <Card className="bg-glass/50 backdrop-blur-sm border-glass print:hidden">
         <CardHeader className="bg-primary/10 print:hidden">
