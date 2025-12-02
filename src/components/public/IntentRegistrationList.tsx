@@ -119,9 +119,9 @@ export function IntentRegistrationList() {
         </Card>
       ) : (
         <div className="space-y-4">
-          <Card>
+          <Card className="print:border-none print:shadow-none print:bg-transparent">
             <Table>
-              <TableHeader>
+              <TableHeader className="print:hidden">
                 <TableRow>
                   <TableHead className="w-8"></TableHead>
                   <TableHead>Entity</TableHead>
@@ -136,7 +136,7 @@ export function IntentRegistrationList() {
                   <>
                     <TableRow
                       key={intent.id}
-                      className={`cursor-pointer transition-colors ${
+                      className={`cursor-pointer transition-colors print:hidden ${
                         selectedIntent === intent.id
                           ? 'bg-accent hover:bg-accent/90'
                           : 'hover:bg-muted/50'
