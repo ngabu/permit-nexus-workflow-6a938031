@@ -186,7 +186,7 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
         </div>
 
         {/* Title */}
-        <h2 className="text-lg font-bold mb-4">Intent Registration Record</h2>
+        <h2 className="text-lg font-bold mb-4">Intent Registration Record - {intent.entity?.name || 'Unknown Entity'}</h2>
 
         {/* Date */}
         <div className="mb-3">
