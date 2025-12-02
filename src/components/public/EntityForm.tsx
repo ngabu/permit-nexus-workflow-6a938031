@@ -23,6 +23,8 @@ interface EntityFormProps {
     contact_person_email?: string;
     postal_address?: string;
     registered_address?: string;
+    district?: string;
+    province?: string;
   } | null;
   onSuccess: () => void;
   onCancel: () => void;
@@ -41,6 +43,8 @@ export function EntityForm({ entity, onSuccess, onCancel }: EntityFormProps) {
     contact_person_email: '',
     postal_address: '',
     registered_address: '',
+    district: '',
+    province: '',
   });
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
@@ -60,6 +64,8 @@ export function EntityForm({ entity, onSuccess, onCancel }: EntityFormProps) {
         contact_person_email: entity.contact_person_email || '',
         postal_address: entity.postal_address || '',
         registered_address: entity.registered_address || '',
+        district: entity.district || '',
+        province: entity.province || '',
       });
     }
   }, [entity]);
@@ -83,6 +89,8 @@ export function EntityForm({ entity, onSuccess, onCancel }: EntityFormProps) {
         contact_person_email: formData.contact_person_email || null,
         postal_address: formData.postal_address || null,
         'registered address': formData.registered_address || null,
+        district: formData.district || null,
+        province: formData.province || null,
         updated_at: new Date().toISOString(),
       };
 
@@ -119,7 +127,7 @@ export function EntityForm({ entity, onSuccess, onCancel }: EntityFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className={`space-y-6 ${formData.entity_type === 'company' ? 'max-w-7xl' : 'max-w-4xl'}`}>
       <div className="space-y-3">
         <Label className="text-card-foreground">Entity Type</Label>
         <RadioGroup
@@ -149,59 +157,165 @@ export function EntityForm({ entity, onSuccess, onCancel }: EntityFormProps) {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-card-foreground">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone" className="text-card-foreground">Phone</Label>
-          <Input
-            id="phone"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          />
-        </div>
-      </div>
+      {formData.entity_type === 'individual' && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-card-foreground">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-card-foreground">Phone</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              />
+            </div>
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="registered_address" className="text-card-foreground">Registered Address (Street Address)</Label>
-        <Textarea
-          id="registered_address"
-          value={formData.registered_address}
-          onChange={(e) => setFormData({ ...formData, registered_address: e.target.value })}
-          rows={3}
-          placeholder="Enter registered street address"
-        />
-      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="province" className="text-card-foreground">Province</Label>
+              <Input
+                id="province"
+                value={formData.province}
+                onChange={(e) => setFormData({ ...formData, province: e.target.value })}
+                placeholder="Enter province"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="district" className="text-card-foreground">District</Label>
+              <Input
+                id="district"
+                value={formData.district}
+                onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                placeholder="Enter district"
+              />
+            </div>
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="postal_address" className="text-card-foreground">Postal Address</Label>
-        <Textarea
-          id="postal_address"
-          value={formData.postal_address}
-          onChange={(e) => setFormData({ ...formData, postal_address: e.target.value })}
-          rows={3}
-          placeholder="Enter postal address"
-        />
-      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="registered_address" className="text-card-foreground">Registered Address</Label>
+              <Input
+                id="registered_address"
+                value={formData.registered_address}
+                onChange={(e) => setFormData({ ...formData, registered_address: e.target.value })}
+                placeholder="Enter registered street address"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="postal_address" className="text-card-foreground">Postal Address</Label>
+              <Input
+                id="postal_address"
+                value={formData.postal_address}
+                onChange={(e) => setFormData({ ...formData, postal_address: e.target.value })}
+                placeholder="Enter postal address"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tax_number" className="text-card-foreground">IRC Tax Number</Label>
+            <Input
+              id="tax_number"
+              value={formData.tax_number}
+              onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
+            />
+          </div>
+        </>
+      )}
 
       {formData.entity_type === 'company' && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="registration_number" className="text-card-foreground">Registration Number</Label>
+              <Label htmlFor="email" className="text-card-foreground">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-card-foreground">Phone</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="province" className="text-card-foreground">Province</Label>
+              <Input
+                id="province"
+                value={formData.province}
+                onChange={(e) => setFormData({ ...formData, province: e.target.value })}
+                placeholder="Enter province"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="district" className="text-card-foreground">District</Label>
+              <Input
+                id="district"
+                value={formData.district}
+                onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                placeholder="Enter district"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="registered_address" className="text-card-foreground">Registered Address</Label>
+              <Input
+                id="registered_address"
+                value={formData.registered_address}
+                onChange={(e) => setFormData({ ...formData, registered_address: e.target.value })}
+                placeholder="Enter registered street address"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="postal_address" className="text-card-foreground">Postal Address</Label>
+              <Input
+                id="postal_address"
+                value={formData.postal_address}
+                onChange={(e) => setFormData({ ...formData, postal_address: e.target.value })}
+                placeholder="Enter postal address"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="registration_number" className="text-card-foreground">IPA Reg Number</Label>
               <Input
                 id="registration_number"
                 value={formData.registration_number}
                 onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="tax_number" className="text-card-foreground">IRC Tax Number</Label>
+              <Input
+                id="tax_number"
+                value={formData.tax_number}
+                onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="contact_person" className="text-card-foreground">Contact Person</Label>
               <Input
@@ -210,9 +324,6 @@ export function EntityForm({ entity, onSuccess, onCancel }: EntityFormProps) {
                 onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
               />
             </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="contact_person_phone" className="text-card-foreground">Contact Person Phone</Label>
               <Input
@@ -222,28 +333,20 @@ export function EntityForm({ entity, onSuccess, onCancel }: EntityFormProps) {
                 placeholder="+675 XXX XXXX"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="contact_person_email" className="text-card-foreground">Contact Person Email</Label>
-              <Input
-                id="contact_person_email"
-                type="email"
-                value={formData.contact_person_email}
-                onChange={(e) => setFormData({ ...formData, contact_person_email: e.target.value })}
-                placeholder="contact@company.com"
-              />
-            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="contact_person_email" className="text-card-foreground">Contact Person Email</Label>
+            <Input
+              id="contact_person_email"
+              type="email"
+              value={formData.contact_person_email}
+              onChange={(e) => setFormData({ ...formData, contact_person_email: e.target.value })}
+              placeholder="contact@company.com"
+            />
           </div>
         </>
       )}
-
-      <div className="space-y-2">
-        <Label htmlFor="tax_number" className="text-card-foreground">Tax Number</Label>
-        <Input
-          id="tax_number"
-          value={formData.tax_number}
-          onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
-        />
-      </div>
 
       <div className="flex justify-end space-x-2 pt-4">
         <Button type="button" variant="secondary" onClick={onCancel}>

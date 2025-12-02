@@ -56,13 +56,13 @@ export function IntentRegistrationComplianceReview() {
             />
           </div>
 
-          <div className="flex gap-4">
-            <Button onClick={handleSubmitCompliance} className="flex-1">
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" className="w-32">
+              Save Draft
+            </Button>
+            <Button onClick={handleSubmitCompliance} className="w-56">
               <CheckCircle className="w-4 h-4 mr-2" />
               Submit Compliance Review
-            </Button>
-            <Button variant="outline" className="flex-1">
-              Save Draft
             </Button>
           </div>
         </CardContent>

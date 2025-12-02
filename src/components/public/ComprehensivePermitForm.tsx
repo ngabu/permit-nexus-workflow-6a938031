@@ -98,6 +98,9 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
     permit_type_id: '',
     permit_type: '',
     permit_type_specific_data: {},
+    industrial_sector_id: '', // Industrial sector field
+    district: '', // District field
+    province: '', // Province field
     // PNG Environment Act 2000 fields - Public Consultation
     public_consultation_proof: [],
     consultation_period_start: '',
@@ -177,6 +180,9 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
               permit_type_id: data.permit_type_id || '',
               permit_type: data.permit_type || '',
               permit_type_specific_data: data.permit_type_specific || {},
+              industrial_sector_id: data.industrial_sector_id || '', // Add industrial sector mapping
+              district: data.district || '', // Add district mapping
+              province: data.province || '', // Add province mapping
               public_consultation_proof: Array.isArray(data.public_consultation_proof) ? data.public_consultation_proof : [],
               consultation_period_start: data.consultation_period_start || '',
               consultation_period_end: data.consultation_period_end || '',
@@ -313,6 +319,9 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
         completion_date: updatedFormData.projectEndDate || null,
         fee_amount: updatedFormData.fee_amount || 0,
         fee_breakdown: updatedFormData.fee_breakdown || null,
+        industrial_sector_id: updatedFormData.industrial_sector_id || null,
+        district: updatedFormData.district || null,
+        province: updatedFormData.province || null,
       };
 
       await supabase
@@ -411,6 +420,10 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
         // Date fields - ensure null for empty dates
         commencement_date: formData.projectStartDate || null,
         completion_date: formData.projectEndDate || null,
+        // Location and sector fields
+        industrial_sector_id: formData.industrial_sector_id || null,
+        district: formData.district || null,
+        province: formData.province || null,
       };
 
       let result;

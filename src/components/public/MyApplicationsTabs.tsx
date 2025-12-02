@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,7 @@ interface Activity {
 export function MyApplicationsTabs() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,7 +171,7 @@ export function MyApplicationsTabs() {
 
   const handleEditApplication = (applicationId: string) => {
     // Navigate to edit mode for the application
-    window.location.href = `/submit-application?edit=${applicationId}`;
+    navigate(`/submit-application?edit=${applicationId}`);
   };
 
   const filteredApplications = applications.filter(app => {

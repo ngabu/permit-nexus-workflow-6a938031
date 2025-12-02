@@ -149,7 +149,7 @@ export function RegistrySidebar({ activeTab, onTabChange }: RegistrySidebarProps
                 </SidebarMenuItem>
               ))}
 
-              {/* Entities and Permits with submenu */}
+              {/* Listings with submenu */}
               <SidebarMenuItem>
                 <SidebarMenuButton 
                   onClick={() => setEntitiesPermitsOpen(!entitiesPermitsOpen)}
@@ -158,7 +158,7 @@ export function RegistrySidebar({ activeTab, onTabChange }: RegistrySidebarProps
                   <Building className="w-5 h-5 shrink-0" />
                   {!isCollapsed && (
                     <>
-                      <span className="ml-3 flex-1 text-left">Entities and Permits</span>
+                      <span className="ml-3 flex-1 text-left">Listings</span>
                       {entitiesPermitsOpen ? 
                         <ChevronDown className="w-4 h-4" /> : 
                         <ChevronRight className="w-4 h-4" />
@@ -176,6 +176,17 @@ export function RegistrySidebar({ activeTab, onTabChange }: RegistrySidebarProps
                         >
                           <Building className="w-4 h-4 shrink-0" />
                           <span className="ml-2">Entities</span>
+                        </button>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild>
+                        <button
+                          onClick={() => onTabChange('intents')}
+                          className={`w-full ${getNavCls(activeTab === 'intents')}`}
+                        >
+                          <ClipboardList className="w-4 h-4 shrink-0" />
+                          <span className="ml-2">Intents</span>
                         </button>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>

@@ -13,6 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 interface IntentRegistrationReadOnlyViewProps {
   intent: IntentRegistration;
+  showFeedbackWithBlueHeader?: boolean;
 }
 
 interface Document {
@@ -23,15 +24,28 @@ interface Document {
   file_size: number;
 }
 
-export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationReadOnlyViewProps) {
+interface EntityDetails {
+  id: string;
+  name: string;
+  entity_type: string;
+  'registered address'?: string;
+  postal_address?: string;
+  email?: string;
+  phone?: string;
+  district?: string;
+  province?: string;
+}
+
+export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHeader }: IntentRegistrationReadOnlyViewProps) {
   const { toast } = useToast();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
+  const [entityDetails, setEntityDetails] = useState<EntityDetails | null>(null);
   const [openSections, setOpenSections] = useState({
-    registration: true,
-    projectSite: true,
-    stakeholder: true,
-    financial: true,
+    registration: false,
+    projectSite: false,
+    stakeholder: false,
+    financial: false,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -40,7 +54,24 @@ export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationRea
 
   useEffect(() => {
     fetchDocuments();
-  }, [intent.id]);
+    fetchEntityDetails();
+  }, [intent.id, intent.entity_id]);
+
+  const fetchEntityDetails = async () => {
+    if (!intent.entity_id) return;
+    try {
+      const { data, error } = await supabase
+        .from('entities')
+        .select('*')
+        .eq('id', intent.entity_id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setEntityDetails(data);
+    } catch (error) {
+      console.error('Error fetching entity details:', error);
+    }
+  };
 
   const fetchDocuments = async () => {
     try {
@@ -106,13 +137,210 @@ export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationRea
   };
 
   const handleExportPDF = () => {
-    window.print();
+    // Expand all sections before printing
+    setOpenSections({
+      registration: true,
+      projectSite: true,
+      stakeholder: true,
+      financial: true,
+    });
+    
+    // Wait for sections to expand, then print
+    setTimeout(() => {
+      window.print();
+    }, 100);
+  };
+
+  // Get entity address for PDF
+  const getEntityAddress = () => {
+    if (entityDetails) {
+      const parts = [
+        entityDetails['registered address'],
+        entityDetails.district,
+        entityDetails.province
+      ].filter(Boolean);
+      return parts.length > 0 ? parts.join(', ') : 'N/A';
+    }
+    return 'N/A';
+  };
+
+  // Get attachment list for PDF
+  const getAttachmentList = () => {
+    if (documents.length === 0) return 'No attachments';
+    return documents.map(doc => doc.filename).join(', ');
   };
 
   return (
     <div className="space-y-6">
-      <Card className="bg-glass/50 backdrop-blur-sm border-glass">
-        <CardHeader>
+      {/* Print-only A4 formatted content */}
+      <div className="hidden print:block print:mb-6">
+        {/* Header with PNG Emblem and Authority Name */}
+        <div className="text-center mb-8">
+          <img 
+            src="/images/png-emblem.png" 
+            alt="Papua New Guinea Emblem" 
+            className="mx-auto h-24 mb-4"
+          />
+          <h1 className="text-xl font-bold text-gray-800">Conservation & Environment Protection Authority</h1>
+          <p className="text-base text-gray-600">CEPA Registry Division</p>
+        </div>
+
+        {/* Title */}
+        <h2 className="text-lg font-bold mb-4">Intent Registration Record</h2>
+
+        {/* Date */}
+        <div className="mb-3">
+          <span className="font-bold">Date:</span>
+          <span className="ml-2">{format(new Date(intent.created_at), 'MMMM dd, yyyy')}</span>
+        </div>
+
+        {/* Entity and Attachment Ref side by side */}
+        <div className="flex gap-8 mb-6">
+          <div className="flex items-start">
+            <span className="font-bold mr-4">Entity:</span>
+            <div className="border border-gray-400 p-3 min-w-[200px] min-h-[60px]">
+              <p className="text-sm">{getEntityAddress()}</p>
+            </div>
+          </div>
+          <div className="flex items-start">
+            <span className="font-bold mr-4">Attachment Ref:</span>
+            <div className="border border-gray-400 p-3 min-w-[200px] min-h-[60px]">
+              <p className="text-sm">{getAttachmentList()}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Registration Details - Print */}
+        <div className="print-section">
+          <h3 className="print-section-title">Registration Details</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="print-field">
+              <p className="print-field-label">Entity</p>
+              <p className="print-field-value">{intent.entity?.name} ({intent.entity?.entity_type})</p>
+            </div>
+            <div className="print-field">
+              <p className="print-field-label">Activity Level</p>
+              <p className="print-field-value">{intent.activity_level}</p>
+            </div>
+          </div>
+          {intent.prescribed_activity_id && (
+            <div className="print-field mt-2">
+              <p className="print-field-label">Prescribed Activity</p>
+              <p className="print-field-value">{intent.prescribed_activity_id}</p>
+            </div>
+          )}
+          <div className="print-field mt-2">
+            <p className="print-field-label">Activity Description</p>
+            <p className="print-field-value whitespace-pre-wrap">{intent.activity_description}</p>
+          </div>
+          <div className="print-field mt-2">
+            <p className="print-field-label">Preparatory Work Description</p>
+            <p className="print-field-value whitespace-pre-wrap">{intent.preparatory_work_description}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            <div className="print-field">
+              <p className="print-field-label">Commencement Date</p>
+              <p className="print-field-value">{format(new Date(intent.commencement_date), 'MMMM dd, yyyy')}</p>
+            </div>
+            <div className="print-field">
+              <p className="print-field-label">Completion Date</p>
+              <p className="print-field-value">{format(new Date(intent.completion_date), 'MMMM dd, yyyy')}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Project Site Information - Print */}
+        <div className="print-section">
+          <h3 className="print-section-title">Project Site Information</h3>
+          <div className="print-field">
+            <p className="print-field-label">Project Site Address</p>
+            <p className="print-field-value">{intent.project_site_address || 'Not provided'}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            <div className="print-field">
+              <p className="print-field-label">District</p>
+              <p className="print-field-value">{intent.district || 'Not provided'}</p>
+            </div>
+            <div className="print-field">
+              <p className="print-field-label">Province</p>
+              <p className="print-field-value">{intent.province || 'Not provided'}</p>
+            </div>
+          </div>
+          <div className="print-field mt-2">
+            <p className="print-field-label">Site Description</p>
+            <p className="print-field-value whitespace-pre-wrap">{intent.project_site_description || 'Not provided'}</p>
+          </div>
+          <div className="print-field mt-2">
+            <p className="print-field-label">Site Ownership Details</p>
+            <p className="print-field-value whitespace-pre-wrap">{intent.site_ownership_details || 'Not provided'}</p>
+          </div>
+        </div>
+
+        {/* Government & Stakeholder Engagement - Print */}
+        <div className="print-section">
+          <h3 className="print-section-title">Government & Stakeholder Engagement</h3>
+          <div className="print-field">
+            <p className="print-field-label">Agreement with Government of PNG</p>
+            <p className="print-field-value whitespace-pre-wrap">{intent.government_agreement || 'Not provided'}</p>
+          </div>
+          <div className="print-field mt-2">
+            <p className="print-field-label">Departments/Statutory Bodies Approached</p>
+            <p className="print-field-value whitespace-pre-wrap">{intent.departments_approached || 'Not provided'}</p>
+          </div>
+          <div className="print-field mt-2">
+            <p className="print-field-label">Other Formal Government Approvals Required</p>
+            <p className="print-field-value whitespace-pre-wrap">{intent.approvals_required || 'Not provided'}</p>
+          </div>
+          <div className="print-field mt-2">
+            <p className="print-field-label">Landowner Negotiation Status</p>
+            <p className="print-field-value whitespace-pre-wrap">{intent.landowner_negotiation_status || 'Not provided'}</p>
+          </div>
+        </div>
+
+        {/* Financial Information - Print */}
+        <div className="print-section">
+          <h3 className="print-section-title">Project Financial Information</h3>
+          <div className="print-field">
+            <p className="print-field-label">Estimated Cost of Works</p>
+            <p className="print-field-value font-medium">
+              {intent.estimated_cost_kina ? `K${intent.estimated_cost_kina.toLocaleString()}` : 'Not provided'}
+            </p>
+          </div>
+        </div>
+
+        {/* Supporting Documents - Print */}
+        <div className="print-section">
+          <h3 className="print-section-title">Supporting Documents</h3>
+          {documents.length === 0 ? (
+            <p className="text-sm">No documents attached</p>
+          ) : (
+            <ul className="list-disc list-inside text-sm space-y-1">
+              {documents.map((doc) => (
+                <li key={doc.id}>{doc.filename}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Official Feedback - Print */}
+        {intent.status !== 'pending' && intent.review_notes && (
+          <div className="print-section">
+            <h3 className="print-section-title">Official Feedback from CEPA</h3>
+            {intent.reviewed_at && (
+              <p className="text-sm text-gray-600 mb-2">
+                Reviewed on {format(new Date(intent.reviewed_at), 'MMMM dd, yyyy')}
+                {intent.reviewer && ` by ${intent.reviewer.first_name} ${intent.reviewer.last_name}`}
+              </p>
+            )}
+            <div className="print-field">
+              <p className="print-field-label">Feedback Notes</p>
+              <p className="print-field-value whitespace-pre-wrap">{intent.review_notes}</p>
+            </div>
+          </div>
+        )}
+      </div>
+      <Card className="bg-glass/50 backdrop-blur-sm border-glass print:hidden">
+        <CardHeader className="bg-primary/10 print:hidden">
           <div className="flex justify-between items-start">
             <div className="space-y-2 flex-1">
               <CardTitle className="flex items-center gap-2">
@@ -141,10 +369,10 @@ export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationRea
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 print:space-y-4">
           {/* Registration Details */}
           <Collapsible open={openSections.registration} onOpenChange={() => toggleSection('registration')}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 rounded-lg transition-colors">
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 rounded-lg transition-colors print:hidden">
               <h3 className="text-lg font-semibold">Registration Details</h3>
               {openSections.registration ? (
                 <ChevronDown className="w-5 h-5 text-muted-foreground" />
@@ -152,11 +380,14 @@ export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationRea
                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
               )}
             </CollapsibleTrigger>
+            <div className="hidden print:block mb-2">
+              <h3 className="text-lg font-semibold border-b pb-2 mb-3">Registration Details</h3>
+            </div>
             <CollapsibleContent className="pt-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Entity</Label>
-                  <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg">
                     {intent.entity?.entity_type === 'company' ? (
                       <Building className="w-5 h-5 text-primary" />
                     ) : (
@@ -173,22 +404,31 @@ export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationRea
 
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Activity Level</Label>
-                  <div className="p-3 bg-muted/50 rounded-lg">
+                  <div className="p-3 bg-primary/10 rounded-lg">
                     <Badge variant="outline">{intent.activity_level}</Badge>
                   </div>
                 </div>
               </div>
 
+              {intent.prescribed_activity_id && (
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Prescribed Activity</Label>
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <p className="text-sm">{intent.prescribed_activity_id}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label className="text-muted-foreground">Activity Description</Label>
-                <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="p-3 bg-primary/10 rounded-lg">
                   <p className="text-sm">{intent.activity_description}</p>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label className="text-muted-foreground">Preparatory Work Description</Label>
-                <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="p-3 bg-primary/10 rounded-lg">
                   <p className="text-sm whitespace-pre-wrap">{intent.preparatory_work_description}</p>
                 </div>
               </div>
@@ -199,7 +439,7 @@ export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationRea
                     <Calendar className="w-4 h-4" />
                     Commencement Date
                   </Label>
-                  <div className="p-3 bg-muted/50 rounded-lg">
+                  <div className="p-3 bg-primary/10 rounded-lg">
                     <p className="text-sm">{format(new Date(intent.commencement_date), 'MMMM dd, yyyy')}</p>
                   </div>
                 </div>
@@ -209,7 +449,7 @@ export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationRea
                     <Calendar className="w-4 h-4" />
                     Completion Date
                   </Label>
-                  <div className="p-3 bg-muted/50 rounded-lg">
+                  <div className="p-3 bg-primary/10 rounded-lg">
                     <p className="text-sm">{format(new Date(intent.completion_date), 'MMMM dd, yyyy')}</p>
                   </div>
                 </div>
@@ -218,51 +458,65 @@ export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationRea
           </Collapsible>
 
           {/* Project Site Information */}
-          {(intent.project_site_address || intent.project_site_description || intent.site_ownership_details) && (
-            <Collapsible open={openSections.projectSite} onOpenChange={() => toggleSection('projectSite')} className="pt-6 border-t border-glass">
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 rounded-lg transition-colors">
-                <h3 className="text-lg font-semibold">Project Site Information</h3>
-                {openSections.projectSite ? (
-                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                )}
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-4 space-y-4">
-                {intent.project_site_address && (
+          <Collapsible open={openSections.projectSite} onOpenChange={() => toggleSection('projectSite')} className="pt-6 border-t border-glass print:border-t-0 print:pt-4">
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 rounded-lg transition-colors print:hidden">
+              <h3 className="text-lg font-semibold">Project Site Information</h3>
+              {openSections.projectSite ? (
+                <ChevronDown className="w-5 h-5 text-muted-foreground" />
+              ) : (
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              )}
+            </CollapsibleTrigger>
+            <div className="hidden print:block mb-2">
+              <h3 className="text-lg font-semibold border-b pb-2 mb-3">Project Site Information</h3>
+            </div>
+            <CollapsibleContent className="pt-4 space-y-4">
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Project Site Address</Label>
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <p className="text-sm">{intent.project_site_address || 'Not provided'}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {intent.district && (
                   <div className="space-y-2">
-                    <Label className="text-muted-foreground">Project Site Address</Label>
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-sm">{intent.project_site_address}</p>
+                    <Label className="text-muted-foreground">District</Label>
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      <p className="text-sm">{intent.district}</p>
                     </div>
                   </div>
                 )}
 
-                {intent.project_site_description && (
+                {intent.province && (
                   <div className="space-y-2">
-                    <Label className="text-muted-foreground">Site Description</Label>
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-sm whitespace-pre-wrap">{intent.project_site_description}</p>
+                    <Label className="text-muted-foreground">Province</Label>
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      <p className="text-sm">{intent.province}</p>
                     </div>
                   </div>
                 )}
+              </div>
 
-                {intent.site_ownership_details && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Site Ownership Details</Label>
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-sm whitespace-pre-wrap">{intent.site_ownership_details}</p>
-                    </div>
-                  </div>
-                )}
-              </CollapsibleContent>
-            </Collapsible>
-          )}
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Site Description</Label>
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <p className="text-sm whitespace-pre-wrap">{intent.project_site_description || 'Not provided'}</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Site Ownership Details</Label>
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <p className="text-sm whitespace-pre-wrap">{intent.site_ownership_details || 'Not provided'}</p>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* Government & Stakeholder Engagement */}
-          {(intent.government_agreement || intent.departments_approached || intent.approvals_required || intent.landowner_negotiation_status) && (
-            <Collapsible open={openSections.stakeholder} onOpenChange={() => toggleSection('stakeholder')} className="pt-6 border-t border-glass">
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 rounded-lg transition-colors">
+          <Collapsible open={openSections.stakeholder} onOpenChange={() => toggleSection('stakeholder')} className="pt-6 border-t border-glass print:border-t-0 print:pt-4">
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 rounded-lg transition-colors print:hidden">
                 <h3 className="text-lg font-semibold">Government & Stakeholder Engagement</h3>
                 {openSections.stakeholder ? (
                   <ChevronDown className="w-5 h-5 text-muted-foreground" />
@@ -270,50 +524,43 @@ export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationRea
                   <ChevronRight className="w-5 h-5 text-muted-foreground" />
                 )}
               </CollapsibleTrigger>
+              <div className="hidden print:block mb-2">
+                <h3 className="text-lg font-semibold border-b pb-2 mb-3">Government & Stakeholder Engagement</h3>
+              </div>
               <CollapsibleContent className="pt-4 space-y-4">
-                {intent.government_agreement && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Agreement with Government of PNG</Label>
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-sm whitespace-pre-wrap">{intent.government_agreement}</p>
-                    </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Agreement with Government of PNG</Label>
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <p className="text-sm whitespace-pre-wrap">{intent.government_agreement || 'Not provided'}</p>
                   </div>
-                )}
+                </div>
 
-                {intent.departments_approached && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Departments/Statutory Bodies Approached</Label>
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-sm whitespace-pre-wrap">{intent.departments_approached}</p>
-                    </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Departments/Statutory Bodies Approached</Label>
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <p className="text-sm whitespace-pre-wrap">{intent.departments_approached || 'Not provided'}</p>
                   </div>
-                )}
+                </div>
 
-                {intent.approvals_required && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Other Formal Government Approvals Required</Label>
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-sm whitespace-pre-wrap">{intent.approvals_required}</p>
-                    </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Other Formal Government Approvals Required</Label>
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <p className="text-sm whitespace-pre-wrap">{intent.approvals_required || 'Not provided'}</p>
                   </div>
-                )}
+                </div>
 
-                {intent.landowner_negotiation_status && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Landowner Negotiation Status</Label>
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-sm whitespace-pre-wrap">{intent.landowner_negotiation_status}</p>
-                    </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Landowner Negotiation Status</Label>
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <p className="text-sm whitespace-pre-wrap">{intent.landowner_negotiation_status || 'Not provided'}</p>
                   </div>
-                )}
+                </div>
               </CollapsibleContent>
             </Collapsible>
-          )}
 
           {/* Financial Information */}
-          {intent.estimated_cost_kina && (
-            <Collapsible open={openSections.financial} onOpenChange={() => toggleSection('financial')} className="pt-6 border-t border-glass">
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 rounded-lg transition-colors">
+          <Collapsible open={openSections.financial} onOpenChange={() => toggleSection('financial')} className="pt-6 border-t border-glass print:border-t-0 print:pt-4">
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 rounded-lg transition-colors print:hidden">
                 <h3 className="text-lg font-semibold">Project Financial Information</h3>
                 {openSections.financial ? (
                   <ChevronDown className="w-5 h-5 text-muted-foreground" />
@@ -321,23 +568,65 @@ export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationRea
                   <ChevronRight className="w-5 h-5 text-muted-foreground" />
                 )}
               </CollapsibleTrigger>
+              <div className="hidden print:block mb-2">
+                <h3 className="text-lg font-semibold border-b pb-2 mb-3">Project Financial Information</h3>
+              </div>
               <CollapsibleContent className="pt-4">
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Estimated Cost of Works</Label>
                   <div className="p-3 bg-primary/10 rounded-lg">
-                    <p className="text-2xl font-bold text-primary">
-                      K{intent.estimated_cost_kina.toLocaleString()}
+                    <p className="text-sm font-medium">
+                      {intent.estimated_cost_kina ? `K${intent.estimated_cost_kina.toLocaleString()}` : 'Not provided'}
                     </p>
                   </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
+
+          {/* Official Feedback Section - Only show if flag is true */}
+          {showFeedbackWithBlueHeader && intent.status !== 'pending' && intent.review_notes && (
+            <div className="space-y-4 pt-6 border-t border-glass print:border-t-0 print:pt-4 print:break-before-page">
+              <Card className="bg-muted/30 print:shadow-none print:border">
+                <CardHeader className="bg-primary/10 print:bg-transparent">
+                  <CardTitle className="text-lg print:border-b print:pb-2">Official Feedback from CEPA</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {intent.reviewed_at && (
+                    <div className="text-sm text-muted-foreground">
+                      Reviewed on {format(new Date(intent.reviewed_at), 'MMMM dd, yyyy')}
+                      {intent.reviewer && ` by ${intent.reviewer.first_name} ${intent.reviewer.last_name}`}
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label>Feedback Notes</Label>
+                    <div className="p-3 bg-primary/5 rounded-lg">
+                      <p className="text-sm whitespace-pre-wrap">{intent.review_notes}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {showFeedbackWithBlueHeader && intent.status === 'pending' && (
+            <div className="space-y-4 pt-6 border-t border-glass print:border-t-0 print:pt-4 print:hidden">
+              <Card className="bg-muted/30 print:shadow-none">
+                <CardHeader className="bg-primary/10 print:bg-transparent">
+                  <CardTitle className="text-lg print:border-b print:pb-2">Official Feedback from CEPA</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Your submission is currently under review. Any official feedback will be displayed here once the review is complete.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {/* Supporting Documents Section */}
-          <div className="space-y-4 pt-6 border-t border-glass">
-            <div className="flex items-center justify-between">
-              <Label className="text-muted-foreground">Supporting Documents ({documents.length})</Label>
+          <div className="space-y-4 pt-6 border-t border-glass print:border-t-0 print:pt-4">
+            <div className="flex items-center justify-between print:block">
+              <Label className="text-muted-foreground print:text-lg print:font-semibold print:border-b print:pb-2 print:mb-3 print:block">Supporting Documents ({documents.length})</Label>
             </div>
             {loadingDocs ? (
               <div className="flex justify-center p-4">
@@ -348,7 +637,7 @@ export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationRea
             ) : (
               <div className="space-y-2">
                 {documents.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div key={doc.id} className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <FileText className="w-4 h-4 text-primary flex-shrink-0" />
                       <div className="min-w-0 flex-1">
@@ -371,45 +660,6 @@ export function IntentRegistrationReadOnlyView({ intent }: IntentRegistrationRea
             )}
           </div>
 
-          {/* Review Information (if available) */}
-          {intent.reviewed_by && (
-            <>
-              <Separator />
-              <div className="bg-muted/30 p-4 rounded-lg space-y-3">
-                <h3 className="text-lg font-semibold">Review Information</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label>Reviewed By</Label>
-                    <p className="text-sm mt-1">
-                      {intent.reviewer?.first_name} {intent.reviewer?.last_name}
-                    </p>
-                    {intent.reviewer?.email && (
-                      <p className="text-sm text-muted-foreground">{intent.reviewer.email}</p>
-                    )}
-                  </div>
-                  
-                  {intent.reviewed_at && (
-                    <div>
-                      <Label>Review Date</Label>
-                      <p className="text-sm mt-1">
-                        {format(new Date(intent.reviewed_at), 'MMMM dd, yyyy h:mm a')}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {intent.review_notes && (
-                  <div>
-                    <Label>Official Review Notes</Label>
-                    <p className="text-sm mt-2 text-muted-foreground whitespace-pre-wrap">
-                      {intent.review_notes}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
         </CardContent>
       </Card>
     </div>

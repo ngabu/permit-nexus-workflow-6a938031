@@ -35,7 +35,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
                 <User className="w-4 h-4" />
                 Entity Name
               </label>
-              <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
+              <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
                 {entity.name}
               </div>
             </div>
@@ -44,7 +44,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
                 <Building className="w-4 h-4" />
                 Entity Type
               </label>
-              <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
+              <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
                 {entity.entity_type === 'company' ? 'Company' : 'Individual'}
               </div>
             </div>
@@ -62,7 +62,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
                 <Mail className="w-4 h-4" />
                 Email Address
               </label>
-              <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
+              <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
                 {entity.email || 'Not provided'}
               </div>
             </div>
@@ -71,7 +71,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
                 <Phone className="w-4 h-4" />
                 Phone Number
               </label>
-              <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
+              <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
                 {entity.phone || 'Not provided'}
               </div>
             </div>
@@ -83,13 +83,44 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
           <h4 className="font-medium text-sm text-muted-foreground mb-3 uppercase tracking-wide">
             Address Information
           </h4>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              Address
-            </label>
-            <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm min-h-[2.5rem]">
-              {entity.postal_address || entity['registered address'] || 'Not provided'}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Registered Address
+              </label>
+              <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm min-h-[2.5rem]">
+                {entity['registered address'] || 'Not provided'}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Postal Address
+              </label>
+              <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm min-h-[2.5rem]">
+                {entity.postal_address || 'Not provided'}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Province
+              </label>
+              <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
+                {entity.province || 'Not provided'}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                District
+              </label>
+              <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
+                {entity.district || 'Not provided'}
+              </div>
             </div>
           </div>
         </div>
@@ -104,30 +135,47 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                   <FileText className="w-4 h-4" />
-                  Registration Number
+                  IPA Reg Number
                 </label>
-                <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
+                <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
                   {entity.registration_number || 'Not provided'}
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                   <Hash className="w-4 h-4" />
-                  Tax Number
+                  IRC Tax Number
                 </label>
-                <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
+                <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
                   {entity.tax_number || 'Not provided'}
                 </div>
               </div>
             </div>
             {entity.contact_person && (
-              <div className="mt-4 space-y-2">
-                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <div className="mt-4">
+                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-3">
                   <UserCheck className="w-4 h-4" />
                   Contact Person
                 </label>
-                <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
-                  {entity.contact_person}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Name</label>
+                    <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
+                      {entity.contact_person}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Email</label>
+                    <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
+                      {entity.contact_person_email || 'Not provided'}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Phone</label>
+                    <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
+                      {entity.contact_person_phone || 'Not provided'}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -144,7 +192,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
               <label className="text-sm font-medium text-muted-foreground">
                 Created Date
               </label>
-              <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
+              <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
                 {new Date(entity.created_at).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
@@ -158,7 +206,7 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
               <label className="text-sm font-medium text-muted-foreground">
                 Last Updated
               </label>
-              <div className="bg-glass/50 backdrop-blur-sm border border-glass rounded-md px-3 py-2 text-sm">
+              <div className="bg-primary/10 rounded-lg px-3 py-2 text-sm">
                 {new Date(entity.updated_at).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',

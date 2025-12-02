@@ -33,6 +33,7 @@ export interface PermitApplicationDetails {
   activity_classification?: string;
   activity_category?: string;
   activity_subcategory?: string;
+  industrial_sector_id?: string;
   
   // Step 4: Permit Period
   permit_period?: string;
@@ -46,6 +47,8 @@ export interface PermitApplicationDetails {
   project_end_date?: string;
   environmental_impact?: string;
   mitigation_measures?: string;
+  district?: string;
+  province?: string;
   
   // Progress tracking
   current_step?: number;

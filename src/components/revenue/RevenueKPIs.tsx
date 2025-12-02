@@ -9,43 +9,40 @@ export function RevenueKPIs() {
   const metrics = useMemo(() => {
     if (loading || !invoices.length) {
       return {
-        monthlyRevenue: 0,
-        collectionsRate: 0,
-        outstandingFees: 0,
-        overduePayments: 0
+        newInvoices: 0,
+        pendingPayments: 0,
+        totalOutstanding: 0,
+        totalOverdue: 0
       };
     }
 
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // Calculate monthly revenue (paid invoices this month)
-    const monthlyRevenue = invoices
-      .filter(invoice => {
-        if (!invoice.paid_date) return false;
-        const paidDate = new Date(invoice.paid_date);
-        return paidDate.getMonth() === currentMonth && paidDate.getFullYear() === currentYear;
-      })
-      .reduce((sum, invoice) => sum + invoice.amount, 0);
+    // Calculate new invoices (created in last 7 days)
+    const newInvoices = invoices.filter(invoice => {
+      const createdDate = new Date(invoice.created_at);
+      return createdDate >= sevenDaysAgo;
+    }).length;
 
-    // Calculate collections rate (paid vs total)
-    const totalInvoices = invoices.length;
-    const paidInvoices = invoices.filter(invoice => invoice.payment_status === 'paid').length;
-    const collectionsRate = totalInvoices > 0 ? (paidInvoices / totalInvoices) * 100 : 0;
+    // Count pending payment processes
+    const pendingPayments = invoices.filter(invoice => invoice.payment_status === 'pending').length;
 
-    // Calculate outstanding fees (pending + overdue)
-    const outstandingFees = invoices
+    // Calculate total outstanding (pending + overdue amounts)
+    const totalOutstanding = invoices
       .filter(invoice => invoice.payment_status === 'pending' || invoice.payment_status === 'overdue')
       .reduce((sum, invoice) => sum + invoice.amount, 0);
 
-    // Count overdue payments
-    const overduePayments = invoices.filter(invoice => invoice.payment_status === 'overdue').length;
+    // Calculate total overdue amount
+    const totalOverdue = invoices
+      .filter(invoice => invoice.payment_status === 'overdue')
+      .reduce((sum, invoice) => sum + invoice.amount, 0);
 
     return {
-      monthlyRevenue,
-      collectionsRate,
-      outstandingFees,
-      overduePayments
+      newInvoices,
+      pendingPayments,
+      totalOutstanding,
+      totalOverdue
     };
   }, [invoices, loading]);
 
@@ -62,31 +59,23 @@ export function RevenueKPIs() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <KPICard
-        title="Monthly Revenue"
-        value={`K${metrics.monthlyRevenue.toLocaleString()}`}
-        change={8.5}
-        trend="up"
+        title="New Invoices"
+        value={metrics.newInvoices.toString()}
         icon={<DollarSign className="w-5 h-5" />}
       />
       <KPICard
-        title="Collections Rate"
-        value={`${metrics.collectionsRate.toFixed(1)}%`}
-        change={3.2}
-        trend="up"
+        title="Pending Payment Process"
+        value={metrics.pendingPayments.toString()}
         icon={<TrendingUp className="w-5 h-5" />}
       />
       <KPICard
-        title="Outstanding Fees"
-        value={`K${metrics.outstandingFees.toLocaleString()}`}
-        change={-12}
-        trend="down"
+        title="Total Outstanding"
+        value={`K${metrics.totalOutstanding.toLocaleString()}`}
         icon={<CreditCard className="w-5 h-5" />}
       />
       <KPICard
-        title="Overdue Payments"
-        value={metrics.overduePayments.toString()}
-        change={-5}
-        trend="down"
+        title="Total Overdue"
+        value={`K${metrics.totalOverdue.toLocaleString()}`}
         icon={<AlertTriangle className="w-5 h-5" />}
       />
     </div>

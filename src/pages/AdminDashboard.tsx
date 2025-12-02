@@ -4,19 +4,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { KPICard } from '@/components/kpi-card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Settings, Shield, Database, Activity, TrendingUp, UserCheck, AlertCircle, BarChart3, FileText, Monitor, Globe, Server, Lock, Gauge, Building } from 'lucide-react';
-import { StaffManagement } from '@/components/staff-management';
-import { AuditLogs } from '@/components/audit-logs';
-import { SystemMetrics } from '@/components/system-metrics';
+import { Users, Settings, Shield, Database, Activity, TrendingUp, UserCheck, AlertCircle, BarChart3, FileText, Monitor, Globe, Server, Lock, Building } from 'lucide-react';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { EntityManagement } from '@/components/admin/EntityManagement';
+import { PrescribedActivitiesManagement } from '@/components/admin/PrescribedActivitiesManagement';
+import { ActivityLevelsManagement } from '@/components/admin/ActivityLevelsManagement';
+import { PermitTypesManagement } from '@/components/admin/PermitTypesManagement';
+import { FeeManagement } from '@/components/admin/FeeManagement';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminStats } from '@/hooks/useAdminStats';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { PermitApplicationsMap } from '@/components/public/PermitApplicationsMap';
 
 export default function AdminDashboard() {
   const { profile } = useAuth();
   const { stats, loading } = useAdminStats();
+  const [activeTab, setActiveTab] = useState('overview');
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,13 +37,29 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" className="border-forest-200 text-forest-700">
-              <Monitor className="w-4 h-4 mr-2" />
-              System Health
+            <Button variant="outline" asChild>
+              <Link to="/system-health">
+                <Monitor className="w-4 h-4 mr-2" />
+                System Health
+              </Link>
             </Button>
-            <Button className="bg-gradient-to-r from-forest-600 to-nature-600 hover:from-forest-700 hover:to-nature-700">
-              <Shield className="w-4 h-4 mr-2" />
-              Security Dashboard
+            <Button variant="outline" asChild>
+              <Link to="/security-dashboard">
+                <Shield className="w-4 h-4 mr-2" />
+                Security Dashboard
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/audit-logs">
+                <Shield className="w-4 h-4 mr-2" />
+                Audit Logs
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/database-administration">
+                <Database className="w-4 h-4 mr-2" />
+                Database Administration
+              </Link>
             </Button>
           </div>
         </div>
@@ -54,18 +74,18 @@ export default function AdminDashboard() {
             icon={<Users className="w-5 h-5" />}
           />
           <KPICard
-            title="Active Applications"
-            value={loading ? "..." : (stats.submittedApplications + stats.underReviewApplications).toString()}
-            change={stats.approvedApplications}
-            trend="up"
-            icon={<Activity className="w-5 h-5" />}
-          />
-          <KPICard
-            title="Total Entities"
+            title="Entities"
             value={loading ? "..." : stats.totalEntities.toString()}
-            change={stats.totalEntities}
+            change={stats.totalEntities > 0 ? Math.round(stats.totalEntities * 0.1) : 0}
             trend="up"
             icon={<Building className="w-5 h-5" />}
+          />
+          <KPICard
+            title="System Logs"
+            value={loading ? "..." : "Active"}
+            change={100}
+            trend="up"
+            icon={<Activity className="w-5 h-5" />}
           />
           <KPICard
             title="Security Alerts"
@@ -76,122 +96,61 @@ export default function AdminDashboard() {
           />
         </div>
 
-        {/* Quick Actions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          <Card className="border-forest-200 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-forest-800">User Management</h3>
-                  <p className="text-sm text-forest-600">Manage users, roles & permissions</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-forest-200 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <FileText className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-forest-800">Application Overview</h3>
-                  <p className="text-sm text-forest-600">Monitor all permit applications</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-forest-200 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Database className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-forest-800">Database Admin</h3>
-                  <p className="text-sm text-forest-600">Database maintenance & backup</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-forest-200 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-red-100 rounded-lg">
-                  <Lock className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-forest-800">Security Center</h3>
-                  <p className="text-sm text-forest-600">Security policies & monitoring</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Admin Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-7 h-auto">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="staff" className="flex items-center gap-2">
+            <TabsTrigger value="users" className="flex items-center gap-2">
               <UserCheck className="w-4 h-4" />
-              User Management
+              Users
             </TabsTrigger>
             <TabsTrigger value="entities" className="flex items-center gap-2">
               <Building className="w-4 h-4" />
-              Entity Management
+              Entities
             </TabsTrigger>
-            <TabsTrigger value="audit" className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              Audit & Security
+            <TabsTrigger value="activities" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              Activities
             </TabsTrigger>
-            <TabsTrigger value="metrics" className="flex items-center gap-2">
+            <TabsTrigger value="levels" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
-              System Metrics
+              Levels
             </TabsTrigger>
-            <TabsTrigger value="operations" className="flex items-center gap-2">
-              <Gauge className="w-4 h-4" />
-              Operations
+            <TabsTrigger value="permit-types" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Permit Types
+            </TabsTrigger>
+            <TabsTrigger value="fees" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Fees
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* System Access Matrix */}
+              {/* Approved Permits Map */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-forest-800 flex items-center">
-                    <Users className="w-5 h-5 mr-2" />
-                    Unit Access Overview
+                    <Globe className="w-5 h-5 mr-2" />
+                    Approved Permits Map
                   </CardTitle>
-                  <CardDescription>Access permissions across organizational units</CardDescription>
+                  <CardDescription>Geospatial view of all approved permits with GIS layers</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {[
-                    { unit: 'Registry Unit', staff: stats.staffUsers, access: 'Full Application Processing', status: 'Active' },
-                    { unit: 'Compliance Unit', staff: Math.floor(stats.staffUsers * 0.3), access: 'Compliance Review & Monitoring', status: 'Active' },
-                    { unit: 'Revenue Unit', staff: Math.floor(stats.staffUsers * 0.2), access: 'Financial Processing & Invoicing', status: 'Active' },
-                    { unit: 'Finance Unit', staff: Math.floor(stats.staffUsers * 0.15), access: 'Payment & Financial Reconciliation', status: 'Active' },
-                    { unit: 'Directorate', staff: stats.adminUsers + stats.superAdminUsers, access: 'Executive Oversight & Reporting', status: 'Active' },
-                  ].map((unitData) => (
-                    <div key={unitData.unit} className="p-4 border border-forest-100 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-semibold text-forest-800">{unitData.unit}</h4>
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">{unitData.status}</span>
-                      </div>
-                      <p className="text-sm text-forest-600 mb-1">{unitData.access}</p>
-                      <p className="text-xs text-forest-500">{unitData.staff} active staff members</p>
-                    </div>
-                  ))}
+                <CardContent>
+                  <div className="h-[500px]">
+                    <PermitApplicationsMap 
+                      showAllApplications={true}
+                      defaultStatuses={['approved']}
+                      hideDrawingTools={true}
+                      customTitle="Approved Permits"
+                      customDescription="View all approved permits on the map with filtering options"
+                    />
+                  </div>
                 </CardContent>
               </Card>
 
@@ -205,53 +164,61 @@ export default function AdminDashboard() {
                   <CardDescription>Core administrative capabilities</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button asChild variant="outline" className="w-full justify-start h-auto p-4">
-                    <Link to="/user-management">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start h-auto p-4 hover:bg-accent hover:text-accent-foreground transition-colors"
+                    onClick={() => setActiveTab('users')}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Users className="w-5 h-5 text-forest-600" />
+                      <div className="text-left">
+                        <div className="font-medium">User & Role Management</div>
+                        <div className="text-sm text-forest-500">Create, edit, and manage user accounts and permissions</div>
+                      </div>
+                    </div>
+                  </Button>
+                  
+                  <Button asChild variant="outline" className="w-full justify-start h-auto p-4 hover:bg-accent hover:text-accent-foreground transition-colors">
+                    <Link to="/database-administration">
                       <div className="flex items-center space-x-3">
-                        <Users className="w-5 h-5 text-forest-600" />
+                        <Database className="w-5 h-5 text-forest-600" />
                         <div className="text-left">
-                          <div className="font-medium">User & Role Management</div>
-                          <div className="text-sm text-forest-500">Create, edit, and manage user accounts and permissions</div>
+                          <div className="font-medium">Database Administration</div>
+                          <div className="text-sm text-forest-500">Database maintenance, backups, and optimization</div>
                         </div>
                       </div>
                     </Link>
                   </Button>
                   
-                  <Button variant="outline" className="w-full justify-start h-auto p-4">
-                    <div className="flex items-center space-x-3">
-                      <Database className="w-5 h-5 text-forest-600" />
-                      <div className="text-left">
-                        <div className="font-medium">Database Administration</div>
-                        <div className="text-sm text-forest-500">Database maintenance, backups, and optimization</div>
+                  <Button asChild variant="outline" className="w-full justify-start h-auto p-4 hover:bg-accent hover:text-accent-foreground transition-colors">
+                    <Link to="/security-dashboard">
+                      <div className="flex items-center space-x-3">
+                        <Shield className="w-5 h-5 text-forest-600" />
+                        <div className="text-left">
+                          <div className="font-medium">Security Configuration</div>
+                          <div className="text-sm text-forest-500">Security policies, authentication, and access control</div>
+                        </div>
                       </div>
-                    </div>
+                    </Link>
                   </Button>
                   
-                  <Button variant="outline" className="w-full justify-start h-auto p-4">
-                    <div className="flex items-center space-x-3">
-                      <Shield className="w-5 h-5 text-forest-600" />
-                      <div className="text-left">
-                        <div className="font-medium">Security Configuration</div>
-                        <div className="text-sm text-forest-500">Security policies, authentication, and access control</div>
+                  <Button asChild variant="outline" className="w-full justify-start h-auto p-4 hover:bg-accent hover:text-accent-foreground transition-colors">
+                    <Link to="/system-health">
+                      <div className="flex items-center space-x-3">
+                        <Monitor className="w-5 h-5 text-forest-600" />
+                        <div className="text-left">
+                          <div className="font-medium">System Monitoring</div>
+                          <div className="text-sm text-forest-500">Performance monitoring and system health checks</div>
+                        </div>
                       </div>
-                    </div>
-                  </Button>
-                  
-                  <Button variant="outline" className="w-full justify-start h-auto p-4">
-                    <div className="flex items-center space-x-3">
-                      <Monitor className="w-5 h-5 text-forest-600" />
-                      <div className="text-left">
-                        <div className="font-medium">System Monitoring</div>
-                        <div className="text-sm text-forest-500">Performance monitoring and system health checks</div>
-                      </div>
-                    </div>
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
-          <TabsContent value="staff" className="space-y-6">
+          <TabsContent value="users" className="space-y-6">
             <UserManagement />
           </TabsContent>
 
@@ -259,73 +226,20 @@ export default function AdminDashboard() {
             <EntityManagement />
           </TabsContent>
 
-          <TabsContent value="audit" className="space-y-6">
-            <AuditLogs />
+          <TabsContent value="activities" className="space-y-6">
+            <PrescribedActivitiesManagement />
           </TabsContent>
 
-          <TabsContent value="metrics" className="space-y-6">
-            <SystemMetrics />
+          <TabsContent value="levels" className="space-y-6">
+            <ActivityLevelsManagement />
           </TabsContent>
 
-          <TabsContent value="operations" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Permit Applications Overview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-forest-800 flex items-center">
-                    <TrendingUp className="w-5 h-5 mr-2" />
-                    Permit Applications
-                  </CardTitle>
-                  <CardDescription>Overview of permit processing across all units</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {[
-                    { unit: 'Registry', pending: stats.draftApplications, processed: stats.approvedApplications, rejected: stats.rejectedApplications },
-                    { unit: 'Revenue', pending: stats.pendingTransactions, processed: stats.completedTransactions, rejected: 0 },
-                    { unit: 'Compliance', pending: stats.underReviewApplications, processed: stats.approvedApplications, rejected: stats.rejectedApplications },
-                    { unit: 'Finance', pending: Math.floor(stats.pendingTransactions * 0.4), processed: Math.floor(stats.completedTransactions * 0.4), rejected: 0 },
-                  ].map((unitData) => (
-                    <div key={unitData.unit} className="p-4 border border-forest-100 rounded-lg">
-                      <h4 className="font-semibold text-forest-800 mb-2">{unitData.unit} Unit</h4>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-amber-600">Pending: {unitData.pending}</span>
-                        <span className="text-green-600">Processed: {unitData.processed}</span>
-                        <span className="text-red-600">Rejected: {unitData.rejected}</span>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+          <TabsContent value="permit-types" className="space-y-6">
+            <PermitTypesManagement />
+          </TabsContent>
 
-              {/* System Health Overview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-forest-800 flex items-center">
-                    <Activity className="w-5 h-5 mr-2" />
-                    System Health
-                  </CardTitle>
-                  <CardDescription>Critical system components status</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {[
-                    { service: 'Database Server', status: 'Healthy', uptime: '99.98%', color: 'text-green-600' },
-                    { service: 'Authentication Service', status: 'Healthy', uptime: '99.95%', color: 'text-green-600' },
-                    { service: 'File Storage', status: 'Warning', uptime: '98.12%', color: 'text-yellow-600' },
-                    { service: 'Email Service', status: 'Healthy', uptime: '99.87%', color: 'text-green-600' },
-                  ].map((service, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border border-forest-100 rounded-lg">
-                      <div>
-                        <p className="font-medium text-forest-800">{service.service}</p>
-                        <p className="text-sm text-forest-600">Uptime: {service.uptime}</p>
-                      </div>
-                      <div className={`font-medium ${service.color}`}>
-                        {service.status}
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
+          <TabsContent value="fees" className="space-y-6">
+            <FeeManagement />
           </TabsContent>
         </Tabs>
         </div>

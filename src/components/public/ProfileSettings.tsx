@@ -15,6 +15,7 @@ export function ProfileSettings() {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
+    email: '',
     phone: '',
     address: '',
     organization: ''
@@ -25,12 +26,13 @@ export function ProfileSettings() {
       setFormData({
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
+        email: profile.email || user?.email || '',
         phone: profile.phone || '',
         address: profile.address || '',
         organization: profile.organization || ''
       });
     }
-  }, [profile]);
+  }, [profile, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +45,7 @@ export function ProfileSettings() {
         .update({
           first_name: formData.first_name,
           last_name: formData.last_name,
+          email: formData.email,
           phone: formData.phone,
           address: formData.address,
           organization: formData.organization,
@@ -121,15 +124,12 @@ export function ProfileSettings() {
                 <Input
                   id="email"
                   type="email"
-                  value={user?.email || ''}
-                  disabled
-                  className="pl-10 bg-sidebar"
-                  placeholder="Email address (cannot be changed)"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="pl-10"
+                  placeholder="Enter your email address"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Email address cannot be changed. Contact support if you need to update this.
-              </p>
             </div>
 
             <div className="space-y-2">

@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useComplianceAssessments } from '@/components/compliance/hooks/useComplianceAssessments';
 import { TechnicalAssessmentPanel } from './TechnicalAssessmentPanel';
 import { ComplianceApplicationsList } from './ComplianceApplicationsList';
+import { PermitApplicationsMap } from '@/components/public/PermitApplicationsMap';
 
 
 interface EnvironmentAssessmentDashboardProps {
@@ -176,6 +177,15 @@ export function EnvironmentAssessmentDashboard({ isManager }: EnvironmentAssessm
           </CardContent>
         </Card>
       </div>
+
+      {/* Permit Applications Map */}
+      <PermitApplicationsMap 
+        showAllApplications={true}
+        defaultStatuses={['approved']}
+        hideDrawingTools={true}
+        customTitle="Approved Permit Applications Map"
+        customDescription="View approved permit applications across Papua New Guinea with GIS boundary layers. Toggle layers to see administrative boundaries and protected areas."
+      />
 
       {/* Recent Activities */}
       <Card>

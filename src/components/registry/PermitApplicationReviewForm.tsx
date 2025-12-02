@@ -662,20 +662,19 @@ export function PermitApplicationReviewForm({ assessmentId: propAssessmentId }: 
 
               <div className="flex gap-3 justify-end pt-2">
                 <Button 
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => navigate('/RegistryDashboard')}
-                  size="lg"
+                  className="w-32"
                 >
                   Cancel
                 </Button>
                 <Button 
                   onClick={handleSubmitAssessment}
-                  className="gap-2"
-                  size="lg"
+                  className="gap-2 w-40"
                   disabled={!assessmentData.assessment_status || !assessmentData.assessment_notes || !assessmentData.assessment_outcome}
                 >
                   <Send className="w-4 h-4" />
-                  Submit Assessment & Notify Applicant
+                  Submit Review
                 </Button>
               </div>
             </>

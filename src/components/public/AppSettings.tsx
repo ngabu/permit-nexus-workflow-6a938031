@@ -72,31 +72,31 @@ export function AppSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between opacity-50">
             <div className="space-y-0.5">
               <Label htmlFor="email-notifications">Email Notifications</Label>
               <p className="text-sm text-muted-foreground">
-                Receive notifications via email
+                Receive notifications via email (Coming soon)
               </p>
             </div>
             <Switch
               id="email-notifications"
               checked={settings.emailNotifications}
-              onCheckedChange={(checked) => handleSettingChange('emailNotifications', checked)}
+              disabled
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between opacity-50">
             <div className="space-y-0.5">
               <Label htmlFor="sms-notifications">SMS Notifications</Label>
               <p className="text-sm text-muted-foreground">
-                Receive notifications via SMS
+                Receive notifications via SMS (Coming soon)
               </p>
             </div>
             <Switch
               id="sms-notifications"
               checked={settings.smsNotifications}
-              onCheckedChange={(checked) => handleSettingChange('smsNotifications', checked)}
+              disabled
             />
           </div>
 
@@ -142,17 +142,17 @@ export function AppSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between opacity-50">
             <div className="space-y-0.5">
               <Label htmlFor="security-alerts">Security Alerts</Label>
               <p className="text-sm text-muted-foreground">
-                Get notified about security-related activities
+                Get notified about security-related activities (Coming soon)
               </p>
             </div>
             <Switch
               id="security-alerts"
               checked={settings.securityAlerts}
-              onCheckedChange={(checked) => handleSettingChange('securityAlerts', checked)}
+              disabled
             />
           </div>
 

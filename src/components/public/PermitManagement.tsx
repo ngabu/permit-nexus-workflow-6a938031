@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,9 +31,10 @@ interface Permit {
 
 interface PermitManagementProps {
   onNavigateToNewApplication?: () => void;
+  onNavigateToEditApplication?: (permitId: string) => void;
 }
 
-export function PermitManagement({ onNavigateToNewApplication }: PermitManagementProps) {
+export function PermitManagement({ onNavigateToNewApplication, onNavigateToEditApplication }: PermitManagementProps) {
   const [permits, setPermits] = useState<Permit[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -87,7 +88,11 @@ export function PermitManagement({ onNavigateToNewApplication }: PermitManagemen
   };
 
   const handleEditApplication = (permit: Permit) => {
-    navigate(`/edit-permit/${permit.id}`);
+    if (onNavigateToEditApplication) {
+      onNavigateToEditApplication(permit.id);
+    } else {
+      navigate(`/edit-permit/${permit.id}`);
+    }
   };
 
   const handleFormSuccess = () => {
@@ -189,9 +194,8 @@ export function PermitManagement({ onNavigateToNewApplication }: PermitManagemen
               </TableHeader>
               <TableBody>
                 {permits.map((permit) => (
-                  <>
+                  <React.Fragment key={permit.id}>
                     <TableRow 
-                      key={permit.id} 
                       className={`cursor-pointer transition-colors ${
                         selectedPermitForPreview?.id === permit.id 
                           ? 'bg-accent hover:bg-accent/90' 
@@ -284,7 +288,7 @@ export function PermitManagement({ onNavigateToNewApplication }: PermitManagemen
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </React.Fragment>
                 ))}
               </TableBody>
             </Table>

@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEntities } from '@/hooks/useEntities';
 import { format } from 'date-fns';
-import { Loader2, Search, Filter, ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react';
-import { EntityDetailsReadOnly } from './read-only/EntityDetailsReadOnly';
+import { Loader2, Search, Filter, ChevronDown, ChevronRight, ChevronLeft, ChevronsUpDown, FileDown } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { EntityDetailsReadOnly } from '@/components/public/EntityDetailsReadOnly';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 export function EntitiesList() {
@@ -55,6 +56,66 @@ export function EntitiesList() {
     return Array.from(new Set(entities.map(e => e.entity_type)));
   }, [entities]);
 
+  const exportToExcel = () => {
+    const exportData = filteredEntities.map(entity => ({
+      'Name': entity.name,
+      'Entity Type': entity.entity_type,
+      'Email': entity.email || '-',
+      'Phone': entity.phone || '-',
+      'Province': entity.province || '-',
+      'District': entity.district || '-',
+      'Registered Address': entity['registered address'] || '-',
+      'Postal Address': entity.postal_address || '-',
+      'Registration Number': entity.registration_number || '-',
+      'IRC Tax Number': entity.tax_number || '-',
+      'Contact Person': entity.contact_person || '-',
+      'Contact Person Phone': entity.contact_person_phone || '-',
+      'Contact Person Email': entity.contact_person_email || '-',
+      'Status': entity.is_suspended ? 'Suspended' : 'Active',
+      'Created Date': format(new Date(entity.created_at), 'MMM dd, yyyy'),
+      'Last Updated': format(new Date(entity.updated_at), 'MMM dd, yyyy')
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    
+    // Adjust column widths based on actual columns
+    const maxColumns = Math.max(...exportData.map(row => Object.keys(row).length));
+    worksheet['!cols'] = Array(maxColumns).fill({ wch: 20 });
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Entities');
+    XLSX.writeFile(workbook, `Entities_Registry_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  };
+
+  const exportToCSV = () => {
+    const exportData = filteredEntities.map(entity => ({
+      'Name': entity.name,
+      'Entity Type': entity.entity_type,
+      'Email': entity.email || '-',
+      'Phone': entity.phone || '-',
+      'Province': entity.province || '-',
+      'District': entity.district || '-',
+      'Registered Address': entity['registered address'] || '-',
+      'Postal Address': entity.postal_address || '-',
+      'Registration Number': entity.registration_number || '-',
+      'IRC Tax Number': entity.tax_number || '-',
+      'Contact Person': entity.contact_person || '-',
+      'Contact Person Phone': entity.contact_person_phone || '-',
+      'Contact Person Email': entity.contact_person_email || '-',
+      'Status': entity.is_suspended ? 'Suspended' : 'Active',
+      'Created Date': format(new Date(entity.created_at), 'MMM dd, yyyy'),
+      'Last Updated': format(new Date(entity.updated_at), 'MMM dd, yyyy')
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const csv = XLSX.utils.sheet_to_csv(worksheet);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Entities_Registry_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -67,7 +128,19 @@ export function EntitiesList() {
     <Card>
       <CardHeader>
         <div className="flex flex-col gap-4">
-          <CardTitle>All Entities</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>All Entities</CardTitle>
+            <div className="flex gap-2">
+              <Button onClick={exportToExcel} className="bg-primary hover:bg-primary/90 text-primary-foreground" size="sm">
+                <FileDown className="h-4 w-4 mr-2" />
+                Export to Excel
+              </Button>
+              <Button onClick={exportToCSV} className="bg-accent hover:bg-accent/90 text-accent-foreground" size="sm">
+                <FileDown className="h-4 w-4 mr-2" />
+                Export to CSV
+              </Button>
+            </div>
+          </div>
           
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
@@ -120,6 +193,7 @@ export function EntitiesList() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8" />
               <TableHead>Name</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Registration Number</TableHead>
@@ -131,7 +205,7 @@ export function EntitiesList() {
           <TableBody>
             {filteredEntities.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   {searchTerm || entityTypeFilter !== 'all' || statusFilter !== 'all' 
                     ? 'No entities match your search criteria' 
                     : 'No entities found'}
@@ -144,16 +218,20 @@ export function EntitiesList() {
                   <>
                     <TableRow 
                       key={entity.id}
-                      className="cursor-pointer hover:bg-accent/50"
+                      className={`cursor-pointer transition-colors ${
+                        isExpanded ? 'bg-accent hover:bg-accent/90' : 'hover:bg-muted/50'
+                      }`}
                       onClick={() => setExpandedEntityId(isExpanded ? null : entity.id)}
                     >
+                      <TableCell>
+                        {isExpanded ? (
+                          <ChevronDown className="w-4 h-4 text-primary" />
+                        ) : (
+                          <ChevronsUpDown className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
+                        )}
+                      </TableCell>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
-                          {isExpanded ? (
-                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                          )}
                           {entity.name}
                         </div>
                       </TableCell>
@@ -168,9 +246,11 @@ export function EntitiesList() {
                       </TableCell>
                     </TableRow>
                     {isExpanded && (
-                      <TableRow key={`${entity.id}-details`}>
-                        <TableCell colSpan={6} className="p-0">
-                          <EntityDetailsReadOnly entity={entity} />
+                      <TableRow key={`${entity.id}-details`} className="bg-glass/50 backdrop-blur-md hover:bg-glass/50">
+                        <TableCell colSpan={7} className="p-0">
+                          <div className="border-t border-glass/30 bg-white/80 dark:bg-primary/5 backdrop-blur-md p-6">
+                            <EntityDetailsReadOnly entity={entity} />
+                          </div>
                         </TableCell>
                       </TableRow>
                     )}

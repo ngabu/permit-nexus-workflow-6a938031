@@ -4,6 +4,7 @@ import { RegistrySidebar } from "@/components/registry/RegistrySidebar";
 import { InitialAssessmentsList } from "@/components/registry/InitialAssessmentsList";
 import { EntitiesList } from "@/components/registry/EntitiesList";
 import { PermitsList } from "@/components/registry/PermitsList";
+import { IntentRegistrationsList } from "@/components/registry/IntentRegistrationsList";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -171,7 +172,10 @@ const RegistryDashboard = () => {
                  {/* Permit Applications Map */}
                  <PermitApplicationsMap 
                    showAllApplications={true}
-                   defaultStatuses={['approved', 'pending', 'under_review']}
+                   defaultStatuses={['approved']}
+                   hideDrawingTools={true}
+                   customTitle="Approved Permit Applications Map"
+                   customDescription="View approved permit applications across Papua New Guinea with GIS boundary layers. Toggle layers to see administrative boundaries and protected areas."
                  />
 
                  {/* Recent Activities */}
@@ -265,6 +269,7 @@ const RegistryDashboard = () => {
             {activeTab === 'compliance-reporting' && <RegistryComplianceReporting />}
             {activeTab === 'permit-reviews' && <PermitApplicationReview />}
             {activeTab === 'entities' && <EntitiesList />}
+            {activeTab === 'intents' && <IntentRegistrationsList />}
             {activeTab === 'permits' && <PermitsList />}
             {activeTab === 'permit-amalgamation' && <PermitAmalgamationReview />}
             {activeTab === 'permit-amendments' && <PermitAmendmentReview />}

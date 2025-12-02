@@ -139,39 +139,60 @@ export function BasicInfoReadOnly({ permit }: BasicInfoReadOnlyProps) {
           {entityDetails && (
             <>
               {/* Contact Information */}
-              {(entityDetails.email || entityDetails.phone) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {entityDetails.email && (
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Email</label>
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        <p className="font-medium">{entityDetails.email}</p>
-                      </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {entityDetails.email && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Email</label>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <p className="font-medium">{entityDetails.email}</p>
                     </div>
-                  )}
-                  {entityDetails.phone && (
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Phone</label>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-muted-foreground" />
-                        <p className="font-medium">{entityDetails.phone}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Address */}
-              {entityDetails.address && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Address</label>
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-                    <p className="font-medium">{entityDetails.address}</p>
                   </div>
+                )}
+                {entityDetails.phone && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Phone</label>
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <p className="font-medium">{entityDetails.phone}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Address Information */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Address Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(entityDetails as any).postal_address && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Postal Address</label>
+                      <p className="font-medium">{(entityDetails as any).postal_address}</p>
+                    </div>
+                  )}
+                  {(entityDetails as any)['registered address'] && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Registered Address</label>
+                      <p className="font-medium">{(entityDetails as any)['registered address']}</p>
+                    </div>
+                  )}
+                  {(entityDetails as any).province && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Province</label>
+                      <p className="font-medium">{(entityDetails as any).province}</p>
+                    </div>
+                  )}
+                  {(entityDetails as any).district && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">District</label>
+                      <p className="font-medium">{(entityDetails as any).district}</p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Business Registration Details */}
               {(entityDetails.registration_number || entityDetails.tax_number || entityDetails.contact_person) && (
@@ -195,9 +216,21 @@ export function BasicInfoReadOnly({ permit }: BasicInfoReadOnlyProps) {
                     )}
                   </div>
                   {entityDetails.contact_person && (
-                    <div>
+                    <div className="col-span-2">
                       <label className="text-sm font-medium text-muted-foreground">Contact Person</label>
                       <p className="font-medium">{entityDetails.contact_person}</p>
+                    </div>
+                  )}
+                  {(entityDetails as any).contact_person_email && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Contact Person Email</label>
+                      <p className="font-medium">{(entityDetails as any).contact_person_email}</p>
+                    </div>
+                  )}
+                  {(entityDetails as any).contact_person_phone && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Contact Person Phone</label>
+                      <p className="font-medium">{(entityDetails as any).contact_person_phone}</p>
                     </div>
                   )}
                 </div>

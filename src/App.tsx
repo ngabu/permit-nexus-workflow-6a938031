@@ -17,6 +17,11 @@ import NotFound from "./pages/NotFound";
 // Protected pages
 import PublicDashboard from "./pages/PublicDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import SystemHealth from "./pages/SystemHealth";
+import SecurityDashboard from "./pages/SecurityDashboard";
+import AuditLogsPage from "./pages/AuditLogsPage";
+import DatabaseAdministration from "./pages/DatabaseAdministration";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Profile from "./pages/Profile";
 import RegistryDashboard from "./pages/RegistryDashboard";
 import ComplianceDashboard from "./pages/ComplianceDashboard";
@@ -24,7 +29,6 @@ import RevenueDashboard from "./pages/RevenueDashboard";
 import FinanceDashboard from "./pages/FinanceDashboard";
 import DirectorateDashboard from "./pages/DirectorateDashboard";
 import ManagingDirectorDashboard from "./pages/ManagingDirectorDashboard";
-import Revenue from "./pages/Revenue";
 import Finance from "./pages/Finance";
 import Compliance from "./pages/Compliance";
 import UserManagement from "./pages/UserManagement";
@@ -180,19 +184,6 @@ function App() {
               />
 
               <Route
-                path="/revenue"
-                element={
-                  <ProtectedRoute 
-                    allowedRoles={['staff', 'admin', 'super_admin']}
-                    allowedUnits={['revenue']}
-                    allowedPositions={['officer']}
-                  >
-                    <Revenue />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
                 path="/RevenueDashboard"
                 element={
                   <ProtectedRoute {...ROUTE_CONFIG.REVENUE}>
@@ -288,6 +279,51 @@ function App() {
                 element={
                   <ProtectedRoute {...ROUTE_CONFIG.PUBLIC}>
                     <EditPermitApplication />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/super-admin"
+                element={
+                  <ProtectedRoute allowedRoles={['super_admin']}>
+                    <SuperAdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/system-health"
+                element={
+                  <ProtectedRoute {...ROUTE_CONFIG.ADMIN}>
+                    <SystemHealth />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/security-dashboard"
+                element={
+                  <ProtectedRoute {...ROUTE_CONFIG.ADMIN}>
+                    <SecurityDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/audit-logs"
+                element={
+                  <ProtectedRoute {...ROUTE_CONFIG.ADMIN}>
+                    <AuditLogsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/database-administration"
+                element={
+                  <ProtectedRoute {...ROUTE_CONFIG.ADMIN}>
+                    <DatabaseAdministration />
                   </ProtectedRoute>
                 }
               />

@@ -19,7 +19,12 @@ export function LocationReadOnly({ permit }: LocationReadOnlyProps) {
     existingPermits: (permit as any).existing_permits_details || 'Not specified',
     landownerStatus: (permit as any).landowner_negotiation_status || 'Not specified',
     legalDescription: (permit as any).legal_description || 'Not specified',
-    ownerName: (permit as any).owner_name || 'Not specified'
+    ownerName: (permit as any).owner_name || 'Not specified',
+    governmentAgreements: (permit as any).government_agreements_details || 'Not specified',
+    consultedDepartments: (permit as any).consulted_departments || 'Not specified',
+    requiredApprovals: (permit as any).required_approvals || 'Not specified',
+    province: (permit as any).province || 'Not specified',
+    district: (permit as any).district || 'Not specified'
   };
 
   return (
@@ -134,6 +139,42 @@ export function LocationReadOnly({ permit }: LocationReadOnlyProps) {
             <p className="mt-1 p-3 bg-muted rounded-lg">
               {locationDetails.landownerStatus}
             </p>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Government Agreements Details</label>
+            <p className="mt-1 p-3 bg-muted rounded-lg">
+              {locationDetails.governmentAgreements}
+            </p>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Consulted Departments</label>
+            <p className="mt-1 p-3 bg-muted rounded-lg">
+              {locationDetails.consultedDepartments}
+            </p>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Required Approvals</label>
+            <p className="mt-1 p-3 bg-muted rounded-lg">
+              {locationDetails.requiredApprovals}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Province</label>
+              <p className="mt-1 p-3 bg-muted rounded-lg">
+                {locationDetails.province}
+              </p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">District</label>
+              <p className="mt-1 p-3 bg-muted rounded-lg">
+                {locationDetails.district}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -17,9 +17,9 @@ import {
 export function AppSidebar() {
   const { profile } = useAuth()
 
-  const unitName = getUnitName(profile?.role)
-  const operationsLabel = getOperationsLabel(profile?.role)
-  const navigationItems = getNavigationItems(profile?.role)
+  const unitName = getUnitName(profile?.role, profile?.staff_position)
+  const operationsLabel = getOperationsLabel(profile?.role, profile?.staff_position)
+  const navigationItems = getNavigationItems(profile?.role, profile?.staff_position)
 
   return (
     <Sidebar

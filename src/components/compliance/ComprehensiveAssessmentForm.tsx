@@ -636,11 +636,12 @@ function OriginalComprehensiveAssessmentForm({ assessmentId, onComplete }: Compr
                   </p>
                 </div>
 
-                <div className="flex gap-4 pt-4">
+                <div className="flex justify-end gap-3 pt-4">
                   <Button 
                     type="submit" 
                     disabled={saving}
-                    variant="outline"
+                    variant="secondary"
+                    className="w-32"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     {saving ? 'Saving...' : 'Save Draft'}
@@ -650,6 +651,7 @@ function OriginalComprehensiveAssessmentForm({ assessmentId, onComplete }: Compr
                     type="button"
                     onClick={handleSubmit((data) => onSubmit(data, true))}
                     disabled={saving || !watch('assessment_notes')}
+                    className="w-48"
                   >
                     <Send className="w-4 h-4 mr-2" />
                     {saving ? 'Submitting...' : 'Submit Assessment'}

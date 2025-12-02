@@ -193,8 +193,8 @@ export function InitialAssessmentForm({ permitId, assessmentId, onAssessmentComp
             />
           </div>
 
-          <div className="flex gap-2">
-            <Button type="submit" disabled={loading}>
+          <div className="flex justify-end gap-3">
+            <Button type="submit" disabled={loading} className="w-48">
               {loading ? 'Submitting...' : 'Submit Assessment'}
             </Button>
           </div>

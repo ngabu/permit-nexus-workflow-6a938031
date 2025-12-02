@@ -178,13 +178,13 @@ export function PermitAmendmentReview() {
                 />
               </div>
 
-              <div className="flex gap-4">
-                <Button onClick={handleSubmitReview} className="flex-1">
+              <div className="flex gap-3 justify-end">
+                <Button variant="secondary" className="w-32">
+                  Save Draft
+                </Button>
+                <Button onClick={handleSubmitReview} className="w-40">
                   <CheckCircle className="w-4 h-4 mr-2" />
                   Submit Review
-                </Button>
-                <Button variant="outline" className="flex-1">
-                  Save Draft
                 </Button>
               </div>
             </CardContent>

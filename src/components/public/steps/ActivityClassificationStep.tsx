@@ -9,6 +9,7 @@ import { Activity, AlertTriangle, FileText, Droplets, Leaf, Gauge } from 'lucide
 import { usePrescribedActivities } from '@/hooks/usePrescribedActivities';
 import { usePermitTypes } from '@/hooks/usePermitTypes';
 import { usePermitTypeFields } from '@/hooks/usePermitTypeFields';
+import { useIndustrialSectors } from '@/hooks/useIndustrialSectors';
 
 interface ActivityClassificationStepProps {
   data: any;
@@ -25,6 +26,7 @@ export function ActivityClassificationStep({ data, onChange }: ActivityClassific
   const selectedLevel = ACTIVITY_LEVELS.find(level => level.value === data.activity_level);
   const { data: prescribedActivities, isLoading: activitiesLoading } = usePrescribedActivities();
   const { permitTypes, loading: permitTypesLoading } = usePermitTypes();
+  const { industrialSectors, loading: industrialSectorsLoading } = useIndustrialSectors();
   
   const selectedPermitType = permitTypes.find(pt => pt.id === data.permit_type_id);
   const { fields: permitTypeFields, loading: fieldsLoading } = usePermitTypeFields(selectedPermitType?.name);
@@ -209,27 +211,47 @@ export function ActivityClassificationStep({ data, onChange }: ActivityClassific
           )}
 
           {data.prescribed_activity_id && (
-            <div className="space-y-2">
-              <Label htmlFor="permit_type">Permit Type *</Label>
-              <Select value={data.permit_type_id || ''} 
-                onValueChange={(value) => {
-                  const selectedType = permitTypes.find(pt => pt.id === value);
-                  onChange({ permit_type_id: value, permit_type: selectedType?.name, permit_type_specific_data: {} });
-                }}
-                disabled={permitTypesLoading}>
-                <SelectTrigger><SelectValue placeholder={permitTypesLoading ? "Loading permit types..." : "Select permit type"} /></SelectTrigger>
-                <SelectContent>
-                  {permitTypes.map((permitType) => (
-                    <SelectItem key={permitType.id} value={permitType.id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{permitType.display_name}</span>
-                        <span className="text-xs text-muted-foreground">{permitType.category}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="industrial_sector">Industrial Sector *</Label>
+                <Select value={data.industrial_sector_id || ''} 
+                  onValueChange={(value) => {
+                    onChange({ industrial_sector_id: value });
+                  }}
+                  disabled={industrialSectorsLoading}>
+                  <SelectTrigger><SelectValue placeholder={industrialSectorsLoading ? "Loading industrial sectors..." : "Select industrial sector"} /></SelectTrigger>
+                  <SelectContent>
+                    {industrialSectors.map((sector) => (
+                      <SelectItem key={sector.id} value={sector.id}>
+                        {sector.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="permit_type">Permit Type *</Label>
+                <Select value={data.permit_type_id || ''} 
+                  onValueChange={(value) => {
+                    const selectedType = permitTypes.find(pt => pt.id === value);
+                    onChange({ permit_type_id: value, permit_type: selectedType?.name, permit_type_specific_data: {} });
+                  }}
+                  disabled={permitTypesLoading}>
+                  <SelectTrigger><SelectValue placeholder={permitTypesLoading ? "Loading permit types..." : "Select permit type"} /></SelectTrigger>
+                  <SelectContent>
+                    {permitTypes.map((permitType) => (
+                      <SelectItem key={permitType.id} value={permitType.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{permitType.display_name}</span>
+                          <span className="text-xs text-muted-foreground">{permitType.category}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
           )}
 
           {data.permit_type_id && selectedPermitType && (

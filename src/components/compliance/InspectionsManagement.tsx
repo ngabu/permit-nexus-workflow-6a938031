@@ -309,11 +309,11 @@ export const InspectionsManagement = () => {
                 />
               </div>
 
-              <div className="flex gap-4">
-                <Button type="submit" className="flex-1">Schedule Inspection</Button>
-                <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)} className="flex-1">
+              <div className="flex justify-end gap-3">
+                <Button type="button" variant="destructive" onClick={() => setShowCreateForm(false)} className="w-32">
                   Cancel
                 </Button>
+                <Button type="submit" className="w-48">Schedule Inspection</Button>
               </div>
             </form>
           </CardContent>
@@ -321,48 +321,51 @@ export const InspectionsManagement = () => {
       )}
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search by permit number, title, or entity..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+      {!showCreateForm && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search by permit number, title, or entity..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-48">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat} value={cat as string}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={provinceFilter} onValueChange={setProvinceFilter}>
+                <SelectTrigger className="w-48">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Province" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Provinces</SelectItem>
+                  {provinces.map(prov => (
+                    <SelectItem key={prov} value={prov as string}>{prov}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-48">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map(cat => (
-                  <SelectItem key={cat} value={cat as string}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={provinceFilter} onValueChange={setProvinceFilter}>
-              <SelectTrigger className="w-48">
-                <MapPin className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Province" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Provinces</SelectItem>
-                {provinces.map(prov => (
-                  <SelectItem key={prov} value={prov as string}>{prov}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Inspections List */}
-      <div className="space-y-4">
+      {!showCreateForm && (
+        <div className="space-y-4">
         {filteredInspections.map((inspection) => (
           <Card key={inspection.id}>
             <CardContent className="pt-6">
@@ -423,7 +426,8 @@ export const InspectionsManagement = () => {
             </CardContent>
           </Card>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -8,15 +8,21 @@ interface ProjectDetailsReadOnlyProps {
 }
 
 export function ProjectDetailsReadOnly({ permit }: ProjectDetailsReadOnlyProps) {
-  // Mock data for demonstration - in real implementation, fetch from permit application details
+  // Extract actual project data from permit
   const projectDetails = {
-    description: permit.description || 'No description provided',
-    estimatedCost: 0,
-    startDate: null,
-    endDate: null,
-    activityClassification: 'Not specified',
-    environmentalImpact: 'Not specified',
-    mitigationMeasures: 'Not specified'
+    description: (permit as any).project_description || permit.description || 'No description provided',
+    proposedWorksDescription: (permit as any).proposed_works_description || 'Not specified',
+    estimatedCost: (permit as any).estimated_cost_kina || 0,
+    startDate: (permit as any).project_start_date || (permit as any).commencement_date || null,
+    endDate: (permit as any).project_end_date || (permit as any).completion_date || null,
+    activityClassification: (permit as any).activity_classification || 'Not specified',
+    activityCategory: (permit as any).activity_category || 'Not specified',
+    activitySubcategory: (permit as any).activity_subcategory || 'Not specified',
+    environmentalImpact: (permit as any).environmental_impact || 'Not specified',
+    mitigationMeasures: (permit as any).mitigation_measures || 'Not specified',
+    industrialSector: (permit as any).industrial_sector_id || 'Not specified',
+    district: (permit as any).district || 'Not specified',
+    province: (permit as any).province || 'Not specified'
   };
 
   return (
@@ -37,6 +43,13 @@ export function ProjectDetailsReadOnly({ permit }: ProjectDetailsReadOnlyProps) 
             </p>
           </div>
 
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Proposed Works Description</label>
+            <p className="mt-1 p-3 bg-muted rounded-lg">
+              {projectDetails.proposedWorksDescription}
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Activity Classification</label>
@@ -49,6 +62,28 @@ export function ProjectDetailsReadOnly({ permit }: ProjectDetailsReadOnlyProps) 
               <Badge variant="secondary" className="mt-1">
                 {permit.permit_type}
               </Badge>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Activity Category</label>
+              <p className="font-medium">{projectDetails.activityCategory}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Activity Subcategory</label>
+              <p className="font-medium">{projectDetails.activitySubcategory}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Province</label>
+              <p className="font-medium">{projectDetails.province}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">District</label>
+              <p className="font-medium">{projectDetails.district}</p>
             </div>
           </div>
         </CardContent>

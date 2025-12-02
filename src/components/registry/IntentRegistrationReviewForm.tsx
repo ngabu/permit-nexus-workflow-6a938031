@@ -733,23 +733,25 @@ export function IntentRegistrationReviewForm({ intentId, onBack }: IntentRegistr
                 )}
               </div>
 
-              <div className="flex justify-end gap-4 pt-6 border-t border-glass">
+              <div className="flex justify-end gap-3 pt-6 border-t border-glass">
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => {
                     setReviewNotes(intent.review_notes || '');
                     setReviewStatus(intent.status);
                     setFeedbackFiles([]);
                   }}
+                  className="w-32"
                 >
-                  Reset
+                  Save Draft
                 </Button>
                 <Button
                   onClick={handleReviewSubmit}
                   disabled={submitting || !reviewStatus || !reviewNotes.trim()}
+                  className="w-40"
                 >
                   <Send className="w-4 h-4 mr-2" />
-                  {submitting ? 'Submitting...' : 'Submit Review & Notify'}
+                  {submitting ? 'Submitting...' : 'Submit Review'}
                 </Button>
               </div>
             </CardContent>

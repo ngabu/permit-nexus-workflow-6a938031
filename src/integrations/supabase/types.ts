@@ -284,6 +284,169 @@ export type Database = {
           },
         ]
       }
+      application_workflow_state: {
+        Row: {
+          applicant_id: string
+          application_id: string
+          application_number: string | null
+          application_type: Database["public"]["Enums"]["application_category"]
+          assigned_at: string | null
+          assigned_to: string | null
+          assigned_unit: Database["public"]["Enums"]["staff_unit"] | null
+          compliance_completed_at: string | null
+          created_at: string
+          current_stage: Database["public"]["Enums"]["workflow_stage"]
+          entity_id: string | null
+          final_decision_at: string | null
+          id: string
+          is_locked: boolean
+          lock_reason: string | null
+          locked_at: string | null
+          locked_by: string | null
+          notes: string | null
+          previous_stage: Database["public"]["Enums"]["workflow_stage"] | null
+          priority: string | null
+          registry_completed_at: string | null
+          revenue_completed_at: string | null
+          sla_deadline: string | null
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_id: string
+          application_id: string
+          application_number?: string | null
+          application_type: Database["public"]["Enums"]["application_category"]
+          assigned_at?: string | null
+          assigned_to?: string | null
+          assigned_unit?: Database["public"]["Enums"]["staff_unit"] | null
+          compliance_completed_at?: string | null
+          created_at?: string
+          current_stage?: Database["public"]["Enums"]["workflow_stage"]
+          entity_id?: string | null
+          final_decision_at?: string | null
+          id?: string
+          is_locked?: boolean
+          lock_reason?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          notes?: string | null
+          previous_stage?: Database["public"]["Enums"]["workflow_stage"] | null
+          priority?: string | null
+          registry_completed_at?: string | null
+          revenue_completed_at?: string | null
+          sla_deadline?: string | null
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_id?: string
+          application_id?: string
+          application_number?: string | null
+          application_type?: Database["public"]["Enums"]["application_category"]
+          assigned_at?: string | null
+          assigned_to?: string | null
+          assigned_unit?: Database["public"]["Enums"]["staff_unit"] | null
+          compliance_completed_at?: string | null
+          created_at?: string
+          current_stage?: Database["public"]["Enums"]["workflow_stage"]
+          entity_id?: string | null
+          final_decision_at?: string | null
+          id?: string
+          is_locked?: boolean
+          lock_reason?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          notes?: string | null
+          previous_stage?: Database["public"]["Enums"]["workflow_stage"] | null
+          priority?: string | null
+          registry_completed_at?: string | null
+          revenue_completed_at?: string | null
+          sla_deadline?: string | null
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_workflow_state_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_stages: {
+        Row: {
+          assigned_at: string | null
+          assigned_to: string | null
+          attachments: Json | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          outcome: string | null
+          recommendations: string | null
+          stage_name: string
+          stage_order: number
+          stage_unit: Database["public"]["Enums"]["staff_unit"]
+          started_at: string | null
+          status: string
+          updated_at: string
+          workflow_state_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_to?: string | null
+          attachments?: Json | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          outcome?: string | null
+          recommendations?: string | null
+          stage_name: string
+          stage_order: number
+          stage_unit: Database["public"]["Enums"]["staff_unit"]
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          workflow_state_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_to?: string | null
+          attachments?: Json | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          outcome?: string | null
+          recommendations?: string | null
+          stage_name?: string
+          stage_order?: number
+          stage_unit?: Database["public"]["Enums"]["staff_unit"]
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          workflow_state_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_stages_workflow_state_id_fkey"
+            columns: ["workflow_state_id"]
+            isOneToOne: false
+            referencedRelation: "application_workflow_state"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           changed_at: string | null
@@ -510,6 +673,80 @@ export type Database = {
           },
         ]
       }
+      director_approvals: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision: string | null
+          decision_notes: string | null
+          docusign_envelope_id: string | null
+          id: string
+          letter_signed: boolean | null
+          letter_signed_at: string | null
+          priority: string | null
+          recommendation: string
+          recommendation_notes: string | null
+          requires_signature: boolean | null
+          signed_document_path: string | null
+          submitted_at: string
+          submitted_by: string
+          submitted_to: string
+          updated_at: string
+          workflow_state_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string | null
+          decision_notes?: string | null
+          docusign_envelope_id?: string | null
+          id?: string
+          letter_signed?: boolean | null
+          letter_signed_at?: string | null
+          priority?: string | null
+          recommendation: string
+          recommendation_notes?: string | null
+          requires_signature?: boolean | null
+          signed_document_path?: string | null
+          submitted_at?: string
+          submitted_by: string
+          submitted_to: string
+          updated_at?: string
+          workflow_state_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string | null
+          decision_notes?: string | null
+          docusign_envelope_id?: string | null
+          id?: string
+          letter_signed?: boolean | null
+          letter_signed_at?: string | null
+          priority?: string | null
+          recommendation?: string
+          recommendation_notes?: string | null
+          requires_signature?: boolean | null
+          signed_document_path?: string | null
+          submitted_at?: string
+          submitted_by?: string
+          submitted_to?: string
+          updated_at?: string
+          workflow_state_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "director_approvals_workflow_state_id_fkey"
+            columns: ["workflow_state_id"]
+            isOneToOne: false
+            referencedRelation: "application_workflow_state"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       directorate_approvals: {
         Row: {
           application_id: string
@@ -722,6 +959,7 @@ export type Database = {
           contact_person_email: string | null
           contact_person_phone: number | null
           created_at: string
+          district: string | null
           email: string | null
           entity_type: string
           id: string
@@ -729,6 +967,7 @@ export type Database = {
           name: string
           phone: string | null
           postal_address: string | null
+          province: string | null
           "registered address": string | null
           registration_number: string | null
           tax_number: string | null
@@ -740,6 +979,7 @@ export type Database = {
           contact_person_email?: string | null
           contact_person_phone?: number | null
           created_at?: string
+          district?: string | null
           email?: string | null
           entity_type: string
           id?: string
@@ -747,6 +987,7 @@ export type Database = {
           name: string
           phone?: string | null
           postal_address?: string | null
+          province?: string | null
           "registered address"?: string | null
           registration_number?: string | null
           tax_number?: string | null
@@ -758,6 +999,7 @@ export type Database = {
           contact_person_email?: string | null
           contact_person_phone?: number | null
           created_at?: string
+          district?: string | null
           email?: string | null
           entity_type?: string
           id?: string
@@ -765,6 +1007,7 @@ export type Database = {
           name?: string
           phone?: string | null
           postal_address?: string | null
+          province?: string | null
           "registered address"?: string | null
           registration_number?: string | null
           tax_number?: string | null
@@ -1064,6 +1307,51 @@ export type Database = {
         }
         Relationships: []
       }
+      gis_data: {
+        Row: {
+          created_at: string | null
+          data: Json
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data: Json
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      industrial_sectors: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       initial_assessments: {
         Row: {
           assessed_by: string
@@ -1197,6 +1485,7 @@ export type Database = {
           completion_date: string | null
           created_at: string
           departments_approached: string | null
+          district: string | null
           draft_name: string | null
           entity_id: string | null
           estimated_cost_kina: number | null
@@ -1206,8 +1495,10 @@ export type Database = {
           landowner_negotiation_status: string | null
           preparatory_work_description: string | null
           prescribed_activity_id: string | null
+          project_boundary: Json | null
           project_site_address: string | null
           project_site_description: string | null
+          province: string | null
           site_ownership_details: string | null
           updated_at: string
           user_id: string
@@ -1220,6 +1511,7 @@ export type Database = {
           completion_date?: string | null
           created_at?: string
           departments_approached?: string | null
+          district?: string | null
           draft_name?: string | null
           entity_id?: string | null
           estimated_cost_kina?: number | null
@@ -1229,8 +1521,10 @@ export type Database = {
           landowner_negotiation_status?: string | null
           preparatory_work_description?: string | null
           prescribed_activity_id?: string | null
+          project_boundary?: Json | null
           project_site_address?: string | null
           project_site_description?: string | null
+          province?: string | null
           site_ownership_details?: string | null
           updated_at?: string
           user_id: string
@@ -1243,6 +1537,7 @@ export type Database = {
           completion_date?: string | null
           created_at?: string
           departments_approached?: string | null
+          district?: string | null
           draft_name?: string | null
           entity_id?: string | null
           estimated_cost_kina?: number | null
@@ -1252,8 +1547,10 @@ export type Database = {
           landowner_negotiation_status?: string | null
           preparatory_work_description?: string | null
           prescribed_activity_id?: string | null
+          project_boundary?: Json | null
           project_site_address?: string | null
           project_site_description?: string | null
+          province?: string | null
           site_ownership_details?: string | null
           updated_at?: string
           user_id?: string
@@ -1312,6 +1609,7 @@ export type Database = {
           completion_date: string
           created_at: string
           departments_approached: string | null
+          district: string | null
           entity_id: string
           estimated_cost_kina: number | null
           existing_permit_id: string | null
@@ -1321,8 +1619,10 @@ export type Database = {
           official_feedback_attachments: Json | null
           preparatory_work_description: string
           prescribed_activity_id: string | null
+          project_boundary: Json | null
           project_site_address: string | null
           project_site_description: string | null
+          province: string | null
           review_notes: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -1339,6 +1639,7 @@ export type Database = {
           completion_date: string
           created_at?: string
           departments_approached?: string | null
+          district?: string | null
           entity_id: string
           estimated_cost_kina?: number | null
           existing_permit_id?: string | null
@@ -1348,8 +1649,10 @@ export type Database = {
           official_feedback_attachments?: Json | null
           preparatory_work_description: string
           prescribed_activity_id?: string | null
+          project_boundary?: Json | null
           project_site_address?: string | null
           project_site_description?: string | null
+          province?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -1366,6 +1669,7 @@ export type Database = {
           completion_date?: string
           created_at?: string
           departments_approached?: string | null
+          district?: string | null
           entity_id?: string
           estimated_cost_kina?: number | null
           existing_permit_id?: string | null
@@ -1375,8 +1679,10 @@ export type Database = {
           official_feedback_attachments?: Json | null
           preparatory_work_description?: string
           prescribed_activity_id?: string | null
+          project_boundary?: Json | null
           project_site_address?: string | null
           project_site_description?: string | null
+          province?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -1438,6 +1744,7 @@ export type Database = {
           created_at: string
           currency: string
           due_date: string
+          entity_id: string | null
           follow_up_date: string | null
           follow_up_notes: string | null
           id: string
@@ -1456,6 +1763,7 @@ export type Database = {
           created_at?: string
           currency?: string
           due_date: string
+          entity_id?: string | null
           follow_up_date?: string | null
           follow_up_notes?: string | null
           id?: string
@@ -1474,6 +1782,7 @@ export type Database = {
           created_at?: string
           currency?: string
           due_date?: string
+          entity_id?: string | null
           follow_up_date?: string | null
           follow_up_notes?: string | null
           id?: string
@@ -1491,6 +1800,13 @@ export type Database = {
             columns: ["activity_id"]
             isOneToOne: false
             referencedRelation: "permit_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
             referencedColumns: ["id"]
           },
         ]
@@ -1646,6 +1962,7 @@ export type Database = {
           created_at: string
           current_step: number | null
           description: string | null
+          district: string | null
           dredging_details: Json | null
           effluent_discharge_details: Json | null
           eia_required: boolean | null
@@ -1668,6 +1985,7 @@ export type Database = {
           hazardous_material_details: Json | null
           hazardous_waste_details: Json | null
           id: string
+          industrial_sector_id: string | null
           infrastructure_details: Json | null
           intent_registration_id: string | null
           is_draft: boolean | null
@@ -1698,6 +2016,7 @@ export type Database = {
           project_description: string | null
           project_end_date: string | null
           project_start_date: string | null
+          province: string | null
           public_consultation_proof: Json | null
           rehabilitation_details: Json | null
           renewable_energy_details: Json | null
@@ -1747,6 +2066,7 @@ export type Database = {
           created_at?: string
           current_step?: number | null
           description?: string | null
+          district?: string | null
           dredging_details?: Json | null
           effluent_discharge_details?: Json | null
           eia_required?: boolean | null
@@ -1769,6 +2089,7 @@ export type Database = {
           hazardous_material_details?: Json | null
           hazardous_waste_details?: Json | null
           id?: string
+          industrial_sector_id?: string | null
           infrastructure_details?: Json | null
           intent_registration_id?: string | null
           is_draft?: boolean | null
@@ -1799,6 +2120,7 @@ export type Database = {
           project_description?: string | null
           project_end_date?: string | null
           project_start_date?: string | null
+          province?: string | null
           public_consultation_proof?: Json | null
           rehabilitation_details?: Json | null
           renewable_energy_details?: Json | null
@@ -1848,6 +2170,7 @@ export type Database = {
           created_at?: string
           current_step?: number | null
           description?: string | null
+          district?: string | null
           dredging_details?: Json | null
           effluent_discharge_details?: Json | null
           eia_required?: boolean | null
@@ -1870,6 +2193,7 @@ export type Database = {
           hazardous_material_details?: Json | null
           hazardous_waste_details?: Json | null
           id?: string
+          industrial_sector_id?: string | null
           infrastructure_details?: Json | null
           intent_registration_id?: string | null
           is_draft?: boolean | null
@@ -1900,6 +2224,7 @@ export type Database = {
           project_description?: string | null
           project_end_date?: string | null
           project_start_date?: string | null
+          province?: string | null
           public_consultation_proof?: Json | null
           rehabilitation_details?: Json | null
           renewable_energy_details?: Json | null
@@ -1958,6 +2283,13 @@ export type Database = {
             columns: ["existing_permit_id"]
             isOneToOne: false
             referencedRelation: "permit_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permit_applications_industrial_sector_id_fkey"
+            columns: ["industrial_sector_id"]
+            isOneToOne: false
+            referencedRelation: "industrial_sectors"
             referencedColumns: ["id"]
           },
           {
@@ -2100,6 +2432,7 @@ export type Database = {
           display_name: string
           icon_name: string | null
           id: string
+          industrial_sector: string | null
           is_active: boolean
           jsonb_column_name: string
           name: string
@@ -2112,6 +2445,7 @@ export type Database = {
           display_name: string
           icon_name?: string | null
           id?: string
+          industrial_sector?: string | null
           is_active?: boolean
           jsonb_column_name: string
           name: string
@@ -2124,13 +2458,22 @@ export type Database = {
           display_name?: string
           icon_name?: string | null
           id?: string
+          industrial_sector?: string | null
           is_active?: boolean
           jsonb_column_name?: string
           name?: string
           sort_order?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "permit_types_industrial_sector_fkey"
+            columns: ["industrial_sector"]
+            isOneToOne: false
+            referencedRelation: "industrial_sectors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       prescribed_activities: {
         Row: {
@@ -2237,6 +2580,27 @@ export type Database = {
         }
         Relationships: []
       }
+      project_aois: {
+        Row: {
+          created_at: string | null
+          geometry: Json
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          geometry: Json
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          geometry?: Json
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       registry_audit_trail: {
         Row: {
           action_type: string
@@ -2333,6 +2697,33 @@ export type Database = {
         }
         Relationships: []
       }
+      revenue_item_codes: {
+        Row: {
+          created_at: string | null
+          id: string
+          item_description: string | null
+          item_name: string
+          item_number: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          item_description?: string | null
+          item_name: string
+          item_number: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          item_description?: string | null
+          item_name?: string
+          item_number?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       system_metrics: {
         Row: {
           id: string
@@ -2356,6 +2747,220 @@ export type Database = {
           recorded_at?: string | null
         }
         Relationships: []
+      }
+      unified_notifications: {
+        Row: {
+          action_label: string | null
+          action_url: string | null
+          application_id: string | null
+          application_type:
+            | Database["public"]["Enums"]["application_category"]
+            | null
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          notification_type: string
+          priority: string | null
+          read_at: string | null
+          recipient_id: string
+          recipient_type: string
+          requires_action: boolean | null
+          title: string
+          workflow_state_id: string | null
+        }
+        Insert: {
+          action_label?: string | null
+          action_url?: string | null
+          application_id?: string | null
+          application_type?:
+            | Database["public"]["Enums"]["application_category"]
+            | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          metadata?: Json | null
+          notification_type: string
+          priority?: string | null
+          read_at?: string | null
+          recipient_id: string
+          recipient_type: string
+          requires_action?: boolean | null
+          title: string
+          workflow_state_id?: string | null
+        }
+        Update: {
+          action_label?: string | null
+          action_url?: string | null
+          application_id?: string | null
+          application_type?:
+            | Database["public"]["Enums"]["application_category"]
+            | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          notification_type?: string
+          priority?: string | null
+          read_at?: string | null
+          recipient_id?: string
+          recipient_type?: string
+          requires_action?: boolean | null
+          title?: string
+          workflow_state_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unified_notifications_workflow_state_id_fkey"
+            columns: ["workflow_state_id"]
+            isOneToOne: false
+            referencedRelation: "application_workflow_state"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_fees: {
+        Row: {
+          administration_fee: number
+          amount_paid: number | null
+          approved_at: string | null
+          approved_by: string | null
+          calculated_at: string | null
+          calculated_by: string | null
+          calculation_method: string | null
+          created_at: string
+          id: string
+          invoice_id: string | null
+          invoice_issued: boolean | null
+          invoice_issued_at: string | null
+          paid_at: string | null
+          payment_reference: string | null
+          payment_status: string | null
+          technical_fee: number
+          total_fee: number
+          updated_at: string
+          workflow_state_id: string
+        }
+        Insert: {
+          administration_fee?: number
+          amount_paid?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          calculated_at?: string | null
+          calculated_by?: string | null
+          calculation_method?: string | null
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          invoice_issued?: boolean | null
+          invoice_issued_at?: string | null
+          paid_at?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          technical_fee?: number
+          total_fee?: number
+          updated_at?: string
+          workflow_state_id: string
+        }
+        Update: {
+          administration_fee?: number
+          amount_paid?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          calculated_at?: string | null
+          calculated_by?: string | null
+          calculation_method?: string | null
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          invoice_issued?: boolean | null
+          invoice_issued_at?: string | null
+          paid_at?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          technical_fee?: number
+          total_fee?: number
+          updated_at?: string
+          workflow_state_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_fees_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_fees_workflow_state_id_fkey"
+            columns: ["workflow_state_id"]
+            isOneToOne: false
+            referencedRelation: "application_workflow_state"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_transitions: {
+        Row: {
+          attachments: Json | null
+          auto_transition: boolean | null
+          created_at: string
+          from_stage: Database["public"]["Enums"]["workflow_stage"] | null
+          id: string
+          notes: string | null
+          performed_by: string
+          performer_position:
+            | Database["public"]["Enums"]["staff_position"]
+            | null
+          performer_role: Database["public"]["Enums"]["staff_unit"] | null
+          to_stage: Database["public"]["Enums"]["workflow_stage"]
+          transition_type: string
+          workflow_state_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          auto_transition?: boolean | null
+          created_at?: string
+          from_stage?: Database["public"]["Enums"]["workflow_stage"] | null
+          id?: string
+          notes?: string | null
+          performed_by: string
+          performer_position?:
+            | Database["public"]["Enums"]["staff_position"]
+            | null
+          performer_role?: Database["public"]["Enums"]["staff_unit"] | null
+          to_stage: Database["public"]["Enums"]["workflow_stage"]
+          transition_type: string
+          workflow_state_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          auto_transition?: boolean | null
+          created_at?: string
+          from_stage?: Database["public"]["Enums"]["workflow_stage"] | null
+          id?: string
+          notes?: string | null
+          performed_by?: string
+          performer_position?:
+            | Database["public"]["Enums"]["staff_position"]
+            | null
+          performer_role?: Database["public"]["Enums"]["staff_unit"] | null
+          to_stage?: Database["public"]["Enums"]["workflow_stage"]
+          transition_type?: string
+          workflow_state_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_transitions_workflow_state_id_fkey"
+            columns: ["workflow_state_id"]
+            isOneToOne: false
+            referencedRelation: "application_workflow_state"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -2413,6 +3018,13 @@ export type Database = {
       }
     }
     Functions: {
+      backup_old_audit_logs: {
+        Args: { days_threshold?: number }
+        Returns: {
+          backup_count: number
+          backup_file: string
+        }[]
+      }
       calculate_application_fee: {
         Args: {
           p_activity_id: string
@@ -2449,6 +3061,29 @@ export type Database = {
       can_update_user_role: {
         Args: { new_role: string; target_user_id: string }
         Returns: boolean
+      }
+      clean_old_drafts: { Args: { days_old?: number }; Returns: number }
+      clear_old_audit_logs: {
+        Args: { days_threshold?: number }
+        Returns: number
+      }
+      clear_old_system_logs: {
+        Args: { days_threshold?: number }
+        Returns: number
+      }
+      create_database_backup: {
+        Args: { backup_filename: string; backup_format: string }
+        Returns: Json
+      }
+      create_workflow_state: {
+        Args: {
+          p_applicant_id: string
+          p_application_id: string
+          p_application_number?: string
+          p_application_type: Database["public"]["Enums"]["application_category"]
+          p_entity_id?: string
+        }
+        Returns: string
       }
       freeze_entity_records: {
         Args: {
@@ -2507,6 +3142,15 @@ export type Database = {
         }[]
       }
       get_prescribed_activities: { Args: never; Returns: Json }
+      get_table_statistics: {
+        Args: never
+        Returns: {
+          row_count: number
+          size_bytes: number
+          table_name: string
+          total_size: string
+        }[]
+      }
       get_user_staff_position: { Args: never; Returns: string }
       get_user_staff_unit: { Args: never; Returns: string }
       get_user_type: { Args: never; Returns: string }
@@ -2517,6 +3161,15 @@ export type Database = {
       is_public_user: { Args: never; Returns: boolean }
       is_registry_staff: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      lock_workflow: {
+        Args: {
+          p_lock: boolean
+          p_reason?: string
+          p_user_id: string
+          p_workflow_id: string
+        }
+        Returns: boolean
+      }
       log_audit_event: {
         Args: {
           p_action: string
@@ -2559,6 +3212,7 @@ export type Database = {
         }
         Returns: string
       }
+      rebuild_database_indexes: { Args: never; Returns: undefined }
       record_system_metric: {
         Args: {
           p_metric_data?: Json
@@ -2567,6 +3221,30 @@ export type Database = {
         }
         Returns: string
       }
+      send_workflow_notification: {
+        Args: {
+          p_message: string
+          p_notification_type: string
+          p_priority?: string
+          p_recipient_id: string
+          p_recipient_type: string
+          p_requires_action?: boolean
+          p_title: string
+          p_workflow_id: string
+        }
+        Returns: string
+      }
+      transition_workflow_stage: {
+        Args: {
+          p_attachments?: Json
+          p_notes?: string
+          p_performer_id: string
+          p_to_stage: Database["public"]["Enums"]["workflow_stage"]
+          p_workflow_id: string
+        }
+        Returns: boolean
+      }
+      update_database_statistics: { Args: never; Returns: undefined }
       update_user_role_secure: {
         Args: {
           new_role: string
@@ -2585,6 +3263,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      vacuum_analyze_database: { Args: never; Returns: undefined }
       validate_assessment_prerequisites: {
         Args: { p_permit_application_id: string }
         Returns: Json
@@ -2595,6 +3274,15 @@ export type Database = {
       }
     }
     Enums: {
+      application_category:
+        | "intent_registration"
+        | "new_permit"
+        | "permit_renewal"
+        | "permit_transfer"
+        | "permit_amendment"
+        | "permit_amalgamation"
+        | "permit_surrender"
+        | "compliance_report"
       staff_position: "officer" | "manager" | "director" | "managing_director"
       staff_unit:
         | "registry"
@@ -2604,6 +3292,20 @@ export type Database = {
         | "directorate"
         | "systems_admin"
       user_type: "public" | "staff" | "admin" | "super_admin"
+      workflow_stage:
+        | "submitted"
+        | "registry_review"
+        | "registry_clarification_needed"
+        | "compliance_review"
+        | "compliance_clarification_needed"
+        | "revenue_review"
+        | "revenue_invoice_issued"
+        | "payment_pending"
+        | "payment_confirmed"
+        | "director_review"
+        | "approved"
+        | "rejected"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2731,6 +3433,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      application_category: [
+        "intent_registration",
+        "new_permit",
+        "permit_renewal",
+        "permit_transfer",
+        "permit_amendment",
+        "permit_amalgamation",
+        "permit_surrender",
+        "compliance_report",
+      ],
       staff_position: ["officer", "manager", "director", "managing_director"],
       staff_unit: [
         "registry",
@@ -2741,6 +3453,21 @@ export const Constants = {
         "systems_admin",
       ],
       user_type: ["public", "staff", "admin", "super_admin"],
+      workflow_stage: [
+        "submitted",
+        "registry_review",
+        "registry_clarification_needed",
+        "compliance_review",
+        "compliance_clarification_needed",
+        "revenue_review",
+        "revenue_invoice_issued",
+        "payment_pending",
+        "payment_confirmed",
+        "director_review",
+        "approved",
+        "rejected",
+        "cancelled",
+      ],
     },
   },
 } as const

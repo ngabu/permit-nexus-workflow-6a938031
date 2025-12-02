@@ -6,11 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { Loader2, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Search, Filter, ChevronLeft, ChevronRight as ChevronRightPagination, ChevronDown, ChevronRight, User, Building, MapPin, Upload, Shield, FileDown } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { BasicInfoReadOnly } from './read-only/BasicInfoReadOnly';
+import { ProjectAndSpecificDetailsReadOnly } from './read-only/ProjectAndSpecificDetailsReadOnly';
+import { LocationReadOnly } from './read-only/LocationReadOnly';
+import { DocumentsReadOnly } from './read-only/DocumentsReadOnly';
+import { ComplianceReadOnly } from './read-only/ComplianceReadOnly';
 
 interface Permit {
   id: string;
@@ -36,6 +43,9 @@ export function PermitsList() {
   const [entityFilter, setEntityFilter] = useState<string>('all');
   const [categoryLevelFilter, setCategoryLevelFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedPermitId, setExpandedPermitId] = useState<string | null>(null);
+  const [expandedPermitDetails, setExpandedPermitDetails] = useState<any>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
@@ -63,6 +73,42 @@ export function PermitsList() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPermitDetails = async (permitId: string) => {
+    try {
+      setLoadingDetails(true);
+      const { data, error } = await supabase
+        .from('permit_applications')
+        .select(`
+          *,
+          entity:entities(*)
+        `)
+        .eq('id', permitId)
+        .single();
+
+      if (error) throw error;
+      setExpandedPermitDetails(data);
+    } catch (error) {
+      console.error('Error fetching permit details:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load permit details',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  const handleRowClick = (permitId: string) => {
+    if (expandedPermitId === permitId) {
+      setExpandedPermitId(null);
+      setExpandedPermitDetails(null);
+    } else {
+      setExpandedPermitId(permitId);
+      fetchPermitDetails(permitId);
     }
   };
 
@@ -117,6 +163,56 @@ export function PermitsList() {
     return Array.from(new Set(permits.map(p => p.activity_level).filter(Boolean)));
   }, [permits]);
 
+  const exportToExcel = () => {
+    const exportData = filteredPermits.map(permit => ({
+      'Permit Number': permit.permit_number || '-',
+      'Application Title': permit.title,
+      'Entity': permit.entity_name || '-',
+      'Permit Type': permit.permit_type.replace(/_/g, ' '),
+      'Activity Level': permit.activity_level || '-',
+      'Project Description': permit.description || '-',
+      'Approval Date': permit.approval_date ? format(new Date(permit.approval_date), 'MMM dd, yyyy') : '-',
+      'Status': 'Active',
+      'Created Date': format(new Date(permit.created_at), 'MMM dd, yyyy'),
+      'Last Updated': format(new Date(permit.updated_at), 'MMM dd, yyyy')
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    
+    // Set column widths
+    worksheet['!cols'] = [
+      { wch: 20 }, { wch: 30 }, { wch: 25 }, { wch: 20 }, { wch: 15 },
+      { wch: 40 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 15 }
+    ];
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Approved Permits');
+    XLSX.writeFile(workbook, `Permits_Registry_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  };
+
+  const exportToCSV = () => {
+    const exportData = filteredPermits.map(permit => ({
+      'Permit Number': permit.permit_number || '-',
+      'Application Title': permit.title,
+      'Entity': permit.entity_name || '-',
+      'Permit Type': permit.permit_type.replace(/_/g, ' '),
+      'Activity Level': permit.activity_level || '-',
+      'Project Description': permit.description || '-',
+      'Approval Date': permit.approval_date ? format(new Date(permit.approval_date), 'MMM dd, yyyy') : '-',
+      'Status': 'Active',
+      'Created Date': format(new Date(permit.created_at), 'MMM dd, yyyy'),
+      'Last Updated': format(new Date(permit.updated_at), 'MMM dd, yyyy')
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const csv = XLSX.utils.sheet_to_csv(worksheet);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Permits_Registry_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -129,7 +225,19 @@ export function PermitsList() {
     <Card>
       <CardHeader>
         <div className="flex flex-col gap-4">
-          <CardTitle>All Approved Permits</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>All Approved Permits</CardTitle>
+            <div className="flex gap-2">
+              <Button onClick={exportToExcel} className="bg-primary hover:bg-primary/90 text-primary-foreground" size="sm">
+                <FileDown className="h-4 w-4 mr-2" />
+                Export to Excel
+              </Button>
+              <Button onClick={exportToCSV} className="bg-accent hover:bg-accent/90 text-accent-foreground" size="sm">
+                <FileDown className="h-4 w-4 mr-2" />
+                Export to CSV
+              </Button>
+            </div>
+          </div>
           
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
@@ -220,25 +328,99 @@ export function PermitsList() {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedPermits.map((permit) => (
-                <TableRow 
-                  key={permit.id}
-                  className="cursor-pointer hover:bg-accent/50"
-                  onClick={() => navigate(`/registry/permits/${permit.id}`)}
-                >
-                  <TableCell className="font-medium">{permit.permit_number}</TableCell>
-                  <TableCell>{permit.title}</TableCell>
-                  <TableCell>{permit.entity_name || '-'}</TableCell>
-                  <TableCell className="capitalize">{permit.permit_type.replace(/_/g, ' ')}</TableCell>
-                  <TableCell>
-                    {permit.approval_date ? format(new Date(permit.approval_date), 'MMM dd, yyyy') : '-'}
-                  </TableCell>
-                  <TableCell>{format(new Date(permit.updated_at), 'MMM dd, yyyy')}</TableCell>
-                  <TableCell>
-                    <Badge variant="default">Active</Badge>
-                  </TableCell>
-                </TableRow>
-              ))
+              paginatedPermits.map((permit) => {
+                const isExpanded = expandedPermitId === permit.id;
+                return (
+                  <>
+                    <TableRow 
+                      key={permit.id}
+                      className="cursor-pointer hover:bg-accent/50"
+                      onClick={() => handleRowClick(permit.id)}
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {isExpanded ? (
+                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          )}
+                          {permit.permit_number}
+                        </div>
+                      </TableCell>
+                      <TableCell>{permit.title}</TableCell>
+                      <TableCell>{permit.entity_name || '-'}</TableCell>
+                      <TableCell className="capitalize">{permit.permit_type.replace(/_/g, ' ')}</TableCell>
+                      <TableCell>
+                        {permit.approval_date ? format(new Date(permit.approval_date), 'MMM dd, yyyy') : '-'}
+                      </TableCell>
+                      <TableCell>{format(new Date(permit.updated_at), 'MMM dd, yyyy')}</TableCell>
+                      <TableCell>
+                        <Badge variant="default">Active</Badge>
+                      </TableCell>
+                    </TableRow>
+                    {isExpanded && (
+                      <TableRow key={`${permit.id}-details`}>
+                        <TableCell colSpan={7} className="p-0">
+                          {loadingDetails ? (
+                            <div className="flex items-center justify-center p-8">
+                              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                            </div>
+                          ) : expandedPermitDetails ? (
+                            <div className="border-t bg-muted/30 p-6">
+                              <Tabs defaultValue="basic-info" className="w-full">
+                                <TabsList className="grid w-full grid-cols-5">
+                                  <TabsTrigger value="basic-info" className="flex items-center gap-2">
+                                    <User className="w-4 h-4" />
+                                    Basic Info
+                                  </TabsTrigger>
+                                  <TabsTrigger value="project-details" className="flex items-center gap-2">
+                                    <Building className="w-4 h-4" />
+                                    Project Details
+                                  </TabsTrigger>
+                                  <TabsTrigger value="location" className="flex items-center gap-2">
+                                    <MapPin className="w-4 h-4" />
+                                    Location
+                                  </TabsTrigger>
+                                  <TabsTrigger value="documents" className="flex items-center gap-2">
+                                    <Upload className="w-4 h-4" />
+                                    Documents
+                                  </TabsTrigger>
+                                  <TabsTrigger value="compliance" className="flex items-center gap-2">
+                                    <Shield className="w-4 h-4" />
+                                    Compliance
+                                  </TabsTrigger>
+                                </TabsList>
+                                
+                                <div className="mt-6">
+                                  <TabsContent value="basic-info" className="space-y-4">
+                                    <BasicInfoReadOnly permit={expandedPermitDetails} />
+                                  </TabsContent>
+                                  
+                                  <TabsContent value="project-details" className="space-y-4">
+                                    <ProjectAndSpecificDetailsReadOnly permit={expandedPermitDetails} />
+                                  </TabsContent>
+                                  
+                                  <TabsContent value="location" className="space-y-4">
+                                    <LocationReadOnly permit={expandedPermitDetails} />
+                                  </TabsContent>
+                                  
+                                  <TabsContent value="documents" className="space-y-4">
+                                    <DocumentsReadOnly permit={expandedPermitDetails} />
+                                  </TabsContent>
+                                  
+                                  <TabsContent value="compliance" className="space-y-4">
+                                    <ComplianceReadOnly permit={expandedPermitDetails} />
+                                  </TabsContent>
+                                </div>
+                              </Tabs>
+                            </div>
+                          ) : null}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -266,7 +448,7 @@ export function PermitsList() {
                 disabled={currentPage === totalPages}
               >
                 Next
-                <ChevronRight className="h-4 w-4 ml-1" />
+                <ChevronRightPagination className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </div>

@@ -14,6 +14,11 @@ import ComplianceDashboard from "@/pages/ComplianceDashboard";
 import FinanceDashboard from "@/pages/FinanceDashboard";
 import DirectorateDashboard from "@/pages/DirectorateDashboard";
 import ManagingDirectorDashboard from "@/pages/ManagingDirectorDashboard";
+import MDNotifications from '@/pages/md/Notifications';
+import MDApprovals from '@/pages/md/Approvals';
+import MDDigitalSignatures from '@/pages/md/DigitalSignatures';
+import MDEnforcement from '@/pages/md/Enforcement';
+import MDReports from '@/pages/md/Reports';
 import EntityRegistration from "@/pages/EntityRegistration";
 import SubmitApplication from "@/pages/SubmitApplication";
 import Applications from "@/pages/Applications";
@@ -30,6 +35,10 @@ import ApplicationDetailView from '@/pages/ApplicationDetailView';
 import UserManagement from "@/pages/UserManagement";
 import Jobs from "@/pages/Jobs";
 import NotFound from "@/pages/NotFound";
+import SystemHealth from "@/pages/SystemHealth";
+import SecurityDashboard from "@/pages/SecurityDashboard";
+import AuditLogsPage from "@/pages/AuditLogsPage";
+import DatabaseAdministration from "@/pages/DatabaseAdministration";
 import PermitRenewal from "@/pages/permit-management/PermitRenewal";
 import PermitTransfer from "@/pages/permit-management/PermitTransfer";
 import PermitSurrender from "@/pages/permit-management/PermitSurrender";
@@ -42,6 +51,7 @@ import { PermitDetail } from "@/pages/registry/PermitDetail";
 import RegistryApplicationDetail from "@/pages/RegistryApplicationDetail";
 import Inspections from "@/pages/Inspections";
 import EditPermitApplication from "@/pages/EditPermitApplication";
+import ApprovalsAndSignatures from "@/pages/admin/ApprovalsAndSignatures";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -72,13 +82,14 @@ const RoleBasedRoute = ({
     return <div>Loading...</div>;
   }
   
-  if (!profile || !allowedRoles.includes(profile.role)) {
+  // Check user_type instead of role
+  if (!profile || !allowedRoles.includes(profile.user_type || '')) {
     return <Navigate to="/dashboard" replace />;
   }
 
   // Additional unit-based access control for staff
   if (allowedUnits && allowedUnits.length > 0) {
-    if (!profile.operational_unit || !allowedUnits.includes(profile.operational_unit)) {
+    if (!profile.staff_unit || !allowedUnits.includes(profile.staff_unit)) {
       return <Navigate to="/dashboard" replace />;
     }
   }
@@ -93,10 +104,13 @@ export const AppRoutes = () => {
     return <div>Loading...</div>;
   }
 
+  // Check if user is managing director
+  const isManagingDirector = profile?.staff_position === 'managing_director' || profile?.email === 'md@cepa.gov.pg';
+
   return (
     <Routes>
-      <Route path="/" element={user ? (profile?.staff_position === 'managing_director' || profile?.email === 'md@cepa.gov.pg' ? <Navigate to="/managing-director-dashboard" replace /> : <Navigate to="/dashboard" replace />) : <Index />} />
-      <Route path="/auth" element={!user ? <Auth /> : (profile?.staff_position === 'managing_director' || profile?.email === 'md@cepa.gov.pg' ? <Navigate to="/managing-director-dashboard" replace /> : <Navigate to="/dashboard" replace />)} />
+      <Route path="/" element={user ? (isManagingDirector ? <Navigate to="/managing-director-dashboard" replace /> : <Navigate to="/dashboard" replace />) : <Index />} />
+      <Route path="/auth" element={!user ? <Auth /> : (isManagingDirector ? <Navigate to="/managing-director-dashboard" replace /> : <Navigate to="/dashboard" replace />)} />
       
       {/* Dashboard Routes - Main dashboard that redirects to appropriate dashboard */}
       <Route 
@@ -165,7 +179,7 @@ export const AppRoutes = () => {
       />
       
       <Route 
-        path="/revenue-dashboard" 
+        path="/RevenueDashboard" 
         element={
           <RoleBasedRoute 
             allowedRoles={['revenue', 'admin']}
@@ -221,8 +235,30 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
+      <Route path="/md/notifications" element={<ProtectedRoute><MDNotifications /></ProtectedRoute>} />
+      <Route path="/md/approvals" element={<ProtectedRoute><MDApprovals /></ProtectedRoute>} />
+      <Route path="/md/signatures" element={<ProtectedRoute><MDDigitalSignatures /></ProtectedRoute>} />
+      <Route path="/md/enforcement" element={<ProtectedRoute><MDEnforcement /></ProtectedRoute>} />
+      <Route path="/md/reports" element={<ProtectedRoute><MDReports /></ProtectedRoute>} />
       
       {/* Admin dashboard - only for admin and super_admin */}
+      <Route 
+        path="/admin" 
+        element={
+          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+            <AdminDashboard />
+          </RoleBasedRoute>
+        }
+      />
+      
+      <Route 
+        path="/admin/approvals-signatures" 
+        element={
+          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+            <ApprovalsAndSignatures />
+          </RoleBasedRoute>
+        }
+      />
       <Route 
         path="/admin-dashboard" 
         element={
@@ -315,47 +351,44 @@ export const AppRoutes = () => {
         } 
       />
 
-      {/* Revenue-specific routes */}
-      <Route 
-        path="/revenue/collection" 
-        element={
-          <RoleBasedRoute 
-            allowedRoles={['cepa_staff', 'admin', 'system_admin']}
-            allowedUnits={['revenue', 'finance']}
-          >
-            <div>Revenue Collection Page</div>
-          </RoleBasedRoute>
-        } 
-      />
-      <Route 
-        path="/revenue/reports" 
-        element={
-          <RoleBasedRoute 
-            allowedRoles={['cepa_staff', 'admin', 'system_admin']}
-            allowedUnits={['revenue', 'finance', 'directorate']}
-          >
-            <div>Revenue Reports Page</div>
-          </RoleBasedRoute>
-        } 
-      />
-      <Route 
-        path="/revenue/outstanding" 
-        element={
-          <RoleBasedRoute 
-            allowedRoles={['cepa_staff', 'admin', 'system_admin']}
-            allowedUnits={['revenue', 'finance']}
-          >
-            <div>Outstanding Payments Page</div>
-          </RoleBasedRoute>
-        } 
-      />
-
       {/* Admin Routes */}
       <Route 
         path="/user-management" 
         element={
           <RoleBasedRoute allowedRoles={['admin', 'system_admin']}>
             <UserManagement />
+          </RoleBasedRoute>
+        } 
+      />
+      <Route 
+        path="/system-health" 
+        element={
+          <RoleBasedRoute allowedRoles={['admin', 'system_admin']}>
+            <SystemHealth />
+          </RoleBasedRoute>
+        } 
+      />
+      <Route 
+        path="/security-dashboard" 
+        element={
+          <RoleBasedRoute allowedRoles={['admin', 'system_admin']}>
+            <SecurityDashboard />
+          </RoleBasedRoute>
+        } 
+      />
+      <Route 
+        path="/database-administration" 
+        element={
+          <RoleBasedRoute allowedRoles={['admin', 'super_admin', 'system_admin']}>
+            <DatabaseAdministration />
+          </RoleBasedRoute>
+        } 
+      />
+      <Route 
+        path="/audit-logs" 
+        element={
+          <RoleBasedRoute allowedRoles={['admin', 'system_admin']}>
+            <AuditLogsPage />
           </RoleBasedRoute>
         } 
       />

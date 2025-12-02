@@ -42,6 +42,13 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
 
         <Separator />
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ReadOnlyField label="Province" value={entity.province} />
+          <ReadOnlyField label="District" value={entity.district} />
+        </div>
+
+        <Separator />
+
         <div>
           <Label className="text-muted-foreground">Contact Person</Label>
           <div className="mt-2 p-3 bg-muted rounded-lg">
@@ -65,8 +72,8 @@ export function EntityDetailsReadOnly({ entity }: EntityDetailsReadOnlyProps) {
         <Separator />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ReadOnlyField label="Registration Number" value={entity.registration_number} />
-          <ReadOnlyField label="Tax Number" value={entity.tax_number} />
+          <ReadOnlyField label="IPA Reg Number" value={entity.registration_number} />
+          <ReadOnlyField label="IRC Tax Number" value={entity.tax_number} />
         </div>
 
         <Separator />

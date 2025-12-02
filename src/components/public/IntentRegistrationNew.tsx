@@ -18,6 +18,7 @@ import { Building, User, Calendar, AlertCircle, FileText, Upload, Trash2, Downlo
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { PermitApplicationsMap } from './PermitApplicationsMap';
 
 export function IntentRegistrationNew() {
   const { user } = useAuth();
@@ -35,6 +36,8 @@ export function IntentRegistrationNew() {
     commencement_date: '',
     completion_date: '',
     project_site_address: '',
+    district: '',
+    province: '',
     project_site_description: '',
     site_ownership_details: '',
     government_agreement: '',
@@ -55,6 +58,8 @@ export function IntentRegistrationNew() {
   const [showDrafts, setShowDrafts] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [draftToDelete, setDraftToDelete] = useState<string | null>(null);
+  const [projectBoundary, setProjectBoundary] = useState<any>(null);
+  const [coordinates, setCoordinates] = useState({ lat: -6.314993, lng: 147.1494 });
 
   const handleSaveDraft = async () => {
     try {
@@ -66,6 +71,8 @@ export function IntentRegistrationNew() {
         commencement_date: formData.commencement_date || null,
         completion_date: formData.completion_date || null,
         project_site_address: formData.project_site_address || null,
+        district: formData.district || null,
+        province: formData.province || null,
         project_site_description: formData.project_site_description || null,
         site_ownership_details: formData.site_ownership_details || null,
         government_agreement: formData.government_agreement || null,
@@ -75,6 +82,7 @@ export function IntentRegistrationNew() {
         estimated_cost_kina: formData.estimated_cost_kina ? parseFloat(formData.estimated_cost_kina) : null,
         prescribed_activity_id: formData.prescribed_activity_id || null,
         existing_permit_id: formData.existing_permit_id || null,
+        project_boundary: projectBoundary || null,
       }, currentDraftId);
       
       if (!currentDraftId) {
@@ -96,6 +104,8 @@ export function IntentRegistrationNew() {
         commencement_date: draft.commencement_date || '',
         completion_date: draft.completion_date || '',
         project_site_address: draft.project_site_address || '',
+        district: draft.district || '',
+        province: draft.province || '',
         project_site_description: draft.project_site_description || '',
         site_ownership_details: draft.site_ownership_details || '',
         government_agreement: draft.government_agreement || '',
@@ -106,6 +116,7 @@ export function IntentRegistrationNew() {
         prescribed_activity_id: draft.prescribed_activity_id || '',
         existing_permit_id: draft.existing_permit_id || '',
       });
+      setProjectBoundary(draft.project_boundary || null);
       setCurrentDraftId(draft.id);
       setShowDrafts(false);
       toast({
@@ -163,6 +174,8 @@ export function IntentRegistrationNew() {
           commencement_date: formData.commencement_date,
           completion_date: formData.completion_date,
           project_site_address: formData.project_site_address,
+          district: formData.district || null,
+          province: formData.province || null,
           project_site_description: formData.project_site_description,
           site_ownership_details: formData.site_ownership_details,
           government_agreement: formData.government_agreement,
@@ -172,6 +185,7 @@ export function IntentRegistrationNew() {
           estimated_cost_kina: formData.estimated_cost_kina ? parseFloat(formData.estimated_cost_kina) : null,
           prescribed_activity_id: formData.prescribed_activity_id || null,
           existing_permit_id: formData.existing_permit_id || null,
+          project_boundary: projectBoundary,
           status: 'pending',
         })
         .select()
@@ -202,6 +216,8 @@ export function IntentRegistrationNew() {
         commencement_date: '',
         completion_date: '',
         project_site_address: '',
+        district: '',
+        province: '',
         project_site_description: '',
         site_ownership_details: '',
         government_agreement: '',
@@ -214,6 +230,7 @@ export function IntentRegistrationNew() {
       });
       setDraftDocuments([]);
       setCurrentDraftId(undefined);
+      setProjectBoundary(null);
     } catch (error) {
       console.error('Error submitting intent registration:', error);
       toast({
@@ -287,7 +304,7 @@ export function IntentRegistrationNew() {
         <div>
           <h2 className="text-3xl font-bold text-foreground">New Intent Registration</h2>
           <p className="text-muted-foreground mt-2">
-            Register your intention to carry out preparatory work for Level 2 or Level 3 activities (Section 48, Environment Act 2000)
+            Register your intention to carry out preparatory work for Level 1, Level 2 or Level 3 activities (Section 48, Environment Act 2000)
           </p>
         </div>
         <div className="flex gap-2">
@@ -351,15 +368,25 @@ export function IntentRegistrationNew() {
       <Alert className="bg-primary/5 border-primary/20">
         <AlertCircle className="h-4 w-4 text-primary" />
         <AlertDescription className="text-foreground">
-          <strong>Important:</strong> Registration of Intent is mandatory before lodging a permit application for Level 2 or Level 3 activities involving preparatory work.
+          <strong>Important:</strong> Registration of Intent is mandatory before lodging a permit application for Level 1, Level 2 or Level 3 activities involving preparatory work.
         </AlertDescription>
       </Alert>
 
-      <Tabs defaultValue="details" className="w-full">
+      <Tabs defaultValue="mapping" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="mapping">Proposed Project Site Mapping</TabsTrigger>
           <TabsTrigger value="details">Registration Details</TabsTrigger>
-          <TabsTrigger value="feedback" disabled>Official Feedback</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="mapping">
+          <PermitApplicationsMap 
+            showAllApplications={false}
+            existingBoundary={projectBoundary}
+            onBoundarySave={setProjectBoundary}
+            coordinates={coordinates}
+            onCoordinatesChange={setCoordinates}
+          />
+        </TabsContent>
 
         <TabsContent value="details">
           <form onSubmit={handleSubmit}>
@@ -493,7 +520,20 @@ export function IntentRegistrationNew() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="activity_level">Activity Level *</Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="activity_level">Activity Level *</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="font-semibold mb-2">Activity Level Classification:</p>
+                        <p className="mb-2"><strong>Level 1:</strong> Low environmental risk activities requiring basic environmental permit</p>
+                        <p className="mb-2"><strong>Level 2:</strong> Medium environmental risk activities requiring Environmental Impact Statement (EIS)</p>
+                        <p><strong>Level 3:</strong> High environmental risk activities requiring full Environmental Plan (EP) and public consultation</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   <Select
                     value={formData.activity_level}
                     onValueChange={(value) => {
@@ -505,6 +545,7 @@ export function IntentRegistrationNew() {
                       <SelectValue placeholder="Select activity level" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="Level 1">Level 1 Activity</SelectItem>
                       <SelectItem value="Level 2">Level 2 Activity</SelectItem>
                       <SelectItem value="Level 3">Level 3 Activity</SelectItem>
                     </SelectContent>
@@ -620,6 +661,30 @@ export function IntentRegistrationNew() {
                     required
                     className="bg-glass/50"
                   />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="district">District</Label>
+                    <Input
+                      id="district"
+                      value={formData.district}
+                      onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                      placeholder="Enter district"
+                      className="bg-glass/50"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="province">Province</Label>
+                    <Input
+                      id="province"
+                      value={formData.province}
+                      onChange={(e) => setFormData({ ...formData, province: e.target.value })}
+                      placeholder="Enter province"
+                      className="bg-glass/50"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -781,7 +846,7 @@ export function IntentRegistrationNew() {
                     required
                     min="0"
                     step="0.01"
-                    className="bg-glass/50"
+                    className="bg-glass/50 text-sm"
                   />
                 </div>
 
@@ -851,6 +916,8 @@ export function IntentRegistrationNew() {
                         commencement_date: '',
                         completion_date: '',
                         project_site_address: '',
+                        district: '',
+                        province: '',
                         project_site_description: '',
                         site_ownership_details: '',
                         government_agreement: '',
@@ -882,28 +949,6 @@ export function IntentRegistrationNew() {
               </CardContent>
             </Card>
           </form>
-        </TabsContent>
-
-        <TabsContent value="feedback">
-          <Card className="bg-glass/50 backdrop-blur-sm border-glass">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Official Feedback
-              </CardTitle>
-              <CardDescription>
-                Registry team feedback will appear here after your submission is reviewed
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Submit your intent registration to receive official feedback from the Registry team.
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
 

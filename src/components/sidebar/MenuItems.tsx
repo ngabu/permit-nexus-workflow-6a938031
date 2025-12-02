@@ -175,12 +175,20 @@ export const getUnitSpecificMenuItems = (cepaUnit: string | undefined) => {
       return [
         ...baseItems,
         {
-          title: "Revenue Management",
+          title: "Revenue Collection",
           icon: DollarSign,
           subItems: [
-            { title: "Fee Collection", url: "/revenue/collection", icon: Receipt },
-            { title: "Revenue Reports", url: "/revenue/reports", icon: BarChart3 },
-            { title: "Outstanding Payments", url: "/revenue/outstanding", icon: AlertTriangle },
+            { title: "Invoices", url: "/revenue?tab=collection", icon: FileText },
+            { title: "Payment Processing", url: "/revenue?tab=collection", icon: Receipt },
+            { title: "Outstanding Payments", url: "/revenue?tab=outstanding", icon: AlertTriangle },
+          ]
+        },
+        {
+          title: "Reports & Analytics",
+          icon: BarChart3,
+          subItems: [
+            { title: "Revenue Reports", url: "/revenue?tab=reports", icon: TrendingUp },
+            { title: "Sector Analysis", url: "/revenue?tab=reports", icon: BarChart3 },
           ]
         }
       ];

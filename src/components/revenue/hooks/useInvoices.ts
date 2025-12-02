@@ -44,7 +44,7 @@ export function useInvoices() {
         .from('invoices')
         .select(`
           *,
-          permit_applications!invoices_permit_id_fkey (
+          permit_applications (
             id,
             title,
             permit_number,
@@ -52,7 +52,7 @@ export function useInvoices() {
             entity_name,
             entity_type
           ),
-          profiles!invoices_assigned_officer_id_fkey (
+          profiles!assigned_officer_id (
             id,
             full_name,
             email
@@ -60,7 +60,12 @@ export function useInvoices() {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching invoices:', error);
+        setInvoices([]);
+        setLoading(false);
+        return;
+      }
       
       // Transform the data to match the Invoice interface
       const transformedData = (data || []).map(invoice => ({

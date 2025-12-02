@@ -115,7 +115,7 @@ const Index = () => {
             <div className="space-y-8">
               <div>
                 <h2 className="text-5xl font-bold text-foreground mb-4">
-                  CEPA
+                  CEPA e-Permitting System
                 </h2>
                 <p className="text-lg text-muted-foreground">
                   Streamline permit applications, manage compliance, and protect Papua New Guinea's natural resources with our comprehensive digital platform.

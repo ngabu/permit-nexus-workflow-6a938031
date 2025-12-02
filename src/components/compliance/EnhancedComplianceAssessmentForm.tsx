@@ -1302,12 +1302,13 @@ export function EnhancedComplianceAssessmentForm({ assessmentId, onComplete }: E
                   </div>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex justify-end gap-3">
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     onClick={handleSubmit((data) => onSubmit(data, false))}
                     disabled={saving}
+                    className="w-32"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Save Progress
@@ -1316,6 +1317,7 @@ export function EnhancedComplianceAssessmentForm({ assessmentId, onComplete }: E
                     type="button"
                     onClick={handleSubmit((data) => onSubmit(data, true))}
                     disabled={saving || !watch('assessment_status') || watch('assessment_status') === 'in_progress'}
+                    className="w-56"
                   >
                     <Send className="w-4 h-4 mr-2" />
                     Submit Final Assessment

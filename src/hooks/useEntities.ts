@@ -16,6 +16,8 @@ export interface Entity {
   contact_person?: string;
   contact_person_email?: string;
   contact_person_phone?: string;
+  district?: string;
+  province?: string;
   is_suspended?: boolean;
   created_at: string;
   updated_at: string;

@@ -1,1 +1,4 @@
 project_id = "mkjugoonmpxsofbasjux"
+
+[functions.convertToGeoJSON]
+verify_jwt = false

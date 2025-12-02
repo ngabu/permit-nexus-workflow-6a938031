@@ -75,7 +75,12 @@ const Dashboard = () => {
         navigate('/managing-director-dashboard', { replace: true });
         return;
       }
-      // Add other role-based redirects here if needed
+      
+      // Redirect revenue users to revenue dashboard
+      if (profile?.staff_unit === 'revenue') {
+        navigate('/RevenueDashboard', { replace: true });
+        return;
+      }
     };
     
     if (profile) {

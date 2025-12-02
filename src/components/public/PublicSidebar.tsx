@@ -36,7 +36,8 @@ import {
   RefreshCw,
   UserX,
   ArrowRightLeft,
-  FileCheck
+  FileCheck,
+  Activity
 } from "lucide-react"
 import { useUserNotifications } from "@/hooks/useUserNotifications"
 import { useAuth } from "@/contexts/AuthContext"
@@ -51,6 +52,7 @@ interface PublicNavigationItem {
 
 const publicNavigationItems: PublicNavigationItem[] = [
   { title: "Dashboard", value: "dashboard", icon: LayoutDashboard },
+  { title: "Activity Overview", value: "activity-overview", icon: Activity },
   { title: "Entities", value: "entities", icon: Building2 },
   { 
     title: "Intent Registration", 
@@ -104,7 +106,7 @@ interface PublicSidebarProps {
 export function PublicSidebar({ activeTab, onTabChange }: PublicSidebarProps) {
   const { user, signOut } = useAuth()
   const { unreadCount } = useUserNotifications(user?.id)
-  const { state, isMobile } = useSidebar()
+  const { state, isMobile, setOpenMobile } = useSidebar()
   const [openMenus, setOpenMenus] = useState<string[]>([])
 
   const handleSignOut = async () => {
@@ -113,6 +115,14 @@ export function PublicSidebar({ activeTab, onTabChange }: PublicSidebarProps) {
       window.location.href = '/';
     } catch (error) {
       console.error('Error signing out:', error);
+    }
+  };
+
+  const handleTabChange = (tab: string) => {
+    onTabChange(tab);
+    // Auto-hide sidebar on mobile after selection
+    if (isMobile) {
+      setOpenMobile(false);
     }
   };
 
@@ -182,7 +192,7 @@ export function PublicSidebar({ activeTab, onTabChange }: PublicSidebarProps) {
                               <SidebarMenuSubItem key={subItem.value}>
                                 <SidebarMenuSubButton asChild>
                                   <button
-                                    onClick={() => onTabChange(subItem.value)}
+                                    onClick={() => handleTabChange(subItem.value)}
                                     className={`w-full ${getNavCls(activeTab === subItem.value)}`}
                                   >
                                     <subItem.icon className="w-4 h-4 shrink-0" />
@@ -198,7 +208,7 @@ export function PublicSidebar({ activeTab, onTabChange }: PublicSidebarProps) {
                   ) : (
                     <SidebarMenuButton asChild>
                       <button
-                        onClick={() => onTabChange(item.value)}
+                        onClick={() => handleTabChange(item.value)}
                         className={`w-full ${getNavCls(activeTab === item.value)}`}
                       >
                         <item.icon className="w-5 h-5 shrink-0" />
@@ -229,7 +239,7 @@ export function PublicSidebar({ activeTab, onTabChange }: PublicSidebarProps) {
                   <SidebarMenuItem key={item.value}>
                     <SidebarMenuButton asChild>
                       <button
-                        onClick={() => onTabChange(item.value)}
+                        onClick={() => handleTabChange(item.value)}
                         className={`w-full ${getNavCls(activeTab === item.value)}`}
                       >
                         <item.icon className="w-5 h-5 shrink-0" />

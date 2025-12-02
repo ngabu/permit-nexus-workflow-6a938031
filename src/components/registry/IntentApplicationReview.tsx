@@ -33,6 +33,8 @@ interface IntentRegistration {
   updated_at: string;
   official_feedback_attachments: any[] | null;
   project_site_address: string | null;
+  district: string | null;
+  province: string | null;
   project_site_description: string | null;
   site_ownership_details: string | null;
   government_agreement: string | null;
@@ -42,6 +44,7 @@ interface IntentRegistration {
   estimated_cost_kina: number | null;
   prescribed_activity_id: string | null;
   existing_permit_id: string | null;
+  project_boundary: any | null;
   entity?: {
     id: string;
     name: string;
@@ -89,6 +92,7 @@ export function IntentApplicationReview() {
             ? item.official_feedback_attachments 
             : [])
           : null,
+        project_boundary: item.project_boundary || null,
       }));
       
       setIntents(mappedIntents);

@@ -17,6 +17,8 @@ export interface IntentRegistration {
   reviewed_at: string | null;
   official_feedback_attachments: any[] | null;
   project_site_address: string | null;
+  district: string | null;
+  province: string | null;
   project_site_description: string | null;
   site_ownership_details: string | null;
   government_agreement: string | null;
@@ -25,6 +27,8 @@ export interface IntentRegistration {
   landowner_negotiation_status: string | null;
   estimated_cost_kina: number | null;
   prescribed_activity_id: string | null;
+  existing_permit_id: string | null;
+  project_boundary: any | null;
   created_at: string;
   updated_at: string;
   entity?: {
