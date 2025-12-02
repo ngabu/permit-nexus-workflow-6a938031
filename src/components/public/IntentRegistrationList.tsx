@@ -60,14 +60,14 @@ export function IntentRegistrationList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center print:hidden">
         <div>
           <h3 className="text-lg font-semibold">Intent Registrations</h3>
           <p className="text-muted-foreground">View your submitted intent registrations</p>
         </div>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap print:hidden">
         <Button
           variant={statusFilter === 'all' ? 'default' : 'outline'}
           onClick={() => setStatusFilter('all')}
@@ -106,7 +106,7 @@ export function IntentRegistrationList() {
       </div>
 
       {filteredIntents.length === 0 ? (
-        <Card>
+        <Card className="print:hidden">
           <CardContent className="py-8 text-center">
             <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
             <h4 className="font-semibold mb-2">No Intent Registrations Found</h4>
@@ -182,14 +182,14 @@ export function IntentRegistrationList() {
                     {selectedIntent === intent.id && selectedIntentData && (
                       <TableRow className="bg-glass/50 backdrop-blur-md hover:bg-glass/50">
                         <TableCell colSpan={6} className="p-0">
-                          <div className="border-t border-glass/30 bg-white/80 dark:bg-primary/5 backdrop-blur-md p-6">
+                          <div className="border-t border-glass/30 bg-white/80 dark:bg-primary/5 backdrop-blur-md p-6 print:border-none print:p-0 print:bg-transparent">
                             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                              <TabsList className="grid w-full grid-cols-2">
+                              <TabsList className="grid w-full grid-cols-2 print:hidden">
                                 <TabsTrigger value="mapping">Proposed Project Site Mapping</TabsTrigger>
                                 <TabsTrigger value="details">Registration Details</TabsTrigger>
                               </TabsList>
 
-                              <TabsContent value="mapping" className="mt-4">
+                              <TabsContent value="mapping" className="mt-4 print:hidden">
                                 <PermitApplicationsMap
                                   showAllApplications={false}
                                   existingBoundary={selectedIntentData.project_boundary}
@@ -209,7 +209,7 @@ export function IntentRegistrationList() {
                             </Tabs>
 
                             {/* Official Feedback Section - Below Tabs */}
-                            <>
+                            <div className="print:hidden">
                               <Separator className="my-6" />
                               <Card className="bg-muted/30">
                                 <CardHeader className="bg-primary/10">
@@ -282,7 +282,7 @@ export function IntentRegistrationList() {
                                   )}
                                 </CardContent>
                               </Card>
-                            </>
+                            </div>
                           </div>
                         </TableCell>
                       </TableRow>
