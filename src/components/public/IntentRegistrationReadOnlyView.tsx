@@ -194,10 +194,10 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
           <span className="ml-2">{format(new Date(intent.created_at), 'MMMM dd, yyyy')}</span>
         </div>
 
-        {/* Entity and Attachment Ref side by side */}
+        {/* Address and Attachment Ref side by side */}
         <div className="flex gap-8 mb-6">
           <div className="flex items-start">
-            <span className="font-bold mr-4">Entity:</span>
+            <span className="font-bold mr-4">Address:</span>
             <div className="border border-gray-400 p-3 min-w-[200px] min-h-[60px]">
               <p className="text-sm">{getEntityAddress()}</p>
             </div>
@@ -213,16 +213,6 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
         {/* Registration Details - Print */}
         <div className="print-section">
           <h3 className="print-section-title">Registration Details</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="print-field">
-              <p className="print-field-label">Entity</p>
-              <p className="print-field-value">{intent.entity?.name} ({intent.entity?.entity_type})</p>
-            </div>
-            <div className="print-field">
-              <p className="print-field-label">Activity Level</p>
-              <p className="print-field-value">{intent.activity_level}</p>
-            </div>
-          </div>
           {intent.prescribed_activity_id && (
             <div className="print-field mt-2">
               <p className="print-field-label">Prescribed Activity</p>
