@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, FileText, Download, Trash2, Eye, Filter, FolderOpen, X, Loader2 } from 'lucide-react';
+import { Upload, FileText, Download, Trash2, Eye, Filter, FolderOpen, X, Loader2, Book } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,6 +24,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { useQuery } from '@tanstack/react-query';
+
+interface DocumentTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  document_type: 'template' | 'guide';
+  category: string;
+  file_path: string | null;
+  is_active: boolean;
+}
 
 interface DocumentFile {
   id: string;
@@ -66,6 +77,154 @@ const getStatusLabel = (status: string) => {
     default: return status;
   }
 };
+
+// Templates Tab Component
+function TemplatesTab() {
+  const { data: templates, isLoading } = useQuery({
+    queryKey: ['document-templates', 'template'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('document_templates')
+        .select('*')
+        .eq('document_type', 'template')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (error) throw error;
+      return data as DocumentTemplate[];
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <Card className="border">
+        <CardContent className="p-6 flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-foreground">Document Templates</h2>
+        </div>
+
+        {templates?.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No templates available</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {templates?.map((template) => (
+              <Card key={template.id} className="border hover:border-primary/30 transition-colors">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-foreground text-sm leading-tight">{template.name}</h4>
+                      <p className="text-sm text-primary mt-1">{template.category}</p>
+                      {template.description && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{template.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button variant="outline" size="icon" className="h-9 w-9">
+                      <Download className="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      Use Template
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Guides Tab Component
+function GuidesTab() {
+  const { data: guides, isLoading } = useQuery({
+    queryKey: ['document-templates', 'guide'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('document_templates')
+        .select('*')
+        .eq('document_type', 'guide')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (error) throw error;
+      return data as DocumentTemplate[];
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <Card className="border">
+        <CardContent className="p-6 flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-foreground">Information and Guidelines</h2>
+        </div>
+
+        {guides?.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Book className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No guides available</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {guides?.map((guide) => (
+              <Card key={guide.id} className="border hover:border-primary/30 transition-colors">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-950 flex items-center justify-center flex-shrink-0">
+                      <Book className="w-5 h-5 text-purple-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-foreground text-sm leading-tight">{guide.name}</h4>
+                      <p className="text-sm text-primary mt-1">{guide.category}</p>
+                      {guide.description && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{guide.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button variant="outline" size="icon" className="h-9 w-9">
+                      <Download className="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      View Guide
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export function DocumentManagement() {
   const [files, setFiles] = useState<DocumentFile[]>([]);
@@ -424,92 +583,11 @@ export function DocumentManagement() {
         </TabsContent>
 
         <TabsContent value="templates" className="mt-6">
-          <Card className="border">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-foreground">Document Templates</h2>
-                <Button className="bg-foreground text-background hover:bg-foreground/90">
-                  <span className="mr-2">+</span> Create Template
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  { name: 'Environmental Impact Assessment Template', type: 'Standard template' },
-                  { name: 'Air Quality Monitoring Plan Template', type: 'Standard template' },
-                  { name: 'Waste Management SOP Template', type: 'Standard template' },
-                  { name: 'Emergency Response Plan Template', type: 'Standard template' },
-                  { name: 'Site Inspection Checklist', type: 'Standard template' },
-                  { name: 'Compliance Report Template', type: 'Standard template' },
-                ].map((template, index) => (
-                  <Card key={index} className="border hover:border-primary/30 transition-colors">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-5 h-5 text-green-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-foreground text-sm leading-tight">{template.name}</h4>
-                          <p className="text-sm text-primary mt-1">{template.type}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="icon" className="h-9 w-9">
-                          <Download className="w-4 h-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Use Template
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <TemplatesTab />
         </TabsContent>
 
         <TabsContent value="info-guidelines" className="mt-6">
-          <Card className="border">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-foreground">Information and Guidelines</h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  { name: 'Environmental Permit Application Guide', type: 'User guide' },
-                  { name: 'Compliance Reporting Guidelines', type: 'Regulatory guideline' },
-                  { name: 'Environmental Impact Assessment Process', type: 'Process guide' },
-                  { name: 'Monitoring and Reporting Requirements', type: 'Regulatory guideline' },
-                  { name: 'Fee Schedule and Payment Information', type: 'Information' },
-                  { name: 'Contact Information and Support', type: 'Information' },
-                ].map((guide, index) => (
-                  <Card key={index} className="border hover:border-primary/30 transition-colors">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-5 h-5 text-purple-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-foreground text-sm leading-tight">{guide.name}</h4>
-                          <p className="text-sm text-primary mt-1">{guide.type}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="icon" className="h-9 w-9">
-                          <Download className="w-4 h-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          View Guide
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <GuidesTab />
         </TabsContent>
       </Tabs>
 
