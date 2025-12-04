@@ -7,6 +7,38 @@
    All colors MUST be HSL.
 */
 
+/* Print styles for PDF export */
+@media print {
+  /* A4 page with margins - browser headers/footers must be disabled in print dialog */
+  @page {
+    size: A4 portrait;
+    margin: 15mm 20mm;
+  }
+  
+  /* Remove all default browser print decorations */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm;
+    height: 297mm;
+  }
+  
+  /* Override browser default styles */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Attempt to hide browser-generated headers/footers (limited effectiveness) */
+  body::before,
+  body::after,
+  html::before,
+  html::after {
+    content: none !important;
+    display: none !important;
+  }
+}
+
 @layer base {
   :root {
     /* Base colors - PNG Government theme */
@@ -159,6 +191,15 @@
     line-height: 1.4;
     color: #000;
   }
+  
+  /* Ensure print content fits within page width */
+  .hidden.print\\:block {
+    max-width: 100%;
+    width: 100%;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+  }
 
   .no-print,
   [class*="print\\:hidden"] {
@@ -189,10 +230,11 @@
     display: block !important;
   }
 
-  /* Ensure content fits on page */
+  /* Ensure content fits on page and remove scrollbars */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    overflow: visible !important;
   }
 
   /* Page breaks */
@@ -238,6 +280,10 @@
     margin-bottom: 1rem;
     padding-bottom: 0.75rem;
     border-bottom: 1px solid #d1d5db;
+    max-width: 100%;
+    width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
   }
 
   .print-section:last-child {
@@ -266,10 +312,15 @@
 
   .print-field-value {
     color: #111827;
-    font-size: 10pt;
+    font-size: 9pt;
     background-color: #f3f4f6;
-    padding: 0.5rem 0.75rem;
+    padding: 0.4rem 0.6rem;
     border-radius: 0.25rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    max-width: 100%;
   }
 
   /* Grid layout for print */
@@ -277,5 +328,21 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
+  }
+  
+  /* Ensure flex containers don't overflow */
+  .flex {
+    flex-wrap: wrap;
+  }
+  
+  /* Ensure equal spacing on both sides */
+  .print\\:block > * {
+    box-sizing: border-box;
+  }
+  
+  /* Fix image sizing */
+  img {
+    max-width: 100%;
+    height: auto;
   }
 }

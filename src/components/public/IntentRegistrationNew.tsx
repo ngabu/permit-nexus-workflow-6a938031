@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,8 @@ export function IntentRegistrationNew() {
     project_site_address: '',
     district: '',
     province: '',
+    llg: '',
+    total_area_sqkm: '',
     project_site_description: '',
     site_ownership_details: '',
     government_agreement: '',
@@ -47,6 +49,8 @@ export function IntentRegistrationNew() {
     estimated_cost_kina: '',
     prescribed_activity_id: '',
     existing_permit_id: '',
+    latitude: '',
+    longitude: '',
   });
   
   const { permits, loading: permitsLoading } = useEntityPermits(formData.entity_id || null);
@@ -59,7 +63,47 @@ export function IntentRegistrationNew() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [draftToDelete, setDraftToDelete] = useState<string | null>(null);
   const [projectBoundary, setProjectBoundary] = useState<any>(null);
-  const [coordinates, setCoordinates] = useState({ lat: -6.314993, lng: 147.1494 });
+  
+  // Coordinates start empty (cleared on initial load)
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Handler to update form data when boundary is uploaded/drawn on map
+  const handleBoundaryUpdate = useCallback((boundary: any, locationInfo?: {
+    district?: string;
+    province?: string;
+    llg?: string;
+    areaSqKm?: number;
+  }) => {
+    setProjectBoundary(boundary);
+    
+    // Auto-populate form fields if location info is provided
+    if (locationInfo) {
+      setFormData(prev => ({
+        ...prev,
+        district: locationInfo.district || prev.district,
+        province: locationInfo.province || prev.province,
+        llg: locationInfo.llg || prev.llg,
+        total_area_sqkm: locationInfo.areaSqKm?.toString() || prev.total_area_sqkm,
+      }));
+      
+      if (locationInfo.district || locationInfo.province || locationInfo.llg) {
+        toast({
+          title: "Location Detected",
+          description: "District, Province, and LLG have been auto-populated from the project boundary.",
+        });
+      }
+    }
+  }, [toast]);
+
+  // Handler for when coordinates change from map marker
+  const handleCoordinatesChange = useCallback((newCoords: { lat: number; lng: number }) => {
+    setCoordinates(newCoords);
+    setFormData(prev => ({
+      ...prev,
+      latitude: newCoords.lat.toFixed(6),
+      longitude: newCoords.lng.toFixed(6),
+    }));
+  }, []);
 
   const handleSaveDraft = async () => {
     try {
@@ -73,6 +117,8 @@ export function IntentRegistrationNew() {
         project_site_address: formData.project_site_address || null,
         district: formData.district || null,
         province: formData.province || null,
+        llg: formData.llg || null,
+        total_area_sqkm: formData.total_area_sqkm ? parseFloat(formData.total_area_sqkm) : null,
         project_site_description: formData.project_site_description || null,
         site_ownership_details: formData.site_ownership_details || null,
         government_agreement: formData.government_agreement || null,
@@ -83,6 +129,8 @@ export function IntentRegistrationNew() {
         prescribed_activity_id: formData.prescribed_activity_id || null,
         existing_permit_id: formData.existing_permit_id || null,
         project_boundary: projectBoundary || null,
+        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
       }, currentDraftId);
       
       if (!currentDraftId) {
@@ -106,6 +154,8 @@ export function IntentRegistrationNew() {
         project_site_address: draft.project_site_address || '',
         district: draft.district || '',
         province: draft.province || '',
+        llg: draft.llg || '',
+        total_area_sqkm: draft.total_area_sqkm?.toString() || '',
         project_site_description: draft.project_site_description || '',
         site_ownership_details: draft.site_ownership_details || '',
         government_agreement: draft.government_agreement || '',
@@ -115,8 +165,17 @@ export function IntentRegistrationNew() {
         estimated_cost_kina: draft.estimated_cost_kina?.toString() || '',
         prescribed_activity_id: draft.prescribed_activity_id || '',
         existing_permit_id: draft.existing_permit_id || '',
+        latitude: (draft as any).latitude?.toString() || '',
+        longitude: (draft as any).longitude?.toString() || '',
       });
       setProjectBoundary(draft.project_boundary || null);
+      // Also set coordinates for the map marker if available
+      if ((draft as any).latitude && (draft as any).longitude) {
+        setCoordinates({
+          lat: (draft as any).latitude,
+          lng: (draft as any).longitude,
+        });
+      }
       setCurrentDraftId(draft.id);
       setShowDrafts(false);
       toast({
@@ -166,7 +225,7 @@ export function IntentRegistrationNew() {
       const { data, error } = await supabase
         .from('intent_registrations')
         .insert({
-          user_id: user.id,
+          user_id: user?.id,
           entity_id: formData.entity_id,
           activity_level: formData.activity_level,
           activity_description: formData.activity_description,
@@ -174,8 +233,10 @@ export function IntentRegistrationNew() {
           commencement_date: formData.commencement_date,
           completion_date: formData.completion_date,
           project_site_address: formData.project_site_address,
-          district: formData.district || null,
-          province: formData.province || null,
+          district: formData.district,
+          province: formData.province,
+          llg: formData.llg,
+          total_area_sqkm: formData.total_area_sqkm ? parseFloat(formData.total_area_sqkm) : null,
           project_site_description: formData.project_site_description,
           site_ownership_details: formData.site_ownership_details,
           government_agreement: formData.government_agreement,
@@ -186,12 +247,33 @@ export function IntentRegistrationNew() {
           prescribed_activity_id: formData.prescribed_activity_id || null,
           existing_permit_id: formData.existing_permit_id || null,
           project_boundary: projectBoundary,
+          latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+          longitude: formData.longitude ? parseFloat(formData.longitude) : null,
           status: 'pending',
         })
         .select()
         .single();
 
       if (error) throw error;
+
+      // Create notification for registry unit
+      if (data) {
+        const entityData = entities.find(e => e.id === formData.entity_id);
+        await supabase
+          .from('manager_notifications' as any)
+          .insert({
+            type: 'new_intent_submission',
+            message: `New intent registration submitted by ${entityData?.name || 'Unknown Entity'} for ${formData.activity_level}`,
+            related_id: data.id,
+            target_unit: 'registry',
+            is_read: false,
+            metadata: {
+              entity_name: entityData?.name,
+              activity_level: formData.activity_level,
+              submitted_at: new Date().toISOString()
+            }
+          });
+      }
 
       // Link uploaded draft documents to the intent
       if (draftDocuments.length > 0) {
@@ -218,6 +300,8 @@ export function IntentRegistrationNew() {
         project_site_address: '',
         district: '',
         province: '',
+        llg: '',
+        total_area_sqkm: '',
         project_site_description: '',
         site_ownership_details: '',
         government_agreement: '',
@@ -227,10 +311,13 @@ export function IntentRegistrationNew() {
         estimated_cost_kina: '',
         prescribed_activity_id: '',
         existing_permit_id: '',
+        latitude: '',
+        longitude: '',
       });
       setDraftDocuments([]);
       setCurrentDraftId(undefined);
       setProjectBoundary(null);
+      setCoordinates(null);
     } catch (error) {
       console.error('Error submitting intent registration:', error);
       toast({
@@ -382,9 +469,9 @@ export function IntentRegistrationNew() {
           <PermitApplicationsMap 
             showAllApplications={false}
             existingBoundary={projectBoundary}
-            onBoundarySave={setProjectBoundary}
-            coordinates={coordinates}
-            onCoordinatesChange={setCoordinates}
+            onBoundarySave={handleBoundaryUpdate}
+            coordinates={coordinates || undefined}
+            onCoordinatesChange={handleCoordinatesChange}
           />
         </TabsContent>
 
@@ -641,48 +728,118 @@ export function IntentRegistrationNew() {
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="project_site_address">Project Site Address *</Label>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs">
-                        <p>Provide the physical address or location details where the preparatory work will be conducted.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <Input
-                    id="project_site_address"
-                    value={formData.project_site_address}
-                    onChange={(e) => setFormData({ ...formData, project_site_address: e.target.value })}
-                    placeholder="Enter the physical address of the project site..."
-                    required
-                    className="bg-glass/50"
-                  />
-                </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="district">District</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="project_site_address">Project Site Address *</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>Provide the physical address or location details where the preparatory work will be conducted.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="project_site_address"
+                      value={formData.project_site_address}
+                      onChange={(e) => setFormData({ ...formData, project_site_address: e.target.value })}
+                      placeholder="Enter the physical address of the project site..."
+                      required
+                      className="bg-glass/50"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="total_area_sqkm">Total Area (sq km)</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>This field is auto-populated when you upload or draw the project boundary on the map.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="total_area_sqkm"
+                      type="number"
+                      value={formData.total_area_sqkm}
+                      onChange={(e) => setFormData({ ...formData, total_area_sqkm: e.target.value })}
+                      placeholder="Auto-filled from map"
+                      step="0.01"
+                      className="bg-glass/50"
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="llg">LLG</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>Local Level Government - auto-populated from project boundary.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="llg"
+                      value={formData.llg}
+                      onChange={(e) => setFormData({ ...formData, llg: e.target.value })}
+                      placeholder="Auto-filled from map"
+                      className="bg-glass/50"
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="district">District</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>District - auto-populated from project boundary.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                     <Input
                       id="district"
                       value={formData.district}
                       onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                      placeholder="Enter district"
+                      placeholder="Auto-filled from map"
                       className="bg-glass/50"
+                      readOnly
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="province">Province</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="province">Province</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>Province - auto-populated from project boundary.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                     <Input
                       id="province"
                       value={formData.province}
                       onChange={(e) => setFormData({ ...formData, province: e.target.value })}
-                      placeholder="Enter province"
+                      placeholder="Auto-filled from map"
                       className="bg-glass/50"
+                      readOnly
                     />
                   </div>
                 </div>
@@ -918,6 +1075,8 @@ export function IntentRegistrationNew() {
                         project_site_address: '',
                         district: '',
                         province: '',
+                        llg: '',
+                        total_area_sqkm: '',
                         project_site_description: '',
                         site_ownership_details: '',
                         government_agreement: '',
@@ -927,9 +1086,12 @@ export function IntentRegistrationNew() {
                         estimated_cost_kina: '',
                         prescribed_activity_id: '',
                         existing_permit_id: '',
+                        latitude: '',
+                        longitude: '',
                       });
                       setDraftDocuments([]);
                       setCurrentDraftId(undefined);
+                      setCoordinates(null);
                     }}
                   >
                     Clear Form

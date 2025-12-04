@@ -1493,6 +1493,9 @@ export type Database = {
           government_agreement: string | null
           id: string
           landowner_negotiation_status: string | null
+          latitude: number | null
+          llg: string | null
+          longitude: number | null
           preparatory_work_description: string | null
           prescribed_activity_id: string | null
           project_boundary: Json | null
@@ -1500,6 +1503,7 @@ export type Database = {
           project_site_description: string | null
           province: string | null
           site_ownership_details: string | null
+          total_area_sqkm: number | null
           updated_at: string
           user_id: string
         }
@@ -1519,6 +1523,9 @@ export type Database = {
           government_agreement?: string | null
           id?: string
           landowner_negotiation_status?: string | null
+          latitude?: number | null
+          llg?: string | null
+          longitude?: number | null
           preparatory_work_description?: string | null
           prescribed_activity_id?: string | null
           project_boundary?: Json | null
@@ -1526,6 +1533,7 @@ export type Database = {
           project_site_description?: string | null
           province?: string | null
           site_ownership_details?: string | null
+          total_area_sqkm?: number | null
           updated_at?: string
           user_id: string
         }
@@ -1545,6 +1553,9 @@ export type Database = {
           government_agreement?: string | null
           id?: string
           landowner_negotiation_status?: string | null
+          latitude?: number | null
+          llg?: string | null
+          longitude?: number | null
           preparatory_work_description?: string | null
           prescribed_activity_id?: string | null
           project_boundary?: Json | null
@@ -1552,6 +1563,7 @@ export type Database = {
           project_site_description?: string | null
           province?: string | null
           site_ownership_details?: string | null
+          total_area_sqkm?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -1607,6 +1619,14 @@ export type Database = {
           approvals_required: string | null
           commencement_date: string
           completion_date: string
+          compliance_assigned_at: string | null
+          compliance_officer_id: string | null
+          compliance_recommendations: string | null
+          compliance_review_notes: string | null
+          compliance_review_status: string | null
+          compliance_reviewed_at: string | null
+          compliance_reviewed_by: string | null
+          compliance_score: number | null
           created_at: string
           departments_approached: string | null
           district: string | null
@@ -1616,6 +1636,14 @@ export type Database = {
           government_agreement: string | null
           id: string
           landowner_negotiation_status: string | null
+          latitude: number | null
+          llg: string | null
+          longitude: number | null
+          md_decided_at: string | null
+          md_decided_by: string | null
+          md_decision: string | null
+          md_decision_notes: string | null
+          md_review_status: string | null
           official_feedback_attachments: Json | null
           preparatory_work_description: string
           prescribed_activity_id: string | null
@@ -1623,11 +1651,18 @@ export type Database = {
           project_site_address: string | null
           project_site_description: string | null
           province: string | null
+          registry_assigned_at: string | null
+          registry_officer_id: string | null
+          registry_review_notes: string | null
+          registry_review_status: string | null
+          registry_reviewed_at: string | null
+          registry_reviewed_by: string | null
           review_notes: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           site_ownership_details: string | null
           status: string
+          total_area_sqkm: number | null
           updated_at: string
           user_id: string
         }
@@ -1637,6 +1672,14 @@ export type Database = {
           approvals_required?: string | null
           commencement_date: string
           completion_date: string
+          compliance_assigned_at?: string | null
+          compliance_officer_id?: string | null
+          compliance_recommendations?: string | null
+          compliance_review_notes?: string | null
+          compliance_review_status?: string | null
+          compliance_reviewed_at?: string | null
+          compliance_reviewed_by?: string | null
+          compliance_score?: number | null
           created_at?: string
           departments_approached?: string | null
           district?: string | null
@@ -1646,6 +1689,14 @@ export type Database = {
           government_agreement?: string | null
           id?: string
           landowner_negotiation_status?: string | null
+          latitude?: number | null
+          llg?: string | null
+          longitude?: number | null
+          md_decided_at?: string | null
+          md_decided_by?: string | null
+          md_decision?: string | null
+          md_decision_notes?: string | null
+          md_review_status?: string | null
           official_feedback_attachments?: Json | null
           preparatory_work_description: string
           prescribed_activity_id?: string | null
@@ -1653,11 +1704,18 @@ export type Database = {
           project_site_address?: string | null
           project_site_description?: string | null
           province?: string | null
+          registry_assigned_at?: string | null
+          registry_officer_id?: string | null
+          registry_review_notes?: string | null
+          registry_review_status?: string | null
+          registry_reviewed_at?: string | null
+          registry_reviewed_by?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           site_ownership_details?: string | null
           status?: string
+          total_area_sqkm?: number | null
           updated_at?: string
           user_id: string
         }
@@ -1667,6 +1725,14 @@ export type Database = {
           approvals_required?: string | null
           commencement_date?: string
           completion_date?: string
+          compliance_assigned_at?: string | null
+          compliance_officer_id?: string | null
+          compliance_recommendations?: string | null
+          compliance_review_notes?: string | null
+          compliance_review_status?: string | null
+          compliance_reviewed_at?: string | null
+          compliance_reviewed_by?: string | null
+          compliance_score?: number | null
           created_at?: string
           departments_approached?: string | null
           district?: string | null
@@ -1676,6 +1742,14 @@ export type Database = {
           government_agreement?: string | null
           id?: string
           landowner_negotiation_status?: string | null
+          latitude?: number | null
+          llg?: string | null
+          longitude?: number | null
+          md_decided_at?: string | null
+          md_decided_by?: string | null
+          md_decision?: string | null
+          md_decision_notes?: string | null
+          md_review_status?: string | null
           official_feedback_attachments?: Json | null
           preparatory_work_description?: string
           prescribed_activity_id?: string | null
@@ -1683,11 +1757,18 @@ export type Database = {
           project_site_address?: string | null
           project_site_description?: string | null
           province?: string | null
+          registry_assigned_at?: string | null
+          registry_officer_id?: string | null
+          registry_review_notes?: string | null
+          registry_review_status?: string | null
+          registry_reviewed_at?: string | null
+          registry_reviewed_by?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           site_ownership_details?: string | null
           status?: string
+          total_area_sqkm?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -1743,11 +1824,13 @@ export type Database = {
           assigned_officer_id: string | null
           created_at: string
           currency: string
+          document_path: string | null
           due_date: string
           entity_id: string | null
           follow_up_date: string | null
           follow_up_notes: string | null
           id: string
+          intent_registration_id: string | null
           invoice_number: string
           paid_date: string | null
           payment_status: string | null
@@ -1762,11 +1845,13 @@ export type Database = {
           assigned_officer_id?: string | null
           created_at?: string
           currency?: string
+          document_path?: string | null
           due_date: string
           entity_id?: string | null
           follow_up_date?: string | null
           follow_up_notes?: string | null
           id?: string
+          intent_registration_id?: string | null
           invoice_number: string
           paid_date?: string | null
           payment_status?: string | null
@@ -1781,11 +1866,13 @@ export type Database = {
           assigned_officer_id?: string | null
           created_at?: string
           currency?: string
+          document_path?: string | null
           due_date?: string
           entity_id?: string | null
           follow_up_date?: string | null
           follow_up_notes?: string | null
           id?: string
+          intent_registration_id?: string | null
           invoice_number?: string
           paid_date?: string | null
           payment_status?: string | null
@@ -1807,6 +1894,13 @@ export type Database = {
             columns: ["entity_id"]
             isOneToOne: false
             referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_intent_registration_id_fkey"
+            columns: ["intent_registration_id"]
+            isOneToOne: false
+            referencedRelation: "intent_registrations"
             referencedColumns: ["id"]
           },
         ]
@@ -1845,15 +1939,7 @@ export type Database = {
           target_unit?: Database["public"]["Enums"]["staff_unit"]
           type?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_related_id"
-            columns: ["related_id"]
-            isOneToOne: false
-            referencedRelation: "permit_applications"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -3119,16 +3205,21 @@ export type Database = {
           completion_date: string
           created_at: string
           departments_approached: string
+          district: string
           entity_id: string
           estimated_cost_kina: number
+          existing_permit_id: string
           government_agreement: string
           id: string
           landowner_negotiation_status: string
+          llg: string
           official_feedback_attachments: Json
           preparatory_work_description: string
           prescribed_activity_id: string
+          project_boundary: Json
           project_site_address: string
           project_site_description: string
+          province: string
           review_notes: string
           reviewed_at: string
           reviewed_by: string
@@ -3158,8 +3249,12 @@ export type Database = {
       is_admin_or_super_admin: { Args: never; Returns: boolean }
       is_admin_or_super_admin_user: { Args: never; Returns: boolean }
       is_admin_user: { Args: never; Returns: boolean }
+      is_compliance_staff_user: { Args: never; Returns: boolean }
+      is_managing_director: { Args: never; Returns: boolean }
       is_public_user: { Args: never; Returns: boolean }
       is_registry_staff: { Args: never; Returns: boolean }
+      is_registry_staff_user: { Args: never; Returns: boolean }
+      is_revenue_staff_user: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       lock_workflow: {
         Args: {

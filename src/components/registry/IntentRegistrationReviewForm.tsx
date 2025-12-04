@@ -12,42 +12,12 @@ import { Badge } from '@/components/ui/badge';
 import { Building, User, Calendar, FileText, Upload, Download, Send, CheckCircle, XCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { IntentRegistrationReadOnlyView } from '@/components/public/IntentRegistrationReadOnlyView';
+import { IntentRegistration } from '@/hooks/useIntentRegistrations';
 
 interface IntentRegistrationReviewFormProps {
   intentId: string;
   onBack: () => void;
-}
-
-interface IntentRegistration {
-  id: string;
-  user_id: string;
-  entity_id: string;
-  activity_level: string;
-  activity_description: string;
-  preparatory_work_description: string;
-  commencement_date: string;
-  completion_date: string;
-  status: string;
-  review_notes: string | null;
-  reviewed_by: string | null;
-  reviewed_at: string | null;
-  official_feedback_attachments: any[] | null;
-  project_site_address: string | null;
-  project_site_description: string | null;
-  site_ownership_details: string | null;
-  government_agreement: string | null;
-  departments_approached: string | null;
-  approvals_required: string | null;
-  landowner_negotiation_status: string | null;
-  estimated_cost_kina: number | null;
-  prescribed_activity_id: string | null;
-  created_at: string;
-  updated_at: string;
-  entity?: {
-    id: string;
-    name: string;
-    entity_type: string;
-  };
 }
 
 interface Document {
@@ -56,6 +26,18 @@ interface Document {
   file_path: string;
   uploaded_at: string;
   file_size: number;
+}
+
+interface EntityDetails {
+  id: string;
+  name: string;
+  entity_type: string;
+  'registered address'?: string;
+  postal_address?: string;
+  email?: string;
+  phone?: string;
+  district?: string;
+  province?: string;
 }
 
 export function IntentRegistrationReviewForm({ intentId, onBack }: IntentRegistrationReviewFormProps) {
@@ -70,6 +52,7 @@ export function IntentRegistrationReviewForm({ intentId, onBack }: IntentRegistr
   const [uploading, setUploading] = useState(false);
   const [feedbackFiles, setFeedbackFiles] = useState<File[]>([]);
   const [reviewerName, setReviewerName] = useState<string>('');
+  const [entityDetails, setEntityDetails] = useState<EntityDetails | null>(null);
 
   useEffect(() => {
     fetchIntentDetails();
@@ -85,7 +68,7 @@ export function IntentRegistrationReviewForm({ intentId, onBack }: IntentRegistr
           entity:entities!inner(id, name, entity_type)
         `)
         .eq('id', intentId)
-        .in('status', ['pending', 'approved', 'rejected', 'under_review'])
+        .in('status', ['submitted', 'approved', 'rejected', 'under_review'])
         .single();
 
       if (error) throw error;
@@ -102,6 +85,19 @@ export function IntentRegistrationReviewForm({ intentId, onBack }: IntentRegistr
       setIntent(typedIntent);
       setReviewNotes(data.review_notes || '');
       setReviewStatus(data.status);
+
+      // Fetch entity details
+      if (data.entity_id) {
+        const { data: entityData, error: entityError } = await supabase
+          .from('entities')
+          .select('*')
+          .eq('id', data.entity_id)
+          .maybeSingle();
+
+        if (!entityError && entityData) {
+          setEntityDetails(entityData);
+        }
+      }
 
       // Fetch reviewer name if reviewed_by exists
       if (data.reviewed_by) {
@@ -170,10 +166,6 @@ export function IntentRegistrationReviewForm({ intentId, onBack }: IntentRegistr
         variant: "destructive"
       });
     }
-  };
-
-  const handleExportPDF = () => {
-    window.print();
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -328,7 +320,7 @@ export function IntentRegistrationReviewForm({ intentId, onBack }: IntentRegistr
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
+      case 'submitted':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
       case 'under_review':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
@@ -367,7 +359,7 @@ export function IntentRegistrationReviewForm({ intentId, onBack }: IntentRegistr
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 print:hidden">
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to List
@@ -380,239 +372,14 @@ export function IntentRegistrationReviewForm({ intentId, onBack }: IntentRegistr
         </Badge>
       </div>
 
-      <Tabs defaultValue="details" className="w-full">
+      <Tabs defaultValue="details" className="w-full print:hidden">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="details">Registration Details</TabsTrigger>
           <TabsTrigger value="feedback">Registry Feedback</TabsTrigger>
         </TabsList>
 
         <TabsContent value="details">
-          <Card className="bg-glass/50 backdrop-blur-sm border-glass">
-            <CardHeader>
-              <CardTitle>Registration Details (Read-Only)</CardTitle>
-              <CardDescription>
-                Submitted {formatDistanceToNow(new Date(intent.created_at), { addSuffix: true })}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Entity</Label>
-                  <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                    {intent.entity?.entity_type === 'company' ? (
-                      <Building className="w-5 h-5 text-primary" />
-                    ) : (
-                      <User className="w-5 h-5 text-primary" />
-                    )}
-                    <div>
-                      <p className="font-medium">{intent.entity?.name}</p>
-                      <p className="text-sm text-muted-foreground capitalize">
-                        {intent.entity?.entity_type}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Activity Level</Label>
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <Badge variant="outline">{intent.activity_level}</Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Activity Description</Label>
-                <div className="p-3 bg-muted/50 rounded-lg">
-                  <p className="text-sm">{intent.activity_description}</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Preparatory Work Description</Label>
-                <div className="p-3 bg-muted/50 rounded-lg">
-                  <p className="text-sm whitespace-pre-wrap">{intent.preparatory_work_description}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    Commencement Date
-                  </Label>
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <p className="text-sm">{new Date(intent.commencement_date).toLocaleDateString()}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    Completion Date
-                  </Label>
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <p className="text-sm">{new Date(intent.completion_date).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Project Site Information */}
-              {(intent.project_site_address || intent.project_site_description || intent.site_ownership_details) && (
-                <>
-                  <div className="pt-6 border-t border-glass">
-                    <h3 className="text-lg font-semibold mb-4">Project Site Information</h3>
-                  </div>
-
-                  {intent.project_site_address && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Project Site Address</Label>
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <p className="text-sm">{intent.project_site_address}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {intent.project_site_description && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Site Description</Label>
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <p className="text-sm whitespace-pre-wrap">{intent.project_site_description}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {intent.site_ownership_details && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Site Ownership Details</Label>
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <p className="text-sm whitespace-pre-wrap">{intent.site_ownership_details}</p>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Government & Stakeholder Engagement */}
-              {(intent.government_agreement || intent.departments_approached || intent.approvals_required || intent.landowner_negotiation_status) && (
-                <>
-                  <div className="pt-6 border-t border-glass">
-                    <h3 className="text-lg font-semibold mb-4">Government & Stakeholder Engagement</h3>
-                  </div>
-
-                  {intent.government_agreement && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Agreement with Government of PNG</Label>
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <p className="text-sm whitespace-pre-wrap">{intent.government_agreement}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {intent.departments_approached && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Departments/Statutory Bodies Approached</Label>
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <p className="text-sm whitespace-pre-wrap">{intent.departments_approached}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {intent.approvals_required && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Other Formal Government Approvals Required</Label>
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <p className="text-sm whitespace-pre-wrap">{intent.approvals_required}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {intent.landowner_negotiation_status && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Landowner Negotiation Status</Label>
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <p className="text-sm whitespace-pre-wrap">{intent.landowner_negotiation_status}</p>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Financial Information */}
-              {intent.estimated_cost_kina && (
-                <>
-                  <div className="pt-6 border-t border-glass">
-                    <h3 className="text-lg font-semibold mb-4">Project Financial Information</h3>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Estimated Cost of Works</Label>
-                    <div className="p-3 bg-primary/10 rounded-lg">
-                      <p className="text-2xl font-bold text-primary">
-                        K{intent.estimated_cost_kina.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              <div className="space-y-4 pt-6 border-t border-glass">
-                <div className="flex items-center justify-between">
-                  <Label className="text-muted-foreground">Supporting Documents ({documents.length})</Label>
-                  <Button variant="outline" size="sm" onClick={handleExportPDF}>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Export PDF
-                  </Button>
-                </div>
-                {documents.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No documents attached</p>
-                ) : (
-                  <div className="space-y-2">
-                    {documents.map((doc) => (
-                      <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <FileText className="w-4 h-4 text-primary flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium truncate">{doc.filename}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {(doc.file_size / 1024).toFixed(2)} KB • {new Date(doc.uploaded_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownloadDocument(doc.file_path, doc.filename)}
-                        >
-                          <Download className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {intent.review_notes && (
-                <div className="space-y-2 pt-6 border-t border-glass">
-                  <Label className="text-muted-foreground">Previous Review</Label>
-                  <div className="p-3 bg-muted/50 rounded-lg border-l-2 border-primary">
-                    {reviewerName && (
-                      <p className="text-xs font-medium text-primary mb-2 flex items-center gap-2">
-                        <User className="w-3 h-3" />
-                        Reviewed by: {reviewerName}
-                      </p>
-                    )}
-                    <p className="text-sm">{intent.review_notes}</p>
-                    {intent.reviewed_at && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Reviewed {formatDistanceToNow(new Date(intent.reviewed_at), { addSuffix: true })}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <IntentRegistrationReadOnlyView intent={intent} />
         </TabsContent>
 
         <TabsContent value="feedback">
@@ -643,10 +410,10 @@ export function IntentRegistrationReviewForm({ intentId, onBack }: IntentRegistr
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">
+                    <SelectItem value="submitted">
                       <div className="flex items-center gap-2">
                         <AlertCircle className="w-4 h-4" />
-                        Pending
+                        Submitted
                       </div>
                     </SelectItem>
                     <SelectItem value="under_review">

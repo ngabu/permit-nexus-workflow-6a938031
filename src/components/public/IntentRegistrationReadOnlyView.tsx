@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { exportIntentRegistrationPDF } from '@/utils/pdfExport';
+import { IntentBoundaryMapDisplay } from '@/components/registry/read-only/IntentBoundaryMapDisplay';
 
 interface IntentRegistrationReadOnlyViewProps {
   intent: IntentRegistration;
@@ -137,18 +139,7 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
   };
 
   const handleExportPDF = () => {
-    // Expand all sections before printing
-    setOpenSections({
-      registration: true,
-      projectSite: true,
-      stakeholder: true,
-      financial: true,
-    });
-    
-    // Wait for sections to expand, then print
-    setTimeout(() => {
-      window.print();
-    }, 100);
+    exportIntentRegistrationPDF(setOpenSections);
   };
 
   // Get entity address for PDF
@@ -173,39 +164,40 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
   return (
     <div className="space-y-6">
       {/* Print-only A4 formatted content */}
-      <div className="hidden print:block print:mb-6">
+      <div className="hidden print:block print:mb-6" style={{ maxWidth: '100%', width: '100%', overflow: 'hidden' }}>
         {/* Header with PNG Emblem and Authority Name */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <img 
-            src="/images/png-emblem.png" 
-            alt="Papua New Guinea Emblem" 
-            className="mx-auto h-24 mb-4"
+            src="/images/cepa-header-crescent.png" 
+            alt="CEPA Header" 
+            className="mx-auto h-20 mb-3"
+            style={{ maxHeight: '80px' }}
           />
-          <h1 className="text-xl font-bold text-gray-800">Conservation & Environment Protection Authority</h1>
-          <p className="text-base text-gray-600">CEPA Registry Division</p>
+          <h1 className="text-lg font-bold text-gray-800">Conservation & Environment Protection Authority</h1>
+          <p className="text-sm text-gray-600">CEPA Registry Division</p>
         </div>
 
         {/* Title */}
-        <h2 className="text-lg font-bold mb-4">Intent Registration Record - {intent.entity?.name || 'Unknown Entity'}</h2>
+        <h2 className="text-base font-bold mb-3">Intent Registration Record - {intent.entity?.name || 'Unknown Entity'}</h2>
 
         {/* Date */}
         <div className="mb-3">
-          <span className="font-bold">Date:</span>
-          <span className="ml-2">{format(new Date(intent.created_at), 'MMMM dd, yyyy')}</span>
+          <span className="font-bold text-sm">Date:</span>
+          <span className="ml-2 text-sm">{format(new Date(intent.created_at), 'MMMM dd, yyyy')}</span>
         </div>
 
         {/* Address and Attachment Ref side by side */}
-        <div className="flex gap-8 mb-6">
-          <div className="flex items-start">
-            <span className="font-bold mr-4">Address:</span>
-            <div className="border border-gray-400 p-3 min-w-[200px] min-h-[60px]">
-              <p className="text-sm">{getEntityAddress()}</p>
+        <div className="flex gap-4 mb-4" style={{ width: '100%', boxSizing: 'border-box' }}>
+          <div className="flex items-start flex-1">
+            <span className="font-bold mr-3 text-sm" style={{ minWidth: '70px' }}>Address:</span>
+            <div className="border border-gray-400 p-2 flex-1 min-h-[50px]">
+              <p className="text-xs">{getEntityAddress()}</p>
             </div>
           </div>
-          <div className="flex items-start">
-            <span className="font-bold mr-4">Attachment Ref:</span>
-            <div className="border border-gray-400 p-3 min-w-[200px] min-h-[60px]">
-              <p className="text-sm">{getAttachmentList()}</p>
+          <div className="flex items-start flex-1">
+            <span className="font-bold mr-3 text-sm" style={{ minWidth: '100px' }}>Attachment Ref:</span>
+            <div className="border border-gray-400 p-2 flex-1 min-h-[50px]">
+              <p className="text-xs">{getAttachmentList()}</p>
             </div>
           </div>
         </div>
@@ -472,7 +464,16 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {intent.province && (
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Province</Label>
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      <p className="text-sm">{intent.province}</p>
+                    </div>
+                  </div>
+                )}
+
                 {intent.district && (
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">District</Label>
@@ -482,11 +483,11 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
                   </div>
                 )}
 
-                {intent.province && (
+                {intent.llg && (
                   <div className="space-y-2">
-                    <Label className="text-muted-foreground">Province</Label>
+                    <Label className="text-muted-foreground">LLG</Label>
                     <div className="p-3 bg-primary/10 rounded-lg">
-                      <p className="text-sm">{intent.province}</p>
+                      <p className="text-sm">{intent.llg}</p>
                     </div>
                   </div>
                 )}

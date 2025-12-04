@@ -28,7 +28,17 @@ export function LocationMapDisplay({ coordinates, activityLocation }: LocationMa
       style: 'mapbox://styles/mapbox/satellite-streets-v12',
       center: [coordinates.lng, coordinates.lat],
       zoom: 12,
+      interactive: true,
+      cooperativeGestures: false,
     });
+
+    // Explicitly enable all interactions after map init
+    map.current.scrollZoom.enable();
+    map.current.dragPan.enable();
+    map.current.dragRotate.enable();
+    map.current.touchZoomRotate.enable();
+    map.current.keyboard.enable();
+    map.current.doubleClickZoom.enable();
 
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -100,6 +110,7 @@ export function LocationMapDisplay({ coordinates, activityLocation }: LocationMa
         <div 
           ref={mapContainer} 
           className="h-64 w-full rounded-lg border border-border overflow-hidden"
+          style={{ touchAction: 'none' }}
         />
         <div className="mt-3 text-sm text-muted-foreground">
           <p><strong>Coordinates:</strong> {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}</p>

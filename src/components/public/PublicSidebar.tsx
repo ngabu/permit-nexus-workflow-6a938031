@@ -90,7 +90,7 @@ const publicNavigationItems: PublicNavigationItem[] = [
   },
   { title: "Compliance Reporting", value: "compliance-reporting", icon: FileCheck },
   { title: "Notifications", value: "notifications", icon: Bell },
-  { title: "Documents", value: "documents", icon: Upload },
+  { title: "Documents Management", value: "documents", icon: Upload },
 ]
 
 const accountItems: PublicNavigationItem[] = [

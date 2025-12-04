@@ -51,8 +51,18 @@ export function ComprehensivePermitApplicationView({ application, initialAssessm
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/satellite-v9',
         center: [lng, lat],
-        zoom: 12
+        zoom: 12,
+        interactive: true,
+        cooperativeGestures: false,
       });
+
+      // Enable all map interactions
+      map.current.scrollZoom.enable();
+      map.current.dragPan.enable();
+      map.current.dragRotate.enable();
+      map.current.touchZoomRotate.enable();
+      map.current.keyboard.enable();
+      map.current.doubleClickZoom.enable();
 
       // Add marker
       new mapboxgl.Marker()
@@ -279,7 +289,7 @@ export function ComprehensivePermitApplicationView({ application, initialAssessm
                       </CardHeader>
                       <CardContent>
                         {application.coordinates ? (
-                          <div ref={mapContainer} className="w-full h-80 rounded-lg border" />
+                          <div ref={mapContainer} className="w-full h-80 rounded-lg border" style={{ touchAction: 'none' }} />
                         ) : (
                           <div className="w-full h-80 rounded-lg border bg-muted/30 flex items-center justify-center">
                             <div className="text-center">

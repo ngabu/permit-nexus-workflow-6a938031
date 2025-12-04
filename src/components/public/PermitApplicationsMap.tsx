@@ -25,13 +25,21 @@ interface PermitApplicationsMapProps {
   defaultStatuses?: string[];
   intentRegistrationId?: string;
   existingBoundary?: any;
-  onBoundarySave?: (boundary: any) => void;
+  onBoundarySave?: (boundary: any, locationInfo?: {
+    district?: string;
+    province?: string;
+    llg?: string;
+    areaSqKm?: number;
+  }) => void;
   coordinates?: { lat: number; lng: number };
   onCoordinatesChange?: (coordinates: { lat: number; lng: number }) => void;
   hideDrawingTools?: boolean;
   customTitle?: string;
   customDescription?: string;
   readOnly?: boolean;
+  district?: string;
+  province?: string;
+  llg?: string;
 }
 
 export function PermitApplicationsMap({ 
@@ -46,7 +54,10 @@ export function PermitApplicationsMap({
   hideDrawingTools = false,
   customTitle,
   customDescription,
-  readOnly = false
+  readOnly = false,
+  district,
+  province,
+  llg
 }: PermitApplicationsMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -57,6 +68,7 @@ export function PermitApplicationsMap({
   const eventListenersRef = useRef<Map<string, { mousemove: any; mouseleave: any }>>(new Map());
   const currentPopupRequestId = useRef<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const readOnlyRef = useRef<boolean>(readOnly);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showOverrideDialog, setShowOverrideDialog] = useState(false);
   const [pendingBoundary, setPendingBoundary] = useState<any>(null);
@@ -101,6 +113,11 @@ export function PermitApplicationsMap({
     districts: null,
     llgs: null
   });
+
+  // Keep readOnlyRef in sync with readOnly prop
+  useEffect(() => {
+    readOnlyRef.current = readOnly;
+  }, [readOnly]);
 
   // Helper function to forcefully remove all boundary popups
   const removeAllBoundaryPopups = useCallback(() => {
@@ -228,6 +245,93 @@ export function PermitApplicationsMap({
     }
   }, [findLocationInfo, showDistricts, showLLGs]);
 
+  // Function to extract location info and area from a geometry
+  const extractLocationInfoFromGeometry = useCallback(async (geometry: any) => {
+    try {
+      // Calculate area
+      const areaSqMeters = area(geometry);
+      const areaSqKm = areaSqMeters / 1_000_000;
+
+      // Get centroid or first coordinate to detect location
+      let lng, lat;
+      if (geometry.type === 'Polygon') {
+        // Get center of first ring
+        const coords = geometry.coordinates[0];
+        lng = coords.reduce((sum: number, coord: number[]) => sum + coord[0], 0) / coords.length;
+        lat = coords.reduce((sum: number, coord: number[]) => sum + coord[1], 0) / coords.length;
+      } else if (geometry.type === 'MultiPolygon') {
+        // Get center of first polygon's first ring
+        const coords = geometry.coordinates[0][0];
+        lng = coords.reduce((sum: number, coord: number[]) => sum + coord[0], 0) / coords.length;
+        lat = coords.reduce((sum: number, coord: number[]) => sum + coord[1], 0) / coords.length;
+      } else if (geometry.type === 'Point') {
+        [lng, lat] = geometry.coordinates;
+      } else {
+        return { areaSqKm };
+      }
+
+      // Load GIS data if not already loaded - use the loaded data directly
+      let districtData = boundaryLayersData.districts;
+      let llgData = boundaryLayersData.llgs;
+      
+      if (!districtData) {
+        districtData = await loadGISLayerData('district-boundaries', '/gis-data/png_dist_boundaries.json');
+        if (districtData) {
+          setBoundaryLayersData(prev => ({ ...prev, districts: districtData }));
+        }
+      }
+      if (!llgData) {
+        llgData = await loadGISLayerData('llg-boundaries', '/gis-data/png_llg_boundaries.json');
+        if (llgData) {
+          setBoundaryLayersData(prev => ({ ...prev, llgs: llgData }));
+        }
+      }
+
+      // Detect location using the loaded data
+      const pt = point([lng, lat]);
+      let district, province, llg;
+
+      // Check district using the loaded data directly
+      if (districtData?.features) {
+        for (const feature of districtData.features) {
+          if (booleanPointInPolygon(pt, feature)) {
+            district = feature.properties?.DISTNAME || feature.properties?.District || feature.properties?.NAME;
+            province = feature.properties?.PROVINCE || feature.properties?.Province || feature.properties?.PROV;
+            break;
+          }
+        }
+      }
+
+      // Check LLG using the loaded data directly
+      if (llgData?.features) {
+        for (const feature of llgData.features) {
+          if (booleanPointInPolygon(pt, feature)) {
+            llg = feature.properties?.LLGNAME || feature.properties?.LLG || feature.properties?.NAME;
+            if (!province) {
+              province = feature.properties?.PROVINCE || feature.properties?.Province || feature.properties?.PROV;
+            }
+            break;
+          }
+        }
+      }
+
+      // Fallback to Mapbox API for province if not found
+      if (!province) {
+        province = await getProvinceFromMapbox(lng, lat);
+      }
+
+      return {
+        areaSqKm: parseFloat(areaSqKm.toFixed(4)),
+        district: district || undefined,
+        province: province || undefined,
+        llg: llg || undefined,
+      };
+    } catch (error) {
+      console.error('Error extracting location info from geometry:', error);
+      return {};
+    }
+  }, [boundaryLayersData, loadGISLayerData, getProvinceFromMapbox]);
+
   // Initialize map once
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -320,7 +424,8 @@ export function PermitApplicationsMap({
             setPendingBoundary(geometry);
             setShowOverrideDialog(true);
           } else {
-            onBoundarySave(geometry);
+            const locationInfo = await extractLocationInfoFromGeometry(geometry);
+            onBoundarySave(geometry, locationInfo);
             toast.success('Project boundary saved successfully');
           }
         } else {
@@ -357,7 +462,8 @@ export function PermitApplicationsMap({
         const geometry = features[0].geometry;
         
         if (intentRegistrationId && onBoundarySave) {
-          onBoundarySave(geometry);
+          const locationInfo = await extractLocationInfoFromGeometry(geometry);
+          onBoundarySave(geometry, locationInfo);
           toast.success('Project boundary updated successfully');
         } else {
           try {
@@ -401,17 +507,19 @@ export function PermitApplicationsMap({
       }
     });
 
-    // Add marker if coordinates provided (only shown when Uploaded AOI toggle is active)
-    if (coordinates && onCoordinatesChange) {
+    // Add marker if onCoordinatesChange provided (allows clicking to set coordinates)
+    if (onCoordinatesChange) {
+      const initialCoords = coordinates ? [coordinates.lng, coordinates.lat] : [147.1494, -6.314993];
       marker.current = new mapboxgl.Marker({ 
         color: '#ef4444', 
-        draggable: true,
+        draggable: !readOnly,
         scale: 1.2
       })
-        .setLngLat([coordinates.lng || 147.1494, coordinates.lat || -6.314993]);
+        .setLngLat(initialCoords as [number, number]);
       
-      // Marker will be added to map based on showUploadedAOI state
-
+      // Only add marker to map if coordinates are provided
+      // Marker will be shown when user clicks or when coordinates are set
+      
       // Update coordinates when marker is dragged
       marker.current.on('dragend', () => {
         const lngLat = marker.current!.getLngLat();
@@ -450,22 +558,35 @@ export function PermitApplicationsMap({
         // Keep popup open, don't close on mouse leave
       });
 
-      // Add click event to set coordinates (only when AOI is active)
+      // Add click event to set coordinates - disabled in read-only mode
       mapInstance.on('click', (e) => {
-        if (!showUploadedAOI || !uploadedAOI) return;
-        
-        const { lng, lat } = e.lngLat;
-        
-        // Check if click is within AOI boundaries
-        const pt = point([lng, lat]);
-        const isInside = booleanPointInPolygon(pt, uploadedAOI);
-        
-        if (!isInside) {
-          // Don't show error message, just don't update marker
+        // Disable marker placement in read-only mode
+        if (readOnlyRef.current) {
           return;
         }
         
+        // If AOI exists and is shown, restrict clicks to within AOI
+        if (uploadedAOI && showUploadedAOI) {
+          const { lng, lat } = e.lngLat;
+          const pt = point([lng, lat]);
+          const isInside = booleanPointInPolygon(pt, uploadedAOI);
+          
+          if (!isInside) {
+            return;
+          }
+        }
+        
+        const { lng, lat } = e.lngLat;
         marker.current!.setLngLat([lng, lat]);
+        
+        // Show marker on map if not already added
+        if (map.current && !marker.current!.getLngLat()) {
+          marker.current!.addTo(map.current);
+        } else if (map.current && showUploadedAOI) {
+          // Ensure marker is on map
+          marker.current!.addTo(map.current);
+        }
+        
         onCoordinatesChange({
           lat: parseFloat(lat.toFixed(6)),
           lng: parseFloat(lng.toFixed(6))
@@ -1197,8 +1318,8 @@ export function PermitApplicationsMap({
         // Get center of bounds
         const center = bounds.getCenter();
         
-        // Zoom to fit the boundary
-        map.current.fitBounds(bounds, { padding: 80, duration: 1000 });
+        // Zoom to fit the boundary at street level
+        map.current.fitBounds(bounds, { padding: 80, duration: 1000, maxZoom: 17 });
         
         // Place marker at center and show it
         if (marker.current && onCoordinatesChange) {
@@ -1208,8 +1329,8 @@ export function PermitApplicationsMap({
             lng: parseFloat(center.lng.toFixed(6))
           });
           
-          // Make marker draggable but constrained to AOI
-          marker.current.setDraggable(true);
+          // Make marker draggable but constrained to AOI (only if not readOnly)
+          marker.current.setDraggable(!readOnly);
           
           // Add marker to map if not already added
           marker.current.addTo(map.current);
@@ -1479,7 +1600,142 @@ export function PermitApplicationsMap({
 
   // Load existing boundary on mount and sync with uploaded AOI state
   useEffect(() => {
-    if (!mapLoaded || !map.current || !draw.current) return;
+    if (!mapLoaded || !map.current) return;
+
+    // Handle read-only mode - display boundary as GeoJSON layer instead of using draw control
+    if (readOnly) {
+      // Remove existing read-only boundary layers if they exist
+      if (map.current.getLayer('readonly-boundary-fill')) {
+        map.current.removeLayer('readonly-boundary-fill');
+      }
+      if (map.current.getLayer('readonly-boundary-outline')) {
+        map.current.removeLayer('readonly-boundary-outline');
+      }
+      if (map.current.getSource('readonly-boundary')) {
+        map.current.removeSource('readonly-boundary');
+      }
+
+      if (!existingBoundary) return;
+
+      try {
+        // Add the boundary as a GeoJSON source
+        map.current.addSource('readonly-boundary', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: existingBoundary
+          }
+        });
+
+        // Add fill layer
+        map.current.addLayer({
+          id: 'readonly-boundary-fill',
+          type: 'fill',
+          source: 'readonly-boundary',
+          paint: {
+            'fill-color': '#ff0000',
+            'fill-opacity': 0.2
+          }
+        });
+
+        // Add outline layer with red dashed line
+        map.current.addLayer({
+          id: 'readonly-boundary-outline',
+          type: 'line',
+          source: 'readonly-boundary',
+          paint: {
+            'line-color': '#ff0000',
+            'line-width': 3,
+            'line-dasharray': [2, 2]
+          }
+        });
+
+        // Zoom to boundary at street level
+        if (existingBoundary.type === 'Polygon' && existingBoundary.coordinates?.[0]) {
+          const bounds = new mapboxgl.LngLatBounds();
+          existingBoundary.coordinates[0].forEach((coord: [number, number]) => {
+            bounds.extend(coord);
+          });
+          map.current.fitBounds(bounds, { padding: 50, maxZoom: 17, duration: 1000 });
+          
+          // Add a center marker
+          const center = bounds.getCenter();
+          new mapboxgl.Marker({ color: '#ef4444', scale: 1.2 })
+            .setLngLat([center.lng, center.lat])
+            .addTo(map.current);
+
+          // Calculate area using turf
+          const turfPolygon = polygon(existingBoundary.coordinates);
+          const areaSqMeters = area(turfPolygon);
+          const areaSqKm = (areaSqMeters / 1_000_000).toFixed(2);
+          const areaHectares = (areaSqMeters / 10_000).toFixed(2);
+
+          // Create popup for hover
+          const hoverPopup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            maxWidth: '300px'
+          });
+
+          // Add hover events for boundary
+          const mapInstance = map.current;
+          
+          mapInstance.on('mouseenter', 'readonly-boundary-fill', (e) => {
+            mapInstance.getCanvas().style.cursor = 'pointer';
+            
+            const locationInfo = [
+              province ? `<strong>Province:</strong> ${province}` : `<strong>Province:</strong> Not Available`,
+              district ? `<strong>District:</strong> ${district}` : `<strong>District:</strong> Not Available`,
+              `<strong>LLG:</strong> ${llg || 'Not Available'}`
+            ].join('<br/>');
+            
+            const popupContent = `
+              <div style="padding: 12px; font-family: system-ui, -apple-system, sans-serif;">
+                <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: #1a1a1a; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">
+                  Area of Interest (AOI)
+                </h4>
+                <div style="margin-bottom: 10px; padding: 8px; background: #f3f4f6; border-radius: 6px;">
+                  <p style="margin: 0; font-size: 12px; color: #374151; line-height: 1.6;">
+                    ${locationInfo}
+                  </p>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <div style="padding: 8px; background: #ecfdf5; border-radius: 6px; border-left: 3px solid #10b981;">
+                    <p style="margin: 0; font-size: 11px; color: #059669; font-weight: 600;">AREA (sq km)</p>
+                    <p style="margin: 2px 0 0 0; font-size: 16px; font-weight: 700; color: #047857;">${areaSqKm}</p>
+                  </div>
+                  <div style="padding: 8px; background: #fef3c7; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                    <p style="margin: 0; font-size: 11px; color: #d97706; font-weight: 600;">AREA (ha)</p>
+                    <p style="margin: 2px 0 0 0; font-size: 16px; font-weight: 700; color: #b45309;">${areaHectares}</p>
+                  </div>
+                </div>
+                <p style="margin: 8px 0 0 0; font-size: 11px; color: #6b7280;">
+                  <strong>Center:</strong> ${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}
+                </p>
+              </div>
+            `;
+            
+            hoverPopup.setLngLat(e.lngLat).setHTML(popupContent).addTo(mapInstance);
+          });
+
+          mapInstance.on('mousemove', 'readonly-boundary-fill', (e) => {
+            hoverPopup.setLngLat(e.lngLat);
+          });
+
+          mapInstance.on('mouseleave', 'readonly-boundary-fill', () => {
+            mapInstance.getCanvas().style.cursor = '';
+            hoverPopup.remove();
+          });
+        }
+      } catch (error) {
+        console.error('Error loading existing boundary in read-only mode:', error);
+      }
+      return;
+    }
+
+    // Non read-only mode - use draw control
+    if (!draw.current) return;
 
     // Clear previous boundary when existingBoundary changes or is null
     if (uploadedAOIFeatureId) {
@@ -1521,7 +1777,7 @@ export function PermitApplicationsMap({
         existingBoundary.coordinates[0].forEach((coord: [number, number]) => {
           bounds.extend(coord);
         });
-        map.current.fitBounds(bounds, { padding: 80, duration: 1000 });
+        map.current.fitBounds(bounds, { padding: 80, duration: 1000, maxZoom: 17 });
         
         // Place marker at center if marker exists
         if (marker.current && onCoordinatesChange) {
@@ -1536,28 +1792,31 @@ export function PermitApplicationsMap({
     } catch (error) {
       console.error('Error loading existing boundary:', error);
     }
-  }, [mapLoaded, existingBoundary]);
+  }, [mapLoaded, existingBoundary, readOnly]);
 
-  const handleConfirmOverride = () => {
+  const handleConfirmOverride = async () => {
     if (pendingBoundary && onBoundarySave) {
-      onBoundarySave(pendingBoundary);
+      const locationInfo = await extractLocationInfoFromGeometry(pendingBoundary);
+      onBoundarySave(pendingBoundary, locationInfo);
       toast.success('Project boundary saved successfully');
     }
     setShowOverrideDialog(false);
     setPendingBoundary(null);
   };
 
-  const handleChooseDrawn = () => {
+  const handleChooseDrawn = async () => {
     if (drawnAOI && onBoundarySave) {
-      onBoundarySave(drawnAOI);
+      const locationInfo = await extractLocationInfoFromGeometry(drawnAOI);
+      onBoundarySave(drawnAOI, locationInfo);
       toast.success('Drawn AOI selected as project boundary');
     }
     setShowAOIChoiceDialog(false);
   };
 
-  const handleChooseUploaded = () => {
+  const handleChooseUploaded = async () => {
     if (uploadedAOI && onBoundarySave) {
-      onBoundarySave(uploadedAOI);
+      const locationInfo = await extractLocationInfoFromGeometry(uploadedAOI);
+      onBoundarySave(uploadedAOI, locationInfo);
       toast.success('Uploaded AOI selected as project boundary');
     }
     setShowAOIChoiceDialog(false);
@@ -1693,7 +1952,8 @@ export function PermitApplicationsMap({
               properties: {},
               geometry: firstGeometry
             });
-            onBoundarySave(firstGeometry);
+            const locationInfo = await extractLocationInfoFromGeometry(firstGeometry);
+            onBoundarySave(firstGeometry, locationInfo);
             toast.success('Project boundary uploaded successfully');
           }
         } else {
@@ -1737,7 +1997,7 @@ export function PermitApplicationsMap({
               });
             }
           });
-          map.current.fitBounds(bounds, { padding: 50 });
+          map.current.fitBounds(bounds, { padding: 50, maxZoom: 17 });
         }
       } else {
         toast.error('No valid geometries found in file');
@@ -1822,39 +2082,37 @@ export function PermitApplicationsMap({
               <Layers className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium">GIS Layers</span>
             </div>
-            {!readOnly && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  // Check if any layer is currently enabled
-                  const anyEnabled = showDistricts || showLLGs || 
-                                    Object.values(dbGISLayerToggles).some(v => v) || 
-                                    (uploadedAOI && showUploadedAOI);
-                  
-                  // If any is enabled, disable all. Otherwise, enable all
-                  const targetState = !anyEnabled;
-                  
-                  setShowDistricts(targetState);
-                  setShowLLGs(targetState);
-                  
-                  if (dbGISLayers.length > 0) {
-                    const newToggles: {[key: string]: boolean} = {};
-                    dbGISLayers.forEach(layer => {
-                      newToggles[layer.id] = targetState;
-                    });
-                    setDbGISLayerToggles(newToggles);
-                  }
-                  
-                  if (uploadedAOI) {
-                    setShowUploadedAOI(targetState);
-                  }
-                }}
-                className="h-7 text-xs"
-              >
-                {(!showDistricts && !showLLGs && Object.values(dbGISLayerToggles).every(v => !v) && (!uploadedAOI || !showUploadedAOI)) ? 'Enable All' : 'Disable All'}
-              </Button>
-            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                // Check if any layer is currently enabled
+                const anyEnabled = showDistricts || showLLGs || 
+                                  Object.values(dbGISLayerToggles).some(v => v) || 
+                                  (uploadedAOI && showUploadedAOI);
+                
+                // If any is enabled, disable all. Otherwise, enable all
+                const targetState = !anyEnabled;
+                
+                setShowDistricts(targetState);
+                setShowLLGs(targetState);
+                
+                if (dbGISLayers.length > 0) {
+                  const newToggles: {[key: string]: boolean} = {};
+                  dbGISLayers.forEach(layer => {
+                    newToggles[layer.id] = targetState;
+                  });
+                  setDbGISLayerToggles(newToggles);
+                }
+                
+                if (uploadedAOI) {
+                  setShowUploadedAOI(targetState);
+                }
+              }}
+              className="h-7 text-xs"
+            >
+              {(!showDistricts && !showLLGs && Object.values(dbGISLayerToggles).every(v => !v) && (!uploadedAOI || !showUploadedAOI)) ? 'Enable All' : 'Disable All'}
+            </Button>
           </div>
 
           {/* Boundary Layers */}
@@ -1866,7 +2124,6 @@ export function PermitApplicationsMap({
                   id="districts"
                   checked={showDistricts}
                   onCheckedChange={setShowDistricts}
-                  disabled={readOnly}
                   className="scale-75"
                 />
                 <Label htmlFor="districts" className="text-xs cursor-pointer flex items-center gap-1.5">
@@ -1879,7 +2136,6 @@ export function PermitApplicationsMap({
                   id="llgs"
                   checked={showLLGs}
                   onCheckedChange={setShowLLGs}
-                  disabled={readOnly}
                   className="scale-75"
                 />
                 <Label htmlFor="llgs" className="text-xs cursor-pointer flex items-center gap-1.5">
@@ -1903,7 +2159,6 @@ export function PermitApplicationsMap({
                       onCheckedChange={(checked) => 
                         setDbGISLayerToggles(prev => ({ ...prev, [layer.id]: checked }))
                       }
-                      disabled={readOnly}
                       className="scale-75"
                     />
                     <Label htmlFor={`db-layer-${layer.id}`} className="text-xs cursor-pointer flex items-center gap-1.5">
@@ -1925,7 +2180,6 @@ export function PermitApplicationsMap({
                   id="uploaded-aoi"
                   checked={showUploadedAOI}
                   onCheckedChange={setShowUploadedAOI}
-                  disabled={readOnly}
                   className="scale-75"
                 />
                 <Label htmlFor="uploaded-aoi" className="text-xs cursor-pointer flex items-center gap-1.5">
@@ -2114,7 +2368,7 @@ export function PermitApplicationsMap({
             <div className="col-span-2">
               <p className="text-xs text-muted-foreground flex items-start gap-1">
                 <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                Click on the map or drag the marker to set coordinates. Enable boundary layers above to see location details.
+                Coordinates are automatically set from the center of the uploaded AOI boundary.
               </p>
             </div>
           </div>
