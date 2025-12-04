@@ -294,7 +294,7 @@ export function DocumentManagement() {
         <TabsList className="bg-muted/50 p-1">
           <TabsTrigger value="my-documents">My Documents</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="archive">Archive</TabsTrigger>
+          <TabsTrigger value="info-guidelines">Information and Guidelines</TabsTrigger>
         </TabsList>
 
         <TabsContent value="my-documents" className="mt-6">
@@ -469,11 +469,45 @@ export function DocumentManagement() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="archive" className="mt-6">
-          <Card>
-            <CardContent className="p-6 text-center text-muted-foreground">
-              <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Archived documents will appear here</p>
+        <TabsContent value="info-guidelines" className="mt-6">
+          <Card className="border">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-foreground">Information and Guidelines</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                  { name: 'Environmental Permit Application Guide', type: 'User guide' },
+                  { name: 'Compliance Reporting Guidelines', type: 'Regulatory guideline' },
+                  { name: 'Environmental Impact Assessment Process', type: 'Process guide' },
+                  { name: 'Monitoring and Reporting Requirements', type: 'Regulatory guideline' },
+                  { name: 'Fee Schedule and Payment Information', type: 'Information' },
+                  { name: 'Contact Information and Support', type: 'Information' },
+                ].map((guide, index) => (
+                  <Card key={index} className="border hover:border-primary/30 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-5 h-5 text-purple-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-foreground text-sm leading-tight">{guide.name}</h4>
+                          <p className="text-sm text-primary mt-1">{guide.type}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="outline" size="icon" className="h-9 w-9">
+                          <Download className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          View Guide
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
