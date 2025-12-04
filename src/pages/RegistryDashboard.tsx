@@ -32,6 +32,7 @@ import { RegistryComplianceReporting } from "@/components/registry/RegistryCompl
 import { UnitNotificationsPanel } from "@/components/notifications/UnitNotificationsPanel";
 import { useUnitNotifications } from "@/hooks/useUnitNotifications";
 import { supabase } from "@/integrations/supabase/client";
+import { RegistryDocumentManagement } from "@/components/registry/RegistryDocumentManagement";
 
 const RegistryDashboard = () => {
   const { profile } = useAuth();
@@ -305,6 +306,7 @@ const RegistryDashboard = () => {
             )}
 
             {activeTab === 'intent-reviews' && <ApprovedIntentsList />}
+            {activeTab === 'documents-management' && <RegistryDocumentManagement />}
             {activeTab === 'compliance-reporting' && <RegistryComplianceReporting />}
             {activeTab === 'permit-reviews' && <PermitApplicationReview />}
             {activeTab === 'entities' && <EntitiesList />}

@@ -35,7 +35,8 @@ import {
   FileX,
   ArrowRightLeft,
   Building,
-  FileCheck
+  FileCheck,
+  FolderOpen
 } from "lucide-react"
 import { useState } from "react"
 import { useUnitNotifications } from "@/hooks/useUnitNotifications"
@@ -51,6 +52,7 @@ interface RegistryNavigationItem {
 
 const registryNavigationItems: RegistryNavigationItem[] = [
   { title: "Dashboard", value: "dashboard", icon: LayoutDashboard },
+  { title: "Documents Management", value: "documents-management", icon: FolderOpen },
   { title: "Compliance Reporting", value: "compliance-reporting", icon: FileCheck },
 ]
 
