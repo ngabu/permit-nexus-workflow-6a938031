@@ -367,16 +367,9 @@ export function DocumentManagement() {
                           <FileText className="w-8 h-8 text-muted-foreground" />
                         </div>
                         <h3 className="text-lg font-medium text-foreground mb-2">No documents found</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
+                        <p className="text-sm text-muted-foreground">
                           Upload your first document using the upload button above
                         </p>
-                        <Button 
-                          onClick={() => setIsUploadDialogOpen(true)}
-                          className="bg-foreground text-background hover:bg-foreground/90"
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload Document
-                        </Button>
                       </div>
                     ) : (
                       filteredFiles.map((file) => (
