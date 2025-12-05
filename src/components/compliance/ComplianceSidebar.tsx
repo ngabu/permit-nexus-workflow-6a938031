@@ -152,51 +152,6 @@ export function ComplianceSidebar({ activeTab, onTabChange }: ComplianceSidebarP
                 </SidebarMenuItem>
               ))}
 
-              {/* Compliance menu with submenus */}
-              <SidebarMenuItem>
-                <SidebarMenuButton 
-                  onClick={() => setComplianceOpen(!complianceOpen)}
-                  className="w-full text-white/80 hover:bg-white/10 hover:text-white transition-all duration-200"
-                >
-                  <Shield className="w-5 h-5 shrink-0" />
-                  {!isCollapsed && (
-                    <>
-                      <span className="ml-3 flex-1 text-left">Compliance</span>
-                      {complianceOpen ? 
-                        <ChevronDown className="w-4 h-4" /> : 
-                        <ChevronRight className="w-4 h-4" />
-                      }
-                    </>
-                  )}
-                </SidebarMenuButton>
-                {complianceOpen && !isCollapsed && (
-                  <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild>
-                        <button
-                          onClick={() => onTabChange('inspections')}
-                          className={`w-full ${getNavCls(activeTab === 'inspections')}`}
-                        >
-                          <Eye className="w-4 h-4 shrink-0" />
-                          <span className="ml-2">Inspections</span>
-                        </button>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild>
-                        <button
-                          onClick={() => onTabChange('compliance-reports')}
-                          className={`w-full ${getNavCls(activeTab === 'compliance-reports')}`}
-                        >
-                          <FileText className="w-4 h-4 shrink-0" />
-                          <span className="ml-2">Compliance Reports</span>
-                        </button>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  </SidebarMenuSub>
-                )}
-              </SidebarMenuItem>
-
               {/* Assessments with submenu */}
               <SidebarMenuItem>
                 <SidebarMenuButton 
@@ -290,6 +245,51 @@ export function ComplianceSidebar({ activeTab, onTabChange }: ComplianceSidebarP
                         >
                           <ArrowRightLeft className="w-4 h-4 shrink-0" />
                           <span className="ml-2">Permit Transfer</span>
+                        </button>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                )}
+              </SidebarMenuItem>
+
+              {/* Compliance menu with submenus */}
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={() => setComplianceOpen(!complianceOpen)}
+                  className="w-full text-white/80 hover:bg-white/10 hover:text-white transition-all duration-200"
+                >
+                  <Shield className="w-5 h-5 shrink-0" />
+                  {!isCollapsed && (
+                    <>
+                      <span className="ml-3 flex-1 text-left">Compliance</span>
+                      {complianceOpen ? 
+                        <ChevronDown className="w-4 h-4" /> : 
+                        <ChevronRight className="w-4 h-4" />
+                      }
+                    </>
+                  )}
+                </SidebarMenuButton>
+                {complianceOpen && !isCollapsed && (
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild>
+                        <button
+                          onClick={() => onTabChange('inspections')}
+                          className={`w-full ${getNavCls(activeTab === 'inspections')}`}
+                        >
+                          <Eye className="w-4 h-4 shrink-0" />
+                          <span className="ml-2">Inspections</span>
+                        </button>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild>
+                        <button
+                          onClick={() => onTabChange('compliance-reports')}
+                          className={`w-full ${getNavCls(activeTab === 'compliance-reports')}`}
+                        >
+                          <FileText className="w-4 h-4 shrink-0" />
+                          <span className="ml-2">Compliance Reports</span>
                         </button>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
