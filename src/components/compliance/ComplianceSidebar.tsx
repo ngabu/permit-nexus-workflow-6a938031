@@ -54,8 +54,8 @@ const complianceNavigationItems: ComplianceNavigationItem[] = [
 ]
 
 const endMenuItems: ComplianceNavigationItem[] = [
-  { title: "Team Management", value: "team", icon: Users, managerOnly: true },
   { title: "Reports", value: "reports", icon: BarChart3 },
+  { title: "Team Management", value: "team", icon: Users, managerOnly: true },
   { title: "Notifications", value: "notifications", icon: Bell },
 ]
 
