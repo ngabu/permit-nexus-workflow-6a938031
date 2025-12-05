@@ -9,7 +9,7 @@ import { useEntities } from '@/hooks/useEntities';
 import { format } from 'date-fns';
 import { Loader2, Search, Filter, ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, FileDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { EntityDetailsReadOnly } from '@/components/public/EntityDetailsReadOnly';
+import { MDEntityTabbedView } from './MDEntityTabbedView';
 
 export function ManagingDirectorEntitiesList() {
   const { entities, loading } = useEntities();
@@ -258,11 +258,16 @@ export function ManagingDirectorEntitiesList() {
                         </Badge>
                       </TableCell>
                     </TableRow>
-                    {isExpanded && (
+                      {isExpanded && (
                       <TableRow key={`${entity.id}-details`} className="bg-muted/30 hover:bg-muted/30">
                         <TableCell colSpan={7} className="p-0">
                           <div className="border-t border-border bg-background/50 backdrop-blur-sm p-6">
-                            <EntityDetailsReadOnly entity={entity} />
+                            <MDEntityTabbedView 
+                              entity={entity} 
+                              onUpdate={() => {
+                                // Refresh the list if needed
+                              }} 
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
