@@ -23,7 +23,7 @@ export function IntentRegistrationList() {
   const { intents, loading, refetch } = useIntentRegistrations(user?.id);
   const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<string>('details');
+  const [activeTab, setActiveTab] = useState<string>('mapping');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [intentToDelete, setIntentToDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -72,16 +72,29 @@ export function IntentRegistrationList() {
     
     setDeleting(true);
     try {
-      const { error } = await supabase
+      // First, delete related documents
+      const { error: docsError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('intent_registration_id', intentToDelete);
+
+      if (docsError) {
+        console.error('Error deleting related documents:', docsError);
+        // Continue with intent deletion even if documents fail
+      }
+
+      // Then delete the intent registration
+      const { error, count } = await supabase
         .from('intent_registrations')
         .delete()
-        .eq('id', intentToDelete);
+        .eq('id', intentToDelete)
+        .select();
 
       if (error) throw error;
 
       toast({
         title: 'Success',
-        description: 'Intent registration deleted successfully',
+        description: 'Intent registration and related documents deleted successfully',
       });
 
       refetch();
@@ -90,7 +103,7 @@ export function IntentRegistrationList() {
       console.error('Error deleting intent:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete intent registration',
+        description: 'Failed to delete intent registration. Only pending registrations can be deleted.',
         variant: 'destructive',
       });
     } finally {

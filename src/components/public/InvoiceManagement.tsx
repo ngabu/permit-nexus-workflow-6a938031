@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Eye } from 'lucide-react';
+import { Search, Eye, Receipt } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { InvoiceDetailView } from './InvoiceDetailView';
 
@@ -37,6 +37,7 @@ interface Invoice {
   permitType: string;
   activityLevel: string;
   prescribedActivity: string;
+  receiptUrl?: string | null;
 }
 
 // Mock data for 2 invoices with 3 permit applications
@@ -137,11 +138,32 @@ const MOCK_INVOICES: Invoice[] = [
 ];
 
 export function InvoiceManagement() {
-  const [invoices] = useState<Invoice[]>(MOCK_INVOICES);
+  const [invoices, setInvoices] = useState<Invoice[]>(MOCK_INVOICES);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
+
+  // Listen for payment success events from PublicDashboard
+  useEffect(() => {
+    const handlePaymentSuccess = (event: CustomEvent<{ invoiceNumber: string; receiptUrl: string | null }>) => {
+      const { invoiceNumber, receiptUrl } = event.detail;
+      console.log('Payment success event received:', invoiceNumber, receiptUrl);
+      
+      // Update local invoice state to show as paid with receipt URL
+      setInvoices(prev => prev.map(inv => 
+        inv.invoice_number === invoiceNumber
+          ? { ...inv, status: 'paid' as const, paidToDate: inv.totalInc, balanceDue: 0, receiptUrl: receiptUrl }
+          : inv
+      ));
+    };
+
+    window.addEventListener('payment-success', handlePaymentSuccess as EventListener);
+    
+    return () => {
+      window.removeEventListener('payment-success', handlePaymentSuccess as EventListener);
+    };
+  }, []);
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -265,14 +287,27 @@ export function InvoiceManagement() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSelectedInvoice(invoice)}
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      View
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setSelectedInvoice(invoice)}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        View
+                      </Button>
+                      {invoice.status === 'paid' && invoice.receiptUrl && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-green-600 border-green-600 hover:bg-green-50"
+                          onClick={() => window.open(invoice.receiptUrl!, '_blank')}
+                        >
+                          <Receipt className="w-4 h-4 mr-1" />
+                          Receipt
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

@@ -60,8 +60,8 @@ const ComplianceDashboardView = () => {
 
           <main className="flex-1 p-6 overflow-auto">
             {activeTab === 'dashboard' && <EnvironmentAssessmentDashboard isManager={isManager} />}
-            {activeTab === 'compliance-reporting' && <ComplianceReportingManagement />}
             {activeTab === 'inspections' && <InspectionsManagement />}
+            {activeTab === 'compliance-reports' && <ComplianceReportingManagement />}
             {activeTab === 'permit-applications' && <ComplianceApplicationsList />}
             {activeTab === 'team' && isManager && <TeamManagement />}
             {activeTab === 'reports' && <ComplianceReports />}

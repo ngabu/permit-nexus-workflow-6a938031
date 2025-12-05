@@ -69,6 +69,7 @@ export function PermitApplicationsMap({
   const currentPopupRequestId = useRef<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const readOnlyRef = useRef<boolean>(readOnly);
+  const aoiBoundaryPresentRef = useRef<boolean>(!!existingBoundary);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showOverrideDialog, setShowOverrideDialog] = useState(false);
   const [pendingBoundary, setPendingBoundary] = useState<any>(null);
@@ -118,6 +119,11 @@ export function PermitApplicationsMap({
   useEffect(() => {
     readOnlyRef.current = readOnly;
   }, [readOnly]);
+
+  // Keep aoiBoundaryPresentRef in sync with uploadedAOI and existingBoundary
+  useEffect(() => {
+    aoiBoundaryPresentRef.current = !!(uploadedAOI || existingBoundary);
+  }, [uploadedAOI, existingBoundary]);
 
   // Helper function to forcefully remove all boundary popups
   const removeAllBoundaryPopups = useCallback(() => {
@@ -558,22 +564,17 @@ export function PermitApplicationsMap({
         // Keep popup open, don't close on mouse leave
       });
 
-      // Add click event to set coordinates - disabled in read-only mode
+      // Add click event to set coordinates - disabled in read-only mode and when AOI exists
       mapInstance.on('click', (e) => {
         // Disable marker placement in read-only mode
         if (readOnlyRef.current) {
           return;
         }
         
-        // If AOI exists and is shown, restrict clicks to within AOI
-        if (uploadedAOI && showUploadedAOI) {
-          const { lng, lat } = e.lngLat;
-          const pt = point([lng, lat]);
-          const isInside = booleanPointInPolygon(pt, uploadedAOI);
-          
-          if (!isInside) {
-            return;
-          }
+        // When an AOI boundary exists (uploaded or existing), marker is fixed at center
+        // Do not allow click-based marker placement
+        if (aoiBoundaryPresentRef.current) {
+          return;
         }
         
         const { lng, lat } = e.lngLat;
@@ -582,7 +583,7 @@ export function PermitApplicationsMap({
         // Show marker on map if not already added
         if (map.current && !marker.current!.getLngLat()) {
           marker.current!.addTo(map.current);
-        } else if (map.current && showUploadedAOI) {
+        } else if (map.current) {
           // Ensure marker is on map
           marker.current!.addTo(map.current);
         }
@@ -1678,6 +1679,67 @@ export function PermitApplicationsMap({
             maxWidth: '300px'
           });
 
+          // Fetch location info from GIS data if props are missing
+          let resolvedProvince = province;
+          let resolvedDistrict = district;
+          let resolvedLlg = llg;
+
+          // Fetch location info from GIS boundaries if props are not provided
+          const fetchLocationInfo = async () => {
+            const pt = point([center.lng, center.lat]);
+            
+            // Fetch district info if not provided
+            if (!resolvedDistrict || !resolvedProvince) {
+              let districtData = boundaryLayersData.districts;
+              if (!districtData) {
+                districtData = await loadGISLayerData('district-boundaries', '/gis-data/png_dist_boundaries.json');
+                if (districtData) {
+                  setBoundaryLayersData(prev => ({ ...prev, districts: districtData }));
+                }
+              }
+              if (districtData?.features) {
+                for (const feature of districtData.features) {
+                  if (booleanPointInPolygon(pt, feature)) {
+                    if (!resolvedDistrict) {
+                      resolvedDistrict = feature.properties?.DISTNAME || feature.properties?.District || feature.properties?.NAME;
+                    }
+                    if (!resolvedProvince) {
+                      resolvedProvince = feature.properties?.PROVINCE || feature.properties?.Province || feature.properties?.PROV;
+                    }
+                    break;
+                  }
+                }
+              }
+            }
+
+            // Fetch LLG info if not provided
+            if (!resolvedLlg) {
+              let llgData = boundaryLayersData.llgs;
+              if (!llgData) {
+                llgData = await loadGISLayerData('llg-boundaries', '/gis-data/png_llg_boundaries.json');
+                if (llgData) {
+                  setBoundaryLayersData(prev => ({ ...prev, llgs: llgData }));
+                }
+              }
+              if (llgData?.features) {
+                for (const feature of llgData.features) {
+                  if (booleanPointInPolygon(pt, feature)) {
+                    resolvedLlg = feature.properties?.LLGNAME || feature.properties?.LLG || feature.properties?.NAME;
+                    break;
+                  }
+                }
+              }
+            }
+
+            // Fallback to Mapbox API for province if still not found
+            if (!resolvedProvince) {
+              resolvedProvince = await getProvinceFromMapbox(center.lng, center.lat);
+            }
+          };
+
+          // Start fetching location info
+          fetchLocationInfo();
+
           // Add hover events for boundary
           const mapInstance = map.current;
           
@@ -1685,9 +1747,9 @@ export function PermitApplicationsMap({
             mapInstance.getCanvas().style.cursor = 'pointer';
             
             const locationInfo = [
-              province ? `<strong>Province:</strong> ${province}` : `<strong>Province:</strong> Not Available`,
-              district ? `<strong>District:</strong> ${district}` : `<strong>District:</strong> Not Available`,
-              `<strong>LLG:</strong> ${llg || 'Not Available'}`
+              resolvedProvince ? `<strong>Province:</strong> ${resolvedProvince}` : `<strong>Province:</strong> Not Available`,
+              resolvedDistrict ? `<strong>District:</strong> ${resolvedDistrict}` : `<strong>District:</strong> Not Available`,
+              resolvedLlg ? `<strong>LLG:</strong> ${resolvedLlg}` : `<strong>LLG:</strong> Not Available`
             ].join('<br/>');
             
             const popupContent = `
@@ -1792,7 +1854,7 @@ export function PermitApplicationsMap({
     } catch (error) {
       console.error('Error loading existing boundary:', error);
     }
-  }, [mapLoaded, existingBoundary, readOnly]);
+  }, [mapLoaded, existingBoundary, readOnly, boundaryLayersData, loadGISLayerData, getProvinceFromMapbox, province, district, llg]);
 
   const handleConfirmOverride = async () => {
     if (pendingBoundary && onBoundarySave) {
@@ -1998,6 +2060,17 @@ export function PermitApplicationsMap({
             }
           });
           map.current.fitBounds(bounds, { padding: 50, maxZoom: 17 });
+          
+          // Place marker at the center of the AOI boundary (fixed position)
+          if (marker.current && onCoordinatesChange) {
+            const center = bounds.getCenter();
+            marker.current.setLngLat([center.lng, center.lat]);
+            marker.current.addTo(map.current);
+            onCoordinatesChange({
+              lat: parseFloat(center.lat.toFixed(6)),
+              lng: parseFloat(center.lng.toFixed(6))
+            });
+          }
         }
       } else {
         toast.error('No valid geometries found in file');

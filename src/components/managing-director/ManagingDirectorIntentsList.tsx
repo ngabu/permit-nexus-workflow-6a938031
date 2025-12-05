@@ -175,7 +175,7 @@ export function ManagingDirectorIntentsList() {
 
   const exportToExcel = () => {
     const exportData = filteredIntents.map(intent => ({
-      'Activity Description': intent.activity_description,
+      'Project Description': intent.activity_description,
       'Entity': intent.entity?.name || '-',
       'Activity Level': intent.activity_level,
       'Project Site': intent.project_site_address || '-',
@@ -196,7 +196,7 @@ export function ManagingDirectorIntentsList() {
 
   const exportToCSV = () => {
     const exportData = filteredIntents.map(intent => ({
-      'Activity Description': intent.activity_description,
+      'Project Description': intent.activity_description,
       'Entity': intent.entity?.name || '-',
       'Activity Level': intent.activity_level,
       'Project Site': intent.project_site_address || '-',
@@ -244,7 +244,7 @@ export function ManagingDirectorIntentsList() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by activity description, entity, or location..."
+                placeholder="Search by project description, entity, or location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -310,7 +310,7 @@ export function ManagingDirectorIntentsList() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-8" />
-              <TableHead>Activity Description</TableHead>
+              <TableHead>Project Description</TableHead>
               <TableHead>Entity</TableHead>
               <TableHead>Level</TableHead>
               <TableHead>Submitted Date</TableHead>

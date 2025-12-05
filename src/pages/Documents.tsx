@@ -25,18 +25,28 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const DOCUMENT_CATEGORIES = [
-  { id: "eia_report", name: "EIA Report" },
-  { id: "survey", name: "Survey" },
-  { id: "management_plan", name: "Management Plan" },
-  { id: "compliance_reports", name: "Compliance Reports" },
-  { id: "inspection_reports", name: "Inspection Reports" },
-  { id: "notices", name: "Notices" },
-  { id: "other", name: "Other" },
+  { id: "Project Details", name: "Project Details" },
+  { id: "EIA Report", name: "EIA Report" },
+  { id: "Survey", name: "Survey" },
+  { id: "Management Plan", name: "Management Plan" },
+  { id: "Compliance Reports", name: "Compliance Reports" },
+  { id: "Inspection Reports", name: "Inspection Reports" },
+  { id: "Notices", name: "Notices" },
+  { id: "Other", name: "Other" },
 ];
 
 const documents = [
   {
     id: 1,
+    name: "Project Overview Document.pdf",
+    type: "Project Details",
+    uploadDate: "2024-01-10",
+    size: "1.2 MB",
+    status: "approved",
+    applicationId: "APP-2024-001"
+  },
+  {
+    id: 2,
     name: "Environmental Impact Assessment.pdf",
     type: "EIA Report",
     uploadDate: "2024-01-15",
@@ -45,7 +55,7 @@ const documents = [
     applicationId: "APP-2024-001"
   },
   {
-    id: 2,
+    id: 3,
     name: "Site Survey Report.pdf",
     type: "Survey",
     uploadDate: "2024-01-20",
@@ -54,7 +64,7 @@ const documents = [
     applicationId: "APP-2024-002"
   },
   {
-    id: 3,
+    id: 4,
     name: "Waste Management Plan.docx",
     type: "Management Plan",
     uploadDate: "2024-02-01",

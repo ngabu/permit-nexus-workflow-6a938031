@@ -48,6 +48,7 @@ interface IntentRegistration {
   prescribed_activity_id: string | null;
   existing_permit_id: string | null;
   project_boundary: any | null;
+  total_area_sqkm: number | null;
   entity?: {
     id: string;
     name: string;
@@ -178,7 +179,7 @@ export function IntentRegistrationsList() {
     const exportData = filteredIntents.map(intent => ({
       'Entity': intent.entity?.name || '-',
       'Activity Level': intent.activity_level,
-      'Activity Description': intent.activity_description,
+      'Project Description': intent.activity_description,
       'Preparatory Work Description': intent.preparatory_work_description,
       'Commencement Date': format(new Date(intent.commencement_date), 'MMM dd, yyyy'),
       'Completion Date': format(new Date(intent.completion_date), 'MMM dd, yyyy'),
@@ -249,7 +250,7 @@ export function IntentRegistrationsList() {
     const exportData = filteredIntents.map(intent => ({
       'Entity': intent.entity?.name || '-',
       'Activity Level': intent.activity_level,
-      'Activity Description': intent.activity_description,
+      'Project Description': intent.activity_description,
       'Preparatory Work Description': intent.preparatory_work_description,
       'Commencement Date': format(new Date(intent.commencement_date), 'MMM dd, yyyy'),
       'Completion Date': format(new Date(intent.completion_date), 'MMM dd, yyyy'),
@@ -348,7 +349,7 @@ export function IntentRegistrationsList() {
               <TableHead className="w-8" />
               <TableHead>Entity</TableHead>
               <TableHead>Activity Level</TableHead>
-              <TableHead>Activity Description</TableHead>
+              <TableHead>Project Description</TableHead>
               <TableHead>Province</TableHead>
               <TableHead>Created Date</TableHead>
               <TableHead>      Status</TableHead>

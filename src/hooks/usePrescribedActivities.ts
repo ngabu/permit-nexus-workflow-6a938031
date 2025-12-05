@@ -9,6 +9,7 @@ export interface PrescribedActivity {
   sub_category: string;
   activity_description: string;
   level: number;
+  fee_category: string | null;
 }
 
 export function usePrescribedActivities() {

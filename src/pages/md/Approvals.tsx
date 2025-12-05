@@ -203,7 +203,7 @@ export default function MDApprovals() {
                         <p className="font-medium">{intent.activity_level}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Activity Description</p>
+                        <p className="text-muted-foreground">Project Description</p>
                         <p className="font-medium">{intent.activity_description}</p>
                       </div>
                     </div>

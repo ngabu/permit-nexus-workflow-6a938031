@@ -52,11 +52,11 @@ interface RegistryNavigationItem {
 
 const registryNavigationItems: RegistryNavigationItem[] = [
   { title: "Dashboard", value: "dashboard", icon: LayoutDashboard },
-  { title: "Documents Management", value: "documents-management", icon: FolderOpen },
-  { title: "Compliance Reporting", value: "compliance-reporting", icon: FileCheck },
+  { title: "Compliance Reports", value: "compliance-reporting", icon: FileCheck },
 ]
 
 const endMenuItems: RegistryNavigationItem[] = [
+  { title: "Documents Management", value: "documents-management", icon: FolderOpen },
   { title: "Team Management", value: "team", icon: Users, managerOnly: true },
   { title: "Reports", value: "reports", icon: BarChart3 },
   { title: "Notifications", value: "notifications", icon: Bell },

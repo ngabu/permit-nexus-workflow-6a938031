@@ -194,9 +194,11 @@ export function ActivityClassificationStep({ data, onChange }: ActivityClassific
             <div className="p-4 bg-muted rounded-lg">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline">{selectedActivity.category_type}</Badge>
-                  <Badge variant="secondary">Category {selectedActivity.category_number}</Badge>
                   <Badge variant="secondary">Level {selectedActivity.level}</Badge>
+                  <Badge variant="outline">Category {selectedActivity.category_number}</Badge>
+                  {selectedActivity.fee_category && (
+                    <Badge variant="default">Fee Category: {selectedActivity.fee_category}</Badge>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   <span className="font-medium">Description:</span> {selectedActivity.activity_description}

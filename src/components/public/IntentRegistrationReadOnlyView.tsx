@@ -43,6 +43,7 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [entityDetails, setEntityDetails] = useState<EntityDetails | null>(null);
+  const [prescribedActivityDescription, setPrescribedActivityDescription] = useState<string | null>(null);
   const [openSections, setOpenSections] = useState({
     registration: false,
     projectSite: false,
@@ -57,7 +58,24 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
   useEffect(() => {
     fetchDocuments();
     fetchEntityDetails();
-  }, [intent.id, intent.entity_id]);
+    fetchPrescribedActivity();
+  }, [intent.id, intent.entity_id, intent.prescribed_activity_id]);
+
+  const fetchPrescribedActivity = async () => {
+    if (!intent.prescribed_activity_id) return;
+    try {
+      const { data, error } = await supabase
+        .from('prescribed_activities')
+        .select('activity_description')
+        .eq('id', intent.prescribed_activity_id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setPrescribedActivityDescription(data?.activity_description || null);
+    } catch (error) {
+      console.error('Error fetching prescribed activity:', error);
+    }
+  };
 
   const fetchEntityDetails = async () => {
     if (!intent.entity_id) return;
@@ -205,14 +223,14 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
         {/* Registration Details - Print */}
         <div className="print-section">
           <h3 className="print-section-title">Registration Details</h3>
-          {intent.prescribed_activity_id && (
+          {intent.prescribed_activity_id && prescribedActivityDescription && (
             <div className="print-field mt-2">
               <p className="print-field-label">Prescribed Activity</p>
-              <p className="print-field-value">{intent.prescribed_activity_id}</p>
+              <p className="print-field-value">{prescribedActivityDescription}</p>
             </div>
           )}
           <div className="print-field mt-2">
-            <p className="print-field-label">Activity Description</p>
+            <p className="print-field-label">Project Description</p>
             <p className="print-field-value whitespace-pre-wrap">{intent.activity_description}</p>
           </div>
           <div className="print-field mt-2">
@@ -396,17 +414,17 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
                 </div>
               </div>
 
-              {intent.prescribed_activity_id && (
+              {intent.prescribed_activity_id && prescribedActivityDescription && (
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Prescribed Activity</Label>
                   <div className="p-3 bg-primary/10 rounded-lg">
-                    <p className="text-sm">{intent.prescribed_activity_id}</p>
+                    <p className="text-sm">{prescribedActivityDescription}</p>
                   </div>
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Activity Description</Label>
+                <Label className="text-muted-foreground">Project Description</Label>
                 <div className="p-3 bg-primary/10 rounded-lg">
                   <p className="text-sm">{intent.activity_description}</p>
                 </div>

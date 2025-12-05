@@ -31,15 +31,17 @@ export function ActivityClassificationDisplay({
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <Badge variant="outline" className="font-medium">
-        {activityInfo.category_type}
-      </Badge>
-      <Badge variant="secondary" className="text-xs">
-        Category {activityInfo.category_number}
-      </Badge>
       <Badge variant="secondary" className="text-xs">
         Level {activityInfo.level}
       </Badge>
+      <Badge variant="outline" className="font-medium">
+        Category {activityInfo.category_number}
+      </Badge>
+      {activityInfo.fee_category && (
+        <Badge variant="default" className="text-xs">
+          Fee Category: {activityInfo.fee_category}
+        </Badge>
+      )}
       {activityLevel && (
         <Badge className={getLevelColor(activityLevel)}>
           {activityLevel}

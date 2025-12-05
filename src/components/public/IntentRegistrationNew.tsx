@@ -680,7 +680,7 @@ export function IntentRegistrationNew() {
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="activity_description">Activity Description *</Label>
+                    <Label htmlFor="activity_description">Project Description *</Label>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />

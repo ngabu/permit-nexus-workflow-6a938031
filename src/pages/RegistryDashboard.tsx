@@ -42,10 +42,11 @@ const RegistryDashboard = () => {
   const [allocationDialogOpen, setAllocationDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [dashboardStats, setDashboardStats] = useState({
-    pendingIntents: 0,
-    pendingPermits: 0,
-    reviewTotal: 0,
-    approvedTotal: 0
+    totalEntities: 0,
+    activePermits: 0,
+    pendingApplications: 0,
+    pendingPayments: 0,
+    expiringSoon: 0
   });
   
   const isManager = profile?.staff_position && ['manager', 'director', 'managing_director'].includes(profile.staff_position);
@@ -55,45 +56,51 @@ const RegistryDashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Pending Intents
+        // Total Entities
+        const { count: totalEntities } = await supabase
+          .from('entities')
+          .select('*', { count: 'exact', head: true });
+
+        // Active Permits (approved status)
+        const { count: activePermits } = await supabase
+          .from('permit_applications')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'approved');
+
+        // Pending Applications (pending intents + pending permits)
         const { count: pendingIntents } = await supabase
           .from('intent_registrations')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'pending');
 
-        // Pending Permits
         const { count: pendingPermits } = await supabase
           .from('permit_applications')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'pending');
 
-        // Review (under_review) - both intents and permits
-        const { count: reviewIntents } = await supabase
-          .from('intent_registrations')
+        // Pending Payments
+        const { count: pendingPayments } = await supabase
+          .from('fee_payments')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'under_review');
+          .eq('payment_status', 'pending');
 
-        const { count: reviewPermits } = await supabase
+        // Expiring Soon (permits expiring within 30 days)
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+        
+        const { count: expiringSoon } = await supabase
           .from('permit_applications')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'under_review');
-
-        // Approved - both intents and permits
-        const { count: approvedIntents } = await supabase
-          .from('intent_registrations')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'approved');
-
-        const { count: approvedPermits } = await supabase
-          .from('permit_applications')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'approved');
+          .eq('status', 'approved')
+          .lte('permit_end_date', thirtyDaysFromNow.toISOString())
+          .gte('permit_end_date', new Date().toISOString());
 
         setDashboardStats({
-          pendingIntents: pendingIntents || 0,
-          pendingPermits: pendingPermits || 0,
-          reviewTotal: (reviewIntents || 0) + (reviewPermits || 0),
-          approvedTotal: (approvedIntents || 0) + (approvedPermits || 0)
+          totalEntities: totalEntities || 0,
+          activePermits: activePermits || 0,
+          pendingApplications: (pendingIntents || 0) + (pendingPermits || 0),
+          pendingPayments: pendingPayments || 0,
+          expiringSoon: expiringSoon || 0
         });
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
@@ -155,43 +162,17 @@ const RegistryDashboard = () => {
             {activeTab === 'dashboard' && (
               <div className="space-y-4 md:space-y-6">
                 {/* Dashboard KPI Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center text-sm text-card-foreground">
-                        <FileText className="w-4 h-4 mr-2 text-blue-500" />
-                        Pending Intents
+                        <Users className="w-4 h-4 mr-2 text-blue-500" />
+                        Total Entities
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-blue-600">{dashboardStats.pendingIntents}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center text-sm text-card-foreground">
-                        <FileCheck className="w-4 h-4 mr-2 text-amber-500" />
-                        Pending Permits
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold text-amber-600">{dashboardStats.pendingPermits}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center text-sm text-card-foreground">
-                        <Clock className="w-4 h-4 mr-2 text-purple-500" />
-                        Under Review
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold text-purple-600">{dashboardStats.reviewTotal}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Total applications</p>
+                      <div className="text-3xl font-bold text-blue-600">{dashboardStats.totalEntities}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Registered entities</p>
                     </CardContent>
                   </Card>
                   
@@ -199,12 +180,51 @@ const RegistryDashboard = () => {
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center text-sm text-card-foreground">
                         <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
-                        Approved
+                        Active Permits
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-green-600">{dashboardStats.approvedTotal}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Total applications</p>
+                      <div className="text-3xl font-bold text-green-600">{dashboardStats.activePermits}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Approved permits</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center text-sm text-card-foreground">
+                        <Clock className="w-4 h-4 mr-2 text-amber-500" />
+                        Pending Applications
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-amber-600">{dashboardStats.pendingApplications}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center text-sm text-card-foreground">
+                        <FileText className="w-4 h-4 mr-2 text-purple-500" />
+                        Pending Payments
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-purple-600">{dashboardStats.pendingPayments}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Awaiting payment</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center text-sm text-card-foreground">
+                        <AlertCircle className="w-4 h-4 mr-2 text-red-500" />
+                        Expiring Soon
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-red-600">{dashboardStats.expiringSoon}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Within 30 days</p>
                     </CardContent>
                   </Card>
                 </div>

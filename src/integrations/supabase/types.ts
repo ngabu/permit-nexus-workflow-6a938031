@@ -3267,6 +3267,7 @@ export type Database = {
           reviewer_last_name: string
           site_ownership_details: string
           status: string
+          total_area_sqkm: number
           updated_at: string
           user_id: string
         }[]

@@ -55,10 +55,6 @@ export function useInspections() {
             title,
             entity_id,
             entities(name)
-          ),
-          inspector:profiles!inspections_inspector_id_fkey(
-            first_name,
-            last_name
           )
         `)
         .order('scheduled_date', { ascending: false });
@@ -95,9 +91,7 @@ export function useInspections() {
         permit_number: inspection.permit_applications?.permit_number,
         permit_title: inspection.permit_applications?.title,
         entity_name: inspection.permit_applications?.entities?.name,
-        inspector_name: inspection.inspector 
-          ? `${inspection.inspector.first_name} ${inspection.inspector.last_name}`
-          : null
+        inspector_name: null
       })) || [];
 
       setInspections(formatted);

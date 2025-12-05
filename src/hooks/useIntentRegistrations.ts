@@ -30,6 +30,7 @@ export interface IntentRegistration {
   prescribed_activity_id: string | null;
   existing_permit_id: string | null;
   project_boundary: any | null;
+  total_area_sqkm: number | null;
   created_at: string;
   updated_at: string;
   entity?: {

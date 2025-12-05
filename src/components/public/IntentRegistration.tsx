@@ -184,10 +184,10 @@ export function IntentRegistration() {
               </Select>
             </div>
 
-            {/* Activity Description */}
+            {/* Project Description */}
             <div className="space-y-2">
               <Label htmlFor="activity_description">
-                Activity Description *
+                Project Description *
               </Label>
               <Textarea
                 id="activity_description"

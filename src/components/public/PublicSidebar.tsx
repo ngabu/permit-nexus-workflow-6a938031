@@ -32,8 +32,8 @@ import {
   Merge,
   Edit,
   Shield,
-  AlertTriangle,
   RefreshCw,
+  ClipboardList,
   UserX,
   ArrowRightLeft,
   FileCheck,
@@ -73,7 +73,6 @@ const publicNavigationItems: PublicNavigationItem[] = [
       { title: "Permit Amalgamation", value: "permit-amalgamation", icon: Merge },
       { title: "Permit Amendment", value: "permit-amendment", icon: Edit },
       { title: "Permit Compliance", value: "permit-compliance", icon: Shield },
-      { title: "Permit Enforcement", value: "permit-enforcement", icon: AlertTriangle },
       { title: "Permit Renewal", value: "permit-renewal", icon: RefreshCw },
       { title: "Permit Surrender", value: "permit-surrender", icon: UserX },
       { title: "Permit Transfer", value: "permit-transfer", icon: ArrowRightLeft },
@@ -88,7 +87,15 @@ const publicNavigationItems: PublicNavigationItem[] = [
       { title: "Payment Summary", value: "payment-summary", icon: FileText },
     ]
   },
-  { title: "Compliance Reporting", value: "compliance-reporting", icon: FileCheck },
+  { 
+    title: "Compliance", 
+    value: "compliance", 
+    icon: FileCheck,
+    subItems: [
+      { title: "Inspections", value: "compliance-inspections", icon: ClipboardList },
+      { title: "Report Submissions", value: "compliance-reports", icon: FileText },
+    ]
+  },
   { title: "Notifications", value: "notifications", icon: Bell },
   { title: "Documents Management", value: "documents", icon: Upload },
 ]

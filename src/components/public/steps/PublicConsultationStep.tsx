@@ -3,7 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Calendar, Upload, Users, AlertCircle } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar, Upload, Users, AlertCircle, FileText, HelpCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PublicConsultationStepProps {
@@ -12,27 +14,7 @@ interface PublicConsultationStepProps {
 }
 
 export function PublicConsultationStep({ data, onChange }: PublicConsultationStepProps) {
-  const isRequired = ['Level 2', 'Level 3'].includes(data.activity_level);
-  
-  if (!isRequired) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-muted-foreground" />
-            Public Consultation
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="p-4 bg-sidebar rounded-lg text-center">
-            <p className="text-muted-foreground">
-              Public consultation is not required for {data.activity_level || 'this activity level'}.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const isPublicConsultationRequired = ['Level 2', 'Level 3'].includes(data.activity_level);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -47,7 +29,6 @@ export function PublicConsultationStep({ data, onChange }: PublicConsultationSte
       const uploadedFileData = [];
       
       for (const file of files) {
-        // Upload file to storage
         const fileName = `${Date.now()}-${Math.random()}.${file.name.split('.').pop()}`;
         const filePath = `${userData.user.id}/consultation-documents/${fileName}`;
         
@@ -63,7 +44,6 @@ export function PublicConsultationStep({ data, onChange }: PublicConsultationSte
           continue;
         }
 
-        // Save document record to database
         const { data: docData, error: docError } = await supabase
           .from('documents')
           .insert({
@@ -106,12 +86,10 @@ export function PublicConsultationStep({ data, onChange }: PublicConsultationSte
       const fileToRemove = (data.public_consultation_proof || []).find((file: any) => file.id === fileId);
       
       if (fileToRemove?.file_path) {
-        // Delete from storage
         await supabase.storage
           .from('documents')
           .remove([fileToRemove.file_path]);
         
-        // Delete from database
         await supabase
           .from('documents')
           .delete()
@@ -134,131 +112,253 @@ export function PublicConsultationStep({ data, onChange }: PublicConsultationSte
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="w-5 h-5 text-primary" />
-          Public Consultation
-        </CardTitle>
-        <CardDescription>
-          Public consultation is required for {data.activity_level} activities under PNG Environment Act 2000
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-            <div>
-              <h4 className="font-medium text-blue-800">Public Consultation Requirements</h4>
-              <ul className="text-sm text-blue-700 mt-2 space-y-1">
-                <li>• Public notice must be published in national newspapers</li>
-                <li>• Consultation period: minimum 30 days for Level 2, 60 days for Level 3</li>
-                <li>• Community meetings must be held in affected areas</li>
-                <li>• All public comments must be documented and addressed</li>
-                <li>• Minutes of public meetings must be submitted</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="consultation_period_start">Consultation Start Date *</Label>
-            <Input
-              type="date"
-              id="consultation_period_start"
-              value={data.consultation_period_start || ''}
-              onChange={(e) => onChange({ consultation_period_start: e.target.value })}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="consultation_period_end">Consultation End Date *</Label>
-            <Input
-              type="date"
-              id="consultation_period_end"
-              value={data.consultation_period_end || ''}
-              onChange={(e) => onChange({ consultation_period_end: e.target.value })}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <Label className="text-base font-medium">Public Consultation Evidence *</Label>
-            <p className="text-sm text-muted-foreground mb-3">
-              Upload proof of public consultation including newspaper advertisements, meeting minutes, and public comments
-            </p>
-            
-            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-              <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground mb-2">
-                Click to upload consultation documents
-              </p>
-              <input
-                type="file"
-                multiple
-                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="consultation-upload"
-              />
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => document.getElementById('consultation-upload')?.click()}
-              >
-                Choose Files
-              </Button>
-            </div>
-          </div>
-
-          {/* Display uploaded files */}
-          {data.public_consultation_proof && data.public_consultation_proof.length > 0 && (
+    <TooltipProvider>
+      <div className="space-y-6">
+        {/* Agreements Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" />
+              Agreements
+            </CardTitle>
+            <CardDescription>
+              Government agreements, approvals, and landowner negotiations
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Agreement with Government */}
             <div className="space-y-2">
-              <Label>Uploaded Documents</Label>
-              <div className="space-y-2">
-                {data.public_consultation_proof.map((file: any) => (
-                  <div key={file.id} className="flex items-center justify-between p-3 bg-sidebar rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-primary/10 rounded flex items-center justify-center">
-                        <Upload className="w-4 h-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{file.name}</p>
-                        <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="government_agreement">Agreement with Government of Papua New Guinea *</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>Specify any existing agreements, MOUs, or negotiations with the PNG Government related to this activity.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Textarea
+                id="government_agreement"
+                value={data.government_agreement || ''}
+                onChange={(e) => onChange({ government_agreement: e.target.value })}
+                placeholder="Specify any agreements with PNG Government..."
+                rows={3}
+              />
+            </div>
+
+            {/* Other Government Departments Approached */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="departments_approached">Other Government Departments or Statutory Bodies Approached *</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>List all government departments, agencies, or statutory bodies you have consulted or approached regarding this activity.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Textarea
+                id="departments_approached"
+                value={data.departments_approached || ''}
+                onChange={(e) => onChange({ departments_approached: e.target.value })}
+                placeholder="List any government departments or statutory bodies you have consulted..."
+                rows={3}
+              />
+            </div>
+
+            {/* Other Formal Government Approvals Required */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="approvals_required">Other Formal Government Approvals Required *</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>List any other formal approvals, permits, or licenses required from government authorities for this activity.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Textarea
+                id="approvals_required"
+                value={data.approvals_required || ''}
+                onChange={(e) => onChange({ approvals_required: e.target.value })}
+                placeholder="List any other government approvals required..."
+                rows={3}
+              />
+            </div>
+
+            {/* Landowner Negotiation Status */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="landowner_negotiation_status">Landowner Negotiation Status *</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>Describe the current status of negotiations with landowners, including any agreements reached or ongoing discussions.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Textarea
+                id="landowner_negotiation_status"
+                value={data.landowner_negotiation_status || ''}
+                onChange={(e) => onChange({ landowner_negotiation_status: e.target.value })}
+                placeholder="Describe the status of landowner negotiations..."
+                rows={3}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Public Consultation Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Public Consultation
+            </CardTitle>
+            {isPublicConsultationRequired ? (
+              <CardDescription>
+                Public consultation is required for {data.activity_level} activities under PNG Environment Act 2000
+              </CardDescription>
+            ) : (
+              <CardDescription>
+                Public consultation requirements for Level 1 Activities
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {!isPublicConsultationRequired ? (
+              <div className="p-4 bg-muted/50 border border-border rounded-lg text-center">
+                <p className="text-muted-foreground">
+                  Public consultation is not required for Level 1 Activities.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-blue-800">Public Consultation Requirements</h4>
+                      <ul className="text-sm text-blue-700 mt-2 space-y-1">
+                        <li>• Public notice must be published in national newspapers</li>
+                        <li>• Consultation period: minimum 30 days for Level 2, 60 days for Level 3</li>
+                        <li>• Community meetings must be held in affected areas</li>
+                        <li>• All public comments must be documented and addressed</li>
+                        <li>• Minutes of public meetings must be submitted</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="consultation_period_start">Consultation Start Date *</Label>
+                    <Input
+                      type="date"
+                      id="consultation_period_start"
+                      value={data.consultation_period_start || ''}
+                      onChange={(e) => onChange({ consultation_period_start: e.target.value })}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="consultation_period_end">Consultation End Date *</Label>
+                    <Input
+                      type="date"
+                      id="consultation_period_end"
+                      value={data.consultation_period_end || ''}
+                      onChange={(e) => onChange({ consultation_period_end: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-base font-medium">Public Consultation Evidence *</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Upload proof of public consultation including newspaper advertisements, meeting minutes, and public comments
+                    </p>
+                    
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                      <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Click to upload consultation documents
+                      </p>
+                      <input
+                        type="file"
+                        multiple
+                        accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id="consultation-upload"
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        onClick={() => document.getElementById('consultation-upload')?.click()}
+                      >
+                        Choose Files
+                      </Button>
+                    </div>
+                  </div>
+
+                  {data.public_consultation_proof && data.public_consultation_proof.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Uploaded Documents</Label>
+                      <div className="space-y-2">
+                        {data.public_consultation_proof.map((file: any) => (
+                          <div key={file.id} className="flex items-center justify-between p-3 bg-muted/50 border border-border rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-primary/10 rounded flex items-center justify-center">
+                                <Upload className="w-4 h-4 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">{file.name}</p>
+                                <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeFile(file.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(file.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+                  )}
+                </div>
 
-        {data.activity_level === 'Level 3' && (
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <h4 className="font-medium text-amber-800 mb-2">Additional Level 3 Requirements</h4>
-            <ul className="text-sm text-amber-700 space-y-1">
-              <li>• Environmental Impact Statement (EIS) must be made available for public review</li>
-              <li>• Extended consultation period (minimum 60 days)</li>
-              <li>• Public hearings may be required by CEPA</li>
-              <li>• Independent review panel may be established</li>
-            </ul>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                {data.activity_level === 'Level 3' && (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <h4 className="font-medium text-amber-800 mb-2">Additional Level 3 Requirements</h4>
+                    <ul className="text-sm text-amber-700 space-y-1">
+                      <li>• Environmental Impact Statement (EIS) must be made available for public review</li>
+                      <li>• Extended consultation period (minimum 60 days)</li>
+                      <li>• Public hearings may be required by CEPA</li>
+                      <li>• Independent review panel may be established</li>
+                    </ul>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </TooltipProvider>
   );
 }

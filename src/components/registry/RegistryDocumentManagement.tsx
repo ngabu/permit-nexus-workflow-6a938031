@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { FileText, Download, Plus, Book, Pencil, Trash2, Loader2 } from "lucide-react";
+import { FileText, Download, Plus, Book, Pencil, Trash2, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -29,6 +29,14 @@ interface DocumentTemplate {
 const templateCategories = ['Form template', 'Report template', 'Assessment template', 'Checklist template'];
 const guideCategories = ['User guide', 'Regulatory guideline', 'Process guide', 'Information'];
 
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
 export function RegistryDocumentManagement() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -37,6 +45,11 @@ export function RegistryDocumentManagement() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<DocumentTemplate | null>(null);
   const [documentType, setDocumentType] = useState<'template' | 'guide'>('template');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -57,7 +70,7 @@ export function RegistryDocumentManagement() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: { name: string; description: string; document_type: string; category: string }) => {
+    mutationFn: async (data: { name: string; description: string; document_type: string; category: string; file_path: string }) => {
       const { error } = await supabase
         .from('document_templates')
         .insert({
@@ -65,6 +78,7 @@ export function RegistryDocumentManagement() {
           description: data.description || null,
           document_type: data.document_type,
           category: data.category,
+          file_path: data.file_path,
           created_by: user?.id,
         });
       
@@ -82,14 +96,20 @@ export function RegistryDocumentManagement() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: { id: string; name: string; description: string; category: string }) => {
+    mutationFn: async (data: { id: string; name: string; description: string; category: string; file_path?: string }) => {
+      const updateData: Record<string, unknown> = {
+        name: data.name,
+        description: data.description || null,
+        category: data.category,
+      };
+      
+      if (data.file_path) {
+        updateData.file_path = data.file_path;
+      }
+      
       const { error } = await supabase
         .from('document_templates')
-        .update({
-          name: data.name,
-          description: data.description || null,
-          category: data.category,
-        })
+        .update(updateData)
         .eq('id', data.id);
       
       if (error) throw error;
@@ -107,11 +127,16 @@ export function RegistryDocumentManagement() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (doc: DocumentTemplate) => {
+      // Delete file from storage if it exists
+      if (doc.file_path) {
+        await supabase.storage.from('documents').remove([doc.file_path]);
+      }
+      
       const { error } = await supabase
         .from('document_templates')
         .delete()
-        .eq('id', id);
+        .eq('id', doc.id);
       
       if (error) throw error;
     },
@@ -128,19 +153,56 @@ export function RegistryDocumentManagement() {
 
   const resetForm = () => {
     setFormData({ name: '', description: '', category: '' });
+    setSelectedFile(null);
+    setEditFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (editFileInputRef.current) editFileInputRef.current.value = '';
   };
 
-  const handleCreate = () => {
+  const uploadFile = async (file: File, docType: string): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${docType}s/${fileName}`;
+    
+    const { error } = await supabase.storage
+      .from('documents')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+    
+    if (error) throw error;
+    return filePath;
+  };
+
+  const handleCreate = async () => {
     if (!formData.name || !formData.category) {
       toast.error('Please fill in all required fields');
       return;
     }
-    createMutation.mutate({
-      name: formData.name,
-      description: formData.description,
-      document_type: documentType,
-      category: formData.category,
-    });
+    
+    if (!selectedFile) {
+      toast.error(`Please upload a ${documentType} file`);
+      return;
+    }
+    
+    setIsUploading(true);
+    try {
+      const filePath = await uploadFile(selectedFile, documentType);
+      
+      await createMutation.mutateAsync({
+        name: formData.name,
+        description: formData.description,
+        document_type: documentType,
+        category: formData.category,
+        file_path: filePath,
+      });
+    } catch (error) {
+      console.error('Error creating document:', error);
+      toast.error('Failed to upload file');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleEdit = (doc: DocumentTemplate) => {
@@ -150,20 +212,42 @@ export function RegistryDocumentManagement() {
       description: doc.description || '',
       category: doc.category,
     });
+    setEditFile(null);
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!selectedDocument || !formData.name || !formData.category) {
       toast.error('Please fill in all required fields');
       return;
     }
-    updateMutation.mutate({
-      id: selectedDocument.id,
-      name: formData.name,
-      description: formData.description,
-      category: formData.category,
-    });
+    
+    setIsUploading(true);
+    try {
+      let filePath = selectedDocument.file_path;
+      
+      if (editFile) {
+        // Delete old file if exists
+        if (selectedDocument.file_path) {
+          await supabase.storage.from('documents').remove([selectedDocument.file_path]);
+        }
+        // Upload new file
+        filePath = await uploadFile(editFile, selectedDocument.document_type);
+      }
+      
+      await updateMutation.mutateAsync({
+        id: selectedDocument.id,
+        name: formData.name,
+        description: formData.description,
+        category: formData.category,
+        file_path: filePath || undefined,
+      });
+    } catch (error) {
+      console.error('Error updating document:', error);
+      toast.error('Failed to update document');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleDelete = (doc: DocumentTemplate) => {
@@ -173,7 +257,7 @@ export function RegistryDocumentManagement() {
 
   const confirmDelete = () => {
     if (selectedDocument) {
-      deleteMutation.mutate(selectedDocument.id);
+      deleteMutation.mutate(selectedDocument);
     }
   };
 
@@ -181,6 +265,57 @@ export function RegistryDocumentManagement() {
     setDocumentType(type);
     resetForm();
     setIsCreateDialogOpen(true);
+  };
+
+  const handleDownload = async (doc: DocumentTemplate) => {
+    if (!doc.file_path) {
+      toast.error('No file available for download');
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(doc.file_path);
+      
+      if (error) throw error;
+      
+      // Create download link
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.name + '.' + doc.file_path.split('.').pop();
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Download started');
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast.error('Failed to download file');
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean = false) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (isEdit) {
+        setEditFile(file);
+      } else {
+        setSelectedFile(file);
+      }
+    }
+  };
+
+  const removeFile = (isEdit: boolean = false) => {
+    if (isEdit) {
+      setEditFile(null);
+      if (editFileInputRef.current) editFileInputRef.current.value = '';
+    } else {
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const templates = documents?.filter(d => d.document_type === 'template') || [];
@@ -199,10 +334,20 @@ export function RegistryDocumentManagement() {
             {doc.description && (
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{doc.description}</p>
             )}
+            {doc.file_path && (
+              <p className="text-xs text-green-600 mt-1">File attached</p>
+            )}
           </div>
         </div>
         <div className="flex items-center justify-end gap-2">
-          <Button variant="outline" size="icon" className="h-9 w-9" title="Download">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="h-9 w-9" 
+            title="Download"
+            onClick={() => handleDownload(doc)}
+            disabled={!doc.file_path}
+          >
             <Download className="w-4 h-4" />
           </Button>
           <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleEdit(doc)} title="Edit">
@@ -344,11 +489,43 @@ export function RegistryDocumentManagement() {
                 rows={3}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="file">Upload {documentType === 'template' ? 'Template' : 'Guide'} File *</Label>
+              <Input
+                id="file"
+                type="file"
+                ref={fileInputRef}
+                onChange={(e) => handleFileSelect(e, false)}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                className="cursor-pointer"
+              />
+              {selectedFile && (
+                <div className="flex items-center justify-between p-2 bg-muted rounded-md">
+                  <div className="flex items-center gap-2">
+                    <Upload className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm truncate max-w-[200px]">{selectedFile.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({formatFileSize(selectedFile.size)})
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeFile(false)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={createMutation.isPending}>
-              {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            <Button onClick={handleCreate} disabled={createMutation.isPending || isUploading}>
+              {(createMutation.isPending || isUploading) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Create
             </Button>
           </DialogFooter>
@@ -395,11 +572,46 @@ export function RegistryDocumentManagement() {
                 rows={3}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-file">Replace File (optional)</Label>
+              {selectedDocument?.file_path && !editFile && (
+                <p className="text-sm text-green-600 mb-2">Current file attached</p>
+              )}
+              <Input
+                id="edit-file"
+                type="file"
+                ref={editFileInputRef}
+                onChange={(e) => handleFileSelect(e, true)}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                className="cursor-pointer"
+              />
+              {editFile && (
+                <div className="flex items-center justify-between p-2 bg-muted rounded-md">
+                  <div className="flex items-center gap-2">
+                    <Upload className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm truncate max-w-[200px]">{editFile.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({formatFileSize(editFile.size)})
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeFile(true)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleUpdate} disabled={updateMutation.isPending}>
-              {updateMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            <Button onClick={handleUpdate} disabled={updateMutation.isPending || isUploading}>
+              {(updateMutation.isPending || isUploading) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Update
             </Button>
           </DialogFooter>

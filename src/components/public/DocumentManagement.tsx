@@ -49,6 +49,7 @@ interface DocumentFile {
 
 const categories = [
   { id: 'all', name: 'All Documents' },
+  { id: 'project_details', name: 'Project Details' },
   { id: 'environmental_assessment', name: 'Environmental Assessment' },
   { id: 'monitoring', name: 'Monitoring' },
   { id: 'compliance_reports', name: 'Compliance Reports' },
@@ -80,6 +81,7 @@ const getStatusLabel = (status: string) => {
 
 // Templates Tab Component
 function TemplatesTab() {
+  const { toast } = useToast();
   const { data: templates, isLoading } = useQuery({
     queryKey: ['document-templates', 'template'],
     queryFn: async () => {
@@ -94,6 +96,46 @@ function TemplatesTab() {
       return data as DocumentTemplate[];
     },
   });
+
+  const handleDownload = async (template: DocumentTemplate) => {
+    if (!template.file_path) {
+      toast({
+        title: "No File",
+        description: "No file available for download",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(template.file_path);
+      
+      if (error) throw error;
+      
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = template.name + '.' + template.file_path.split('.').pop();
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Started",
+        description: `Downloading ${template.name}`,
+      });
+    } catch (error) {
+      console.error('Error downloading template:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download template",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -132,14 +174,20 @@ function TemplatesTab() {
                       {template.description && (
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{template.description}</p>
                       )}
+                      {template.file_path && (
+                        <p className="text-xs text-green-600 mt-1">File available</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center justify-end gap-2">
-                    <Button variant="outline" size="icon" className="h-9 w-9">
-                      <Download className="w-4 h-4" />
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      Use Template
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDownload(template)}
+                      disabled={!template.file_path}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
                     </Button>
                   </div>
                 </CardContent>
@@ -154,6 +202,7 @@ function TemplatesTab() {
 
 // Guides Tab Component
 function GuidesTab() {
+  const { toast } = useToast();
   const { data: guides, isLoading } = useQuery({
     queryKey: ['document-templates', 'guide'],
     queryFn: async () => {
@@ -168,6 +217,46 @@ function GuidesTab() {
       return data as DocumentTemplate[];
     },
   });
+
+  const handleDownload = async (guide: DocumentTemplate) => {
+    if (!guide.file_path) {
+      toast({
+        title: "No File",
+        description: "No file available for download",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(guide.file_path);
+      
+      if (error) throw error;
+      
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = guide.name + '.' + guide.file_path.split('.').pop();
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Started",
+        description: `Downloading ${guide.name}`,
+      });
+    } catch (error) {
+      console.error('Error downloading guide:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download guide",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -206,14 +295,20 @@ function GuidesTab() {
                       {guide.description && (
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{guide.description}</p>
                       )}
+                      {guide.file_path && (
+                        <p className="text-xs text-green-600 mt-1">File available</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center justify-end gap-2">
-                    <Button variant="outline" size="icon" className="h-9 w-9">
-                      <Download className="w-4 h-4" />
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      View Guide
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDownload(guide)}
+                      disabled={!guide.file_path}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
                     </Button>
                   </div>
                 </CardContent>

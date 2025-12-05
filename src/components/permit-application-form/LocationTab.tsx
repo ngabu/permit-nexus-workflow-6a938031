@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { MapPin } from 'lucide-react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { supabase } from '@/integrations/supabase/client';
+import { MapPin, ChevronDown, HelpCircle } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import PNGMap from './PNGMap';
 
 interface LocationTabProps {
   formData: any;
@@ -14,259 +14,203 @@ interface LocationTabProps {
 }
 
 const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange }) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const [projectBoundary, setProjectBoundary] = useState<any>(null);
-
-  // Fetch project boundary from linked intent registration
-  useEffect(() => {
-    const fetchProjectBoundary = async () => {
-      if (!formData.intent_registration_id) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('intent_registrations')
-          .select('project_boundary')
-          .eq('id', formData.intent_registration_id)
-          .single();
-        
-        if (error) throw error;
-        
-        if (data?.project_boundary) {
-          setProjectBoundary(data.project_boundary);
-        }
-      } catch (error) {
-        console.error('Error fetching project boundary:', error);
-      }
-    };
-    
-    fetchProjectBoundary();
-  }, [formData.intent_registration_id]);
-
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    // Set Mapbox access token
-    mapboxgl.accessToken = 'pk.eyJ1IjoiZ2FidW5vcm1hbiIsImEiOiJjbWJ0emU0cGEwOHR1MmtxdXh2d2wzOTV5In0.RUVMHkS-KaJ6CGWUiB3s4w';
-    
-    // Initialize map to display full Papua New Guinea
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
-      center: [147.1494, -6.5], // Centered on PNG
-      zoom: 5, // Zoom level to show full PNG
-      minZoom: 4, // Prevent zooming out too far
-      maxZoom: 18, // Allow detailed zoom
-    });
-
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl({
-      showCompass: true,
-      showZoom: true,
-      visualizePitch: false
-    }), 'top-right');
-
-    // Ensure scroll zoom is enabled
-    map.current.scrollZoom.enable();
-    map.current.doubleClickZoom.enable();
-    map.current.touchZoomRotate.enable();
-
-    // Add marker for current coordinates
-    marker.current = new mapboxgl.Marker({ 
-      color: '#ef4444', 
-      draggable: true,
-      scale: 1.2
-    })
-      .setLngLat([
-        formData.coordinates.lng || 147.1494, 
-        formData.coordinates.lat || -6.314993
-      ])
-      .addTo(map.current);
-
-    // Update coordinates when marker is dragged
-    marker.current.on('dragend', () => {
-      const lngLat = marker.current!.getLngLat();
-      handleInputChange('coordinates', {
-        lat: parseFloat(lngLat.lat.toFixed(6)),
-        lng: parseFloat(lngLat.lng.toFixed(6))
-      });
-    });
-
-    // Add click event to set coordinates
-    map.current.on('click', (e) => {
-      const { lng, lat } = e.lngLat;
-      marker.current!.setLngLat([lng, lat]);
-      handleInputChange('coordinates', {
-        lat: parseFloat(lat.toFixed(6)),
-        lng: parseFloat(lng.toFixed(6))
-      });
-    });
-
-    map.current.on('load', () => {
-      setMapLoaded(true);
-    });
-
-    return () => {
-      map.current?.remove();
-    };
-  }, []);
-
-  // Add project boundary layer
-  useEffect(() => {
-    if (!map.current || !mapLoaded || !projectBoundary) return;
-
-    const sourceId = 'project-boundary-source';
-    const layerId = 'project-boundary';
-
-    // Remove existing layers if they exist
-    if (map.current.getLayer(`${layerId}-fill`)) {
-      map.current.removeLayer(`${layerId}-fill`);
-    }
-    if (map.current.getLayer(layerId)) {
-      map.current.removeLayer(layerId);
-    }
-    if (map.current.getSource(sourceId)) {
-      map.current.removeSource(sourceId);
-    }
-
-    // Add source
-    map.current.addSource(sourceId, {
-      type: 'geojson',
-      data: projectBoundary
-    });
-
-    // Add fill layer
-    map.current.addLayer({
-      id: `${layerId}-fill`,
-      type: 'fill',
-      source: sourceId,
-      paint: {
-        'fill-color': '#3b82f6',
-        'fill-opacity': 0.2
-      }
-    });
-
-    // Add outline layer
-    map.current.addLayer({
-      id: layerId,
-      type: 'line',
-      source: sourceId,
-      paint: {
-        'line-color': '#3b82f6',
-        'line-width': 3,
-        'line-opacity': 0.8
-      }
-    });
-
-    // Fit map to boundary
-    const bounds = new mapboxgl.LngLatBounds();
-    if (projectBoundary.type === 'FeatureCollection') {
-      projectBoundary.features.forEach((feature: any) => {
-        if (feature.geometry.type === 'Polygon') {
-          feature.geometry.coordinates[0].forEach((coord: [number, number]) => {
-            bounds.extend(coord);
-          });
-        } else if (feature.geometry.type === 'MultiPolygon') {
-          feature.geometry.coordinates.forEach((polygon: any) => {
-            polygon[0].forEach((coord: [number, number]) => {
-              bounds.extend(coord);
-            });
-          });
-        }
-      });
-    } else if (projectBoundary.geometry) {
-      if (projectBoundary.geometry.type === 'Polygon') {
-        projectBoundary.geometry.coordinates[0].forEach((coord: [number, number]) => {
-          bounds.extend(coord);
-        });
-      } else if (projectBoundary.geometry.type === 'MultiPolygon') {
-        projectBoundary.geometry.coordinates.forEach((polygon: any) => {
-          polygon[0].forEach((coord: [number, number]) => {
-            bounds.extend(coord);
-          });
-        });
-      }
-    }
-
-    map.current.fitBounds(bounds, { padding: 50 });
-  }, [mapLoaded, projectBoundary]);
+  const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="w-5 h-5" />
-            Project Location
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="projectLocation">Activity Location / Site Address</Label>
-            <Textarea
-              id="projectLocation"
-              value={formData.projectLocation}
-              onChange={(e) => handleInputChange('projectLocation', e.target.value)}
-              placeholder="Enter the specific location or address where the activity will take place"
-              rows={3}
-            />
-          </div>
+    <TooltipProvider>
+      <div className="space-y-6">
+        {/* Project Site Map - Pass boundary data from selected intent */}
+        <PNGMap 
+          projectBoundary={formData.project_boundary}
+          province={formData.province}
+          district={formData.district}
+          llg={formData.llg}
+          projectSiteAddress={formData.projectLocation}
+          projectSiteDescription={formData.project_site_description}
+          activityDescription={formData.selected_intent_activity_description || formData.activity_description}
+        />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="latitude">Latitude</Label>
-              <Input
-                id="latitude"
-                type="number"
-                step="0.000001"
-                value={formData.coordinates.lat}
-                onChange={(e) => handleInputChange('coordinates', {
-                  ...formData.coordinates,
-                  lat: parseFloat(e.target.value)
-                })}
-                placeholder="e.g., -6.314993"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="longitude">Longitude</Label>
-              <Input
-                id="longitude"
-                type="number"
-                step="0.000001"
-                value={formData.coordinates.lng}
-                onChange={(e) => handleInputChange('coordinates', {
-                  ...formData.coordinates,
-                  lng: parseFloat(e.target.value)
-                })}
-                placeholder="e.g., 143.95555"
-              />
-            </div>
-          </div>
+        {/* Project Site Information - Collapsible */}
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    Project Site Information
+                  </div>
+                  <ChevronDown className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </CardTitle>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="space-y-6">
+                {/* Project Site Address and Total Area */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="projectLocation">Project Site Address *</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>Provide the physical address or location details where the activity will be conducted.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="projectLocation"
+                      value={formData.projectLocation || ''}
+                      onChange={(e) => handleInputChange('projectLocation', e.target.value)}
+                      placeholder="Enter the physical address of the project site..."
+                      className="bg-glass/50"
+                    />
+                  </div>
 
-          <div 
-            ref={mapContainer} 
-            className="h-96 w-full rounded-lg border border-border overflow-hidden"
-          />
-          
-          <p className="text-sm text-muted-foreground">
-            Click on the map to set coordinates or drag the marker to adjust the location.
-          </p>
-        </CardContent>
-      </Card>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="total_area_sqkm">Total Area (sq km)</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>Enter the total area of the project site in square kilometers.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="total_area_sqkm"
+                      type="number"
+                      value={formData.total_area_sqkm || ''}
+                      onChange={(e) => handleInputChange('total_area_sqkm', e.target.value)}
+                      placeholder="Enter total area"
+                      step="0.01"
+                      className="bg-glass/50"
+                    />
+                  </div>
+                </div>
 
-      {projectBoundary && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="w-4 h-0.5 bg-blue-500"></div>
-              <span>Project Boundary from Intent Registration</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+                {/* LLG, District, Province */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="llg">LLG</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>Local Level Government area where the project is located.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="llg"
+                      value={formData.llg || ''}
+                      onChange={(e) => handleInputChange('llg', e.target.value)}
+                      placeholder="Enter LLG"
+                      className="bg-glass/50"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="district">District</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>District where the project is located.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="district"
+                      value={formData.district || ''}
+                      onChange={(e) => handleInputChange('district', e.target.value)}
+                      placeholder="Enter district"
+                      className="bg-glass/50"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="province">Province</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>Province where the project is located.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="province"
+                      value={formData.province || ''}
+                      onChange={(e) => handleInputChange('province', e.target.value)}
+                      placeholder="Enter province"
+                      className="bg-glass/50"
+                    />
+                  </div>
+                </div>
+
+                {/* Description of Project Site */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="project_site_description">Description of Project Site *</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>Describe the location characteristics, terrain, current land use, and any notable environmental or geographical features of the site.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <Textarea
+                    id="project_site_description"
+                    value={formData.project_site_description || ''}
+                    onChange={(e) => handleInputChange('project_site_description', e.target.value)}
+                    placeholder="Provide details about the project site location and characteristics..."
+                    rows={4}
+                    className="bg-glass/50"
+                  />
+                </div>
+
+                {/* Details of Site Ownership */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="site_ownership_details">Details of Site Ownership *</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>Include information about land ownership, tenure type, legal description, and any relevant documentation.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <Textarea
+                    id="site_ownership_details"
+                    value={formData.site_ownership_details || ''}
+                    onChange={(e) => handleInputChange('site_ownership_details', e.target.value)}
+                    placeholder="Provide information about land ownership, tenure, and legal description..."
+                    rows={4}
+                    className="bg-glass/50"
+                  />
+                </div>
+
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+      </div>
+    </TooltipProvider>
   );
 };
 
