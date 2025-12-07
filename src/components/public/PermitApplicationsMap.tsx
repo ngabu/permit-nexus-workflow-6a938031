@@ -125,15 +125,6 @@ export function PermitApplicationsMap({
     aoiBoundaryPresentRef.current = !!(uploadedAOI || existingBoundary);
   }, [uploadedAOI, existingBoundary]);
 
-  // Reset internal AOI state when existingBoundary prop changes to prevent stale data
-  useEffect(() => {
-    // When existingBoundary changes (including to null), reset the internal uploaded AOI state
-    // This ensures the component properly displays the new boundary without mixing with old state
-    setUploadedAOI(existingBoundary || null);
-    setUploadedAOIFeatureId(null);
-    setDrawnAOI(null);
-  }, [existingBoundary]);
-
   // Helper function to forcefully remove all boundary popups
   const removeAllBoundaryPopups = useCallback(() => {
     // Remove from ref
