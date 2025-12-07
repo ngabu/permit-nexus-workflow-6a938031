@@ -673,6 +673,88 @@ export type Database = {
           },
         ]
       }
+      compliance_tasks: {
+        Row: {
+          assigned_by: string
+          assigned_to: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          priority: string
+          progress_percentage: number | null
+          related_inspection_id: string | null
+          related_intent_id: string | null
+          related_permit_id: string | null
+          status: string
+          task_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_by: string
+          assigned_to: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          progress_percentage?: number | null
+          related_inspection_id?: string | null
+          related_intent_id?: string | null
+          related_permit_id?: string | null
+          status?: string
+          task_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string
+          assigned_to?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          progress_percentage?: number | null
+          related_inspection_id?: string | null
+          related_intent_id?: string | null
+          related_permit_id?: string | null
+          status?: string
+          task_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_tasks_related_inspection_id_fkey"
+            columns: ["related_inspection_id"]
+            isOneToOne: false
+            referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_tasks_related_intent_id_fkey"
+            columns: ["related_intent_id"]
+            isOneToOne: false
+            referencedRelation: "intent_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_tasks_related_permit_id_fkey"
+            columns: ["related_permit_id"]
+            isOneToOne: false
+            referencedRelation: "permit_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       director_approvals: {
         Row: {
           created_at: string
@@ -1669,6 +1751,7 @@ export type Database = {
           created_at: string
           departments_approached: string | null
           district: string | null
+          docusign_envelope_id: string | null
           entity_id: string
           estimated_cost_kina: number | null
           existing_permit_id: string | null
@@ -1699,6 +1782,7 @@ export type Database = {
           review_notes: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          signed_document_path: string | null
           site_ownership_details: string | null
           status: string
           total_area_sqkm: number | null
@@ -1722,6 +1806,7 @@ export type Database = {
           created_at?: string
           departments_approached?: string | null
           district?: string | null
+          docusign_envelope_id?: string | null
           entity_id: string
           estimated_cost_kina?: number | null
           existing_permit_id?: string | null
@@ -1752,6 +1837,7 @@ export type Database = {
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          signed_document_path?: string | null
           site_ownership_details?: string | null
           status?: string
           total_area_sqkm?: number | null
@@ -1775,6 +1861,7 @@ export type Database = {
           created_at?: string
           departments_approached?: string | null
           district?: string | null
+          docusign_envelope_id?: string | null
           entity_id?: string
           estimated_cost_kina?: number | null
           existing_permit_id?: string | null
@@ -1805,6 +1892,7 @@ export type Database = {
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          signed_document_path?: string | null
           site_ownership_details?: string | null
           status?: string
           total_area_sqkm?: number | null

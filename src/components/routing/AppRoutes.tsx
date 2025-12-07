@@ -52,6 +52,7 @@ import RegistryApplicationDetail from "@/pages/RegistryApplicationDetail";
 import Inspections from "@/pages/Inspections";
 import EditPermitApplication from "@/pages/EditPermitApplication";
 import ApprovalsAndSignatures from "@/pages/admin/ApprovalsAndSignatures";
+import PaymentCallback from "@/pages/PaymentCallback";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -111,6 +112,9 @@ export const AppRoutes = () => {
     <Routes>
       <Route path="/" element={user ? (isManagingDirector ? <Navigate to="/managing-director-dashboard" replace /> : <Navigate to="/dashboard" replace />) : <Index />} />
       <Route path="/auth" element={!user ? <Auth /> : (isManagingDirector ? <Navigate to="/managing-director-dashboard" replace /> : <Navigate to="/dashboard" replace />)} />
+      
+      {/* Payment callback - accessible without full auth to handle Stripe redirects */}
+      <Route path="/payment-callback" element={<PaymentCallback />} />
       
       {/* Dashboard Routes - Main dashboard that redirects to appropriate dashboard */}
       <Route 

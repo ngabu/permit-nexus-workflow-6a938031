@@ -6,23 +6,61 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { Loader2, Search, Filter, ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, FileDown, FileText, Building2, MapPin, Calendar } from 'lucide-react';
+import { Loader2, Search, Filter, ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, FileDown, Clock, AlertCircle, User, Mail, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { IntentRegistrationReadOnlyView } from '@/components/public/IntentRegistrationReadOnlyView';
+import { PermitApplicationsMap } from '@/components/public/PermitApplicationsMap';
+import { IntentRegistryReviewTab, IntentComplianceReviewTab, IntentMDReviewTab, IntentInvoicePaymentsTab } from '@/components/registry/intent-review';
 
 interface IntentRegistration {
   id: string;
-  activity_description: string;
+  user_id: string;
+  entity_id: string;
   activity_level: string;
+  activity_description: string;
+  preparatory_work_description: string;
+  commencement_date: string;
+  completion_date: string;
   project_site_address: string | null;
+  district: string | null;
+  province: string | null;
+  llg: string | null;
+  project_site_description: string | null;
+  site_ownership_details: string | null;
+  government_agreement: string | null;
+  departments_approached: string | null;
+  approvals_required: string | null;
+  landowner_negotiation_status: string | null;
+  estimated_cost_kina: number | null;
   status: string;
   created_at: string;
-  entity_id: string | null;
+  updated_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  review_notes: string | null;
+  official_feedback_attachments: any[] | null;
+  prescribed_activity_id: string | null;
+  existing_permit_id: string | null;
+  project_boundary: any | null;
+  total_area_sqkm: number | null;
+  signed_document_path?: string | null;
+  docusign_envelope_id?: string | null;
   entity?: {
+    id: string;
     name: string;
+    entity_type: string;
+  };
+  reviewer?: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
   };
 }
 
@@ -35,10 +73,21 @@ export function ManagingDirectorIntentsList() {
   const [levelFilter, setLevelFilter] = useState<string>('all');
   const [entityFilter, setEntityFilter] = useState<string>('all');
   const [expandedIntentId, setExpandedIntentId] = useState<string | null>(null);
-  const [expandedIntentDetails, setExpandedIntentDetails] = useState<any>(null);
-  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('mapping');
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
+
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      submitted: 'secondary',
+      approved: 'default',
+      rejected: 'destructive',
+      under_review: 'outline'
+    };
+    return <Badge variant={variants[status] || 'outline'} className="capitalize">
+        {status.replace('_', ' ')}
+      </Badge>;
+  };
 
   useEffect(() => {
     fetchIntents();
@@ -50,19 +99,24 @@ export function ManagingDirectorIntentsList() {
       const { data, error } = await supabase
         .from('intent_registrations')
         .select(`
-          id,
-          activity_description,
-          activity_level,
-          project_site_address,
-          status,
-          created_at,
-          entity_id,
-          entity:entities(name)
+          *,
+          entity:entities(id, name, entity_type)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setIntents(data || []);
+
+      // Process data to ensure proper typing
+      const processedData = (data || []).map(intent => ({
+        ...intent,
+        official_feedback_attachments: intent.official_feedback_attachments 
+          ? Array.isArray(intent.official_feedback_attachments) 
+            ? intent.official_feedback_attachments 
+            : [] 
+          : null,
+        project_boundary: intent.project_boundary || null
+      }));
+      setIntents(processedData);
     } catch (error) {
       console.error('Error fetching intents:', error);
       toast({
@@ -75,49 +129,14 @@ export function ManagingDirectorIntentsList() {
     }
   };
 
-  const fetchIntentDetails = async (intentId: string) => {
-    try {
-      setLoadingDetails(true);
-      const { data, error } = await supabase
-        .from('intent_registrations')
-        .select(`
-          *,
-          entity:entities(*)
-        `)
-        .eq('id', intentId)
-        .single();
-
-      if (error) throw error;
-      setExpandedIntentDetails(data);
-    } catch (error) {
-      console.error('Error fetching intent details:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load intent details',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoadingDetails(false);
-    }
-  };
-
-  const handleRowClick = (intentId: string) => {
-    if (expandedIntentId === intentId) {
-      setExpandedIntentId(null);
-      setExpandedIntentDetails(null);
-    } else {
-      setExpandedIntentId(intentId);
-      fetchIntentDetails(intentId);
-    }
-  };
-
   // Filter and search intents
   const filteredIntents = useMemo(() => {
     return intents.filter((intent) => {
       const matchesSearch = 
         intent.activity_description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         intent.entity?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        intent.project_site_address?.toLowerCase().includes(searchTerm.toLowerCase());
+        intent.project_site_address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        intent.province?.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesStatus = statusFilter === 'all' || intent.status === statusFilter;
       const matchesLevel = levelFilter === 'all' || intent.activity_level === levelFilter;
@@ -164,10 +183,12 @@ export function ManagingDirectorIntentsList() {
     switch (status) {
       case 'approved':
         return 'default';
+      case 'pending':
+        return 'secondary';
       case 'rejected':
         return 'destructive';
       case 'under_review':
-        return 'secondary';
+        return 'outline';
       default:
         return 'outline';
     }
@@ -179,6 +200,7 @@ export function ManagingDirectorIntentsList() {
       'Entity': intent.entity?.name || '-',
       'Activity Level': intent.activity_level,
       'Project Site': intent.project_site_address || '-',
+      'Province': intent.province || '-',
       'Status': intent.status,
       'Submitted Date': format(new Date(intent.created_at), 'MMM dd, yyyy')
     }));
@@ -187,7 +209,7 @@ export function ManagingDirectorIntentsList() {
     const workbook = XLSX.utils.book_new();
     
     worksheet['!cols'] = [
-      { wch: 40 }, { wch: 25 }, { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 15 }
+      { wch: 40 }, { wch: 25 }, { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }
     ];
 
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Intent Registrations');
@@ -200,6 +222,7 @@ export function ManagingDirectorIntentsList() {
       'Entity': intent.entity?.name || '-',
       'Activity Level': intent.activity_level,
       'Project Site': intent.project_site_address || '-',
+      'Province': intent.province || '-',
       'Status': intent.status,
       'Submitted Date': format(new Date(intent.created_at), 'MMM dd, yyyy')
     }));
@@ -310,9 +333,10 @@ export function ManagingDirectorIntentsList() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-8" />
-              <TableHead>Project Description</TableHead>
               <TableHead>Entity</TableHead>
-              <TableHead>Level</TableHead>
+              <TableHead>Activity Level</TableHead>
+              <TableHead>Project Description</TableHead>
+              <TableHead>Province</TableHead>
               <TableHead>Submitted Date</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
@@ -320,7 +344,7 @@ export function ManagingDirectorIntentsList() {
           <TableBody>
             {filteredIntents.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   {searchTerm || statusFilter !== 'all' || levelFilter !== 'all' || entityFilter !== 'all'
                     ? 'No intent registrations match your search criteria'
                     : 'No intent registrations found'}
@@ -336,7 +360,7 @@ export function ManagingDirectorIntentsList() {
                       className={`cursor-pointer transition-colors ${
                         isExpanded ? 'bg-accent hover:bg-accent/90' : 'hover:bg-muted/50'
                       }`}
-                      onClick={() => handleRowClick(intent.id)}
+                      onClick={() => setExpandedIntentId(isExpanded ? null : intent.id)}
                     >
                       <TableCell>
                         {isExpanded ? (
@@ -345,11 +369,10 @@ export function ManagingDirectorIntentsList() {
                           <ChevronsUpDown className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
                         )}
                       </TableCell>
-                      <TableCell className="font-medium max-w-xs truncate">
-                        {intent.activity_description}
-                      </TableCell>
-                      <TableCell>{intent.entity?.name || '-'}</TableCell>
+                      <TableCell className="font-medium">{intent.entity?.name || '-'}</TableCell>
                       <TableCell>{intent.activity_level}</TableCell>
+                      <TableCell className="max-w-xs truncate">{intent.activity_description}</TableCell>
+                      <TableCell>{intent.province || '-'}</TableCell>
                       <TableCell>{format(new Date(intent.created_at), 'MMM dd, yyyy')}</TableCell>
                       <TableCell>
                         <Badge variant={getStatusColor(intent.status)}>
@@ -358,17 +381,151 @@ export function ManagingDirectorIntentsList() {
                       </TableCell>
                     </TableRow>
                     {isExpanded && (
-                      <TableRow key={`${intent.id}-details`} className="bg-muted/30 hover:bg-muted/30">
-                        <TableCell colSpan={6} className="p-0">
-                          {loadingDetails ? (
-                            <div className="flex items-center justify-center p-8">
-                              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      <TableRow key={`${intent.id}-details`} className="bg-glass/50 backdrop-blur-md hover:bg-glass/50">
+                        <TableCell colSpan={7} className="p-0">
+                          <div className="border-t border-glass/30 bg-white/80 dark:bg-primary/5 backdrop-blur-md p-6">
+                            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                              <TabsList className="grid w-full grid-cols-6">
+                                <TabsTrigger value="mapping">Site Mapping</TabsTrigger>
+                                <TabsTrigger value="details">Registration Details</TabsTrigger>
+                                <TabsTrigger value="registry-review">Registry Review</TabsTrigger>
+                                <TabsTrigger value="compliance-review">Compliance Review</TabsTrigger>
+                                <TabsTrigger value="invoice-payments">Invoice & Payments</TabsTrigger>
+                                <TabsTrigger value="md-review">MD Review & Approval</TabsTrigger>
+                              </TabsList>
+
+                              <TabsContent value="mapping" className="mt-4">
+                                <PermitApplicationsMap 
+                                  showAllApplications={false} 
+                                  existingBoundary={intent.project_boundary} 
+                                  onBoundarySave={() => {}} 
+                                  coordinates={{
+                                    lat: intent.project_boundary?.coordinates?.[0]?.[0]?.[1] || -6.314993,
+                                    lng: intent.project_boundary?.coordinates?.[0]?.[0]?.[0] || 147.1494
+                                  }} 
+                                  onCoordinatesChange={() => {}} 
+                                  readOnly={true}
+                                  district={intent.district}
+                                  province={intent.province}
+                                  llg={intent.llg}
+                                  customTitle="Proposed Project Site Map"
+                                  customDescription=""
+                                />
+                              </TabsContent>
+
+                              <TabsContent value="details" className="space-y-4 mt-4">
+                                <IntentRegistrationReadOnlyView intent={intent} />
+                              </TabsContent>
+
+                              <TabsContent value="registry-review" className="mt-4">
+                                <IntentRegistryReviewTab 
+                                  intentId={intent.id} 
+                                  currentStatus={intent.status}
+                                  onStatusUpdate={fetchIntents}
+                                />
+                              </TabsContent>
+
+                              <TabsContent value="compliance-review" className="mt-4">
+                                <IntentComplianceReviewTab 
+                                  intentId={intent.id} 
+                                  currentStatus={intent.status}
+                                  onStatusUpdate={fetchIntents}
+                                />
+                              </TabsContent>
+
+                              <TabsContent value="invoice-payments" className="mt-4">
+                                <IntentInvoicePaymentsTab 
+                                  intentId={intent.id}
+                                  entityId={intent.entity_id}
+                                  onStatusUpdate={fetchIntents}
+                                />
+                              </TabsContent>
+
+                              <TabsContent value="md-review" className="mt-4">
+                                <IntentMDReviewTab 
+                                  intentId={intent.id} 
+                                  currentStatus={intent.status}
+                                  onStatusUpdate={fetchIntents}
+                                />
+                              </TabsContent>
+                            </Tabs>
+
+                            {/* Official Feedback Section - Below Tabs */}
+                            <div>
+                              <Separator className="my-6" />
+                              <Card className="bg-muted/30">
+                                <CardHeader className="bg-primary/10">
+                                  <CardTitle className="text-lg">Official Feedback from CEPA</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4 pt-4">
+                                  {intent.status === 'pending' ? (
+                                    <Alert>
+                                      <Clock className="h-4 w-4" />
+                                      <AlertDescription>
+                                        This submission is currently under review. Any feedback from CEPA will be displayed here once the review is complete.
+                                      </AlertDescription>
+                                    </Alert>
+                                  ) : (
+                                    <>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                          <Label className="text-muted-foreground mb-1">Status</Label>
+                                          <div className="mt-1">{getStatusBadge(intent.status)}</div>
+                                        </div>
+                                        {intent.reviewed_at && (
+                                          <div>
+                                            <Label className="text-muted-foreground mb-1">Review Date</Label>
+                                            <div className="flex items-center gap-2 mt-1">
+                                              <Calendar className="w-4 h-4 text-muted-foreground" />
+                                              <p className="text-sm">{format(new Date(intent.reviewed_at), 'PPP p')}</p>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {intent.reviewer && (
+                                        <div className="bg-background/50 p-4 rounded-lg">
+                                          <Label className="text-muted-foreground mb-2">Reviewed By</Label>
+                                          <div className="space-y-1 mt-2">
+                                            <div className="flex items-center gap-2">
+                                              <User className="w-4 h-4 text-muted-foreground" />
+                                              <p className="text-sm font-medium">
+                                                {intent.reviewer?.first_name} {intent.reviewer?.last_name}
+                                              </p>
+                                            </div>
+                                            {intent.reviewer?.email && (
+                                              <div className="flex items-center gap-2">
+                                                <Mail className="w-4 h-4 text-muted-foreground" />
+                                                <p className="text-sm text-muted-foreground">{intent.reviewer.email}</p>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {intent.review_notes && (
+                                        <div>
+                                          <Label className="text-muted-foreground mb-2">Official Review Notes</Label>
+                                          <div className="bg-background/50 p-4 rounded-lg mt-2">
+                                            <p className="text-sm whitespace-pre-wrap">{intent.review_notes}</p>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {!intent.review_notes && !intent.reviewer && (
+                                        <Alert>
+                                          <AlertCircle className="h-4 w-4" />
+                                          <AlertDescription>
+                                            The Registry team has updated the status but has not yet provided detailed feedback.
+                                          </AlertDescription>
+                                        </Alert>
+                                      )}
+                                    </>
+                                  )}
+                                </CardContent>
+                              </Card>
                             </div>
-                          ) : expandedIntentDetails ? (
-                            <div className="border-t border-border bg-background/50 backdrop-blur-sm p-6">
-                              <IntentRegistrationReadOnlyView intent={expandedIntentDetails} />
-                            </div>
-                          ) : null}
+                          </div>
                         </TableCell>
                       </TableRow>
                     )}

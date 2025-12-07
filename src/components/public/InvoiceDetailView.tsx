@@ -84,8 +84,8 @@ export function InvoiceDetailView({ invoice, onBack, onPayment }: InvoiceDetailP
           totalInc: invoice.totalInc,
           paidToDate: invoice.paidToDate,
           balanceDue: invoice.balanceDue,
-          successUrl: `${currentUrl}/dashboard?payment=success`,
-          cancelUrl: `${currentUrl}/dashboard?payment=cancelled`
+          successUrl: `${currentUrl}/payment-callback?payment=success`,
+          cancelUrl: `${currentUrl}/payment-callback?payment=cancelled`
         }
       });
 
@@ -97,8 +97,13 @@ export function InvoiceDetailView({ invoice, onBack, onPayment }: InvoiceDetailP
 
       if (data?.url) {
         console.log('Redirecting to Stripe checkout:', data.url);
-        // Redirect in same window so we can handle the callback properly
-        window.location.href = data.url;
+        // Open Stripe checkout in a new tab to avoid iframe restrictions
+        window.open(data.url, '_blank');
+        setIsProcessing(false);
+        toast({
+          title: "Checkout Opened",
+          description: "Stripe checkout has opened in a new tab. Complete your payment there.",
+        });
       } else {
         throw new Error('No checkout URL returned');
       }

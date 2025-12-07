@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -16,40 +16,57 @@ interface ComplianceStaff {
 
 export function useComplianceStaff() {
   const [staff, setStaff] = useState<ComplianceStaff[]>([]);
+  const [loading, setLoading] = useState(true);
   const { profile } = useAuth();
 
-  const fetchComplianceStaff = async () => {
+  const fetchComplianceStaff = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      // Managers can see all officers including suspended; others only see active
+      const isManagerOrAdmin = profile?.staff_position === 'manager' || 
+                               profile?.staff_position === 'director' || 
+                               profile?.user_type === 'super_admin';
+      
+      let query = supabase
         .from('profiles')
-        .select('id, email, first_name, last_name, user_type, staff_unit, staff_position, is_active, created_at')
-        .eq('staff_unit', 'compliance')
-        .eq('is_active', true);
+        .select('user_id, email, first_name, last_name, user_type, staff_unit, staff_position, is_active, created_at')
+        .eq('staff_unit', 'compliance');
+      
+      if (!isManagerOrAdmin) {
+        query = query.eq('is_active', true);
+      }
+      
+      const { data, error } = await query;
 
       if (error) throw error;
       
       // Transform data to match expected interface
       const transformedData = (data || []).map(item => ({
-        ...item,
+        id: item.user_id,
+        email: item.email,
         full_name: item.first_name && item.last_name 
           ? `${item.first_name} ${item.last_name}` 
-          : item.first_name || item.last_name,
+          : item.first_name || item.last_name || null,
         role: item.user_type,
-        operational_unit: item.staff_unit
+        operational_unit: item.staff_unit,
+        staff_position: item.staff_position,
+        is_active: item.is_active,
+        created_at: item.created_at
       }));
       
       setStaff(transformedData);
     } catch (error) {
       console.error('Error fetching compliance staff:', error);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [profile?.staff_position, profile?.user_type]);
 
   useEffect(() => {
     if (profile?.staff_unit === 'compliance' || profile?.user_type === 'super_admin') {
       fetchComplianceStaff();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.staff_unit, profile?.user_type]);
+  }, [profile?.staff_unit, profile?.user_type, fetchComplianceStaff]);
 
-  return { staff };
+  return { staff, loading, refetch: fetchComplianceStaff };
 }

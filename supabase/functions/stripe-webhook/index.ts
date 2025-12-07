@@ -102,8 +102,12 @@ serve(async (req) => {
       console.log('Financial transaction updated:', txData);
     }
 
-    // Update the invoices table with receipt URL and status
-    const { data: invData, error: invoiceUpdateError } = await supabase
+    // Update the invoices table - try by invoice_number first
+    let invData = null;
+    let invoiceUpdateError = null;
+
+    // Try updating by invoice_number
+    const { data: invByNumber, error: errByNumber } = await supabase
       .from('invoices')
       .update({
         status: 'paid',
@@ -114,10 +118,37 @@ serve(async (req) => {
       .eq('invoice_number', invoiceNumber)
       .select();
 
-    if (invoiceUpdateError) {
-      console.log('Note: Could not update invoices:', invoiceUpdateError.message);
+    if (errByNumber) {
+      console.log('Error updating by invoice_number:', errByNumber.message);
+      invoiceUpdateError = errByNumber;
+    } else if (invByNumber && invByNumber.length > 0) {
+      invData = invByNumber;
+      console.log('Invoice updated by invoice_number:', invData);
     } else {
-      console.log('Invoice updated:', invData);
+      console.log('No invoice found with invoice_number:', invoiceNumber);
+    }
+
+    // If no rows updated by invoice_number, try by ID (for legacy support)
+    if (!invData || invData.length === 0) {
+      const { data: invById, error: errById } = await supabase
+        .from('invoices')
+        .update({
+          status: 'paid',
+          payment_status: 'paid',
+          paid_date: new Date().toISOString(),
+          document_path: receiptUrl,
+        })
+        .eq('id', invoiceId)
+        .select();
+
+      if (errById) {
+        console.log('Error updating by ID:', errById.message);
+      } else if (invById && invById.length > 0) {
+        invData = invById;
+        console.log('Invoice updated by ID:', invData);
+      } else {
+        console.log('No invoice found with ID:', invoiceId);
+      }
     }
 
     const responseData = { 

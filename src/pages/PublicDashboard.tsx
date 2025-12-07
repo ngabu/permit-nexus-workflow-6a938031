@@ -14,7 +14,6 @@ import { ApplicationDetailDialog } from '@/components/public/ApplicationDetailDi
 import { ProfileSettings } from '@/components/public/ProfileSettings';
 import { AppSettings } from '@/components/public/AppSettings';
 import { ComprehensivePermitForm } from '@/components/public/ComprehensivePermitForm';
-import { PermitApplicationsMap } from '@/components/public/PermitApplicationsMap';
 import PermitAmalgamation from '@/pages/permit-management/PermitAmalgamation';
 import PermitAmendment from '@/pages/permit-management/PermitAmendment';
 import PermitCompliance from '@/pages/permit-management/PermitCompliance';
@@ -29,8 +28,6 @@ import { ComplianceInspectionsView } from '@/components/public/ComplianceInspect
 import { ComplianceReportSubmissionsView } from '@/components/public/ComplianceReportSubmissionsView';
 import { ApplicationGuide } from '@/components/public/ApplicationGuide';
 import ActivityOverview from '@/pages/ActivityOverview';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 export default function PublicDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -39,76 +36,16 @@ export default function PublicDashboard() {
   const { user, profile } = useAuth();
   const { unreadCount } = useUserNotifications(user?.id);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { toast } = useToast();
 
-  // Handle payment verification after Stripe redirect
+  // Handle tab navigation from URL parameter
   useEffect(() => {
-    const sessionId = searchParams.get('session_id');
-    const paymentStatus = searchParams.get('payment');
-    const invoiceNumber = searchParams.get('invoice_number');
-
-    if (sessionId && paymentStatus === 'success') {
-      // Verify payment and update invoice
-      const verifyPayment = async () => {
-        try {
-          console.log('Verifying payment for session:', sessionId);
-          
-          const { data, error } = await supabase.functions.invoke('stripe-webhook', {
-            body: { sessionId }
-          });
-
-          console.log('Payment verification response:', data, error);
-
-          if (error) {
-            throw new Error(error.message);
-          }
-
-          if (data?.success) {
-            // Dispatch event for InvoiceManagement to update local state
-            const paymentEvent = new CustomEvent('payment-success', {
-              detail: {
-                invoiceNumber: data.invoiceNumber || invoiceNumber,
-                receiptUrl: data.receiptUrl
-              }
-            });
-            window.dispatchEvent(paymentEvent);
-            
-            toast({
-              title: "Payment Successful",
-              description: `Invoice ${data.invoiceNumber || invoiceNumber} has been paid. You can view your receipt in the Invoices section.`,
-            });
-            // Navigate to invoices tab
-            setActiveTab('invoices');
-          } else {
-            toast({
-              title: "Payment Verification",
-              description: data?.message || "Payment status is being processed.",
-              variant: "default"
-            });
-          }
-        } catch (error: any) {
-          console.error('Payment verification error:', error);
-          toast({
-            title: "Payment Verification Issue",
-            description: "Your payment may have been processed. Please check your invoices.",
-            variant: "default"
-          });
-        }
-
-        // Clear the URL parameters
-        setSearchParams({});
-      };
-
-      verifyPayment();
-    } else if (paymentStatus === 'cancelled') {
-      toast({
-        title: "Payment Cancelled",
-        description: "Your payment was cancelled. You can try again from the Invoices section.",
-        variant: "default"
-      });
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+      // Clear the tab param from URL
       setSearchParams({});
     }
-  }, [searchParams, setSearchParams, toast]);
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     // Listen for navigation events from notifications

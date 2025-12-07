@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
+import PaymentCallback from "./pages/PaymentCallback";
 
 // Protected pages
 import PublicDashboard from "./pages/PublicDashboard";
@@ -114,6 +115,7 @@ function App() {
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route path="/payment-callback" element={<PaymentCallback />} />
 
               {/* Protected Routes */}
               <Route

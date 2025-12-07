@@ -1,0 +1,126 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "intent_id": "f43b31c3-dba5-4baf-b7fc-fb5e4c67befb",
+        "name": "Porgera Gold Mine Tailings Management Project",
+        "entity": "Highlands Gold Operations Ltd",
+        "activity_level": "Level 3",
+        "province": "Enga",
+        "district": "Porgera-Paiela",
+        "estimated_cost": 125000000,
+        "area_sqkm": 15.0,
+        "description": "Major gold processing and refinery facility with capital investment exceeding K100 million. The facility will process ore from multiple mining sites in the Enga region with capacity of 500,000 tonnes per year.",
+        "status": "Draft",
+        "fill_color": "#dc2626",
+        "stroke_color": "#991b1b"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [143.0900, -5.4600],
+            [143.1400, -5.4600],
+            [143.1500, -5.4800],
+            [143.1450, -5.5100],
+            [143.1100, -5.5150],
+            [143.0850, -5.4950],
+            [143.0900, -5.4600]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "intent_id": "3c85574f-7b84-4c61-8b68-bc3c9db75751",
+        "name": "Markham Valley Oil Exploration",
+        "entity": "Morobe Mining & Resources Ltd",
+        "activity_level": "Level 2",
+        "province": "Morobe",
+        "district": "Lae",
+        "estimated_cost": 45000000,
+        "area_sqkm": 2.5,
+        "description": "Exploratory oil and gas drilling operations in the Markham Valley region to assess potential petroleum reserves. The project involves drilling 3 exploration wells to depths of approximately 2,500 meters.",
+        "status": "Draft",
+        "fill_color": "#2563eb",
+        "stroke_color": "#1d4ed8"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [146.9850, -6.7150],
+            [147.0200, -6.7150],
+            [147.0250, -6.7350],
+            [147.0100, -6.7450],
+            [146.9900, -6.7400],
+            [146.9850, -6.7150]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "intent_id": "958dacea-d78f-4578-92c2-c799d467b293",
+        "name": "Lae City Sewage Treatment Plant",
+        "entity": "Pacific Industrial Solutions PNG",
+        "activity_level": "Level 2",
+        "province": "Morobe",
+        "district": "Lae",
+        "estimated_cost": 28500000,
+        "area_sqkm": 1.8,
+        "description": "Construction and operation of a modern sewage treatment plant to serve the growing population of Lae City. The facility will have capacity to treat wastewater for 25,000 people equivalent.",
+        "status": "Draft",
+        "fill_color": "#16a34a",
+        "stroke_color": "#15803d"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [147.0050, -6.7220],
+            [147.0260, -6.7220],
+            [147.0280, -6.7350],
+            [147.0200, -6.7420],
+            [147.0080, -6.7380],
+            [147.0050, -6.7220]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "intent_id": "3dc03a5c-e1c6-4d82-bc44-64dd35c47032",
+        "name": "Port Moresby Combined Cycle Power Station",
+        "entity": "NCD Power & Energy Corporation",
+        "activity_level": "Level 3",
+        "province": "National Capital District",
+        "district": "Moresby South",
+        "estimated_cost": 78000000,
+        "area_sqkm": 3.2,
+        "description": "Establishment of a chemical manufacturing plant for industrial cleaning products and agricultural chemicals. The facility will handle and process hazardous materials including chlorine compounds and phosphates.",
+        "status": "Draft",
+        "fill_color": "#9333ea",
+        "stroke_color": "#7e22ce"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [147.1750, -9.4500],
+            [147.2100, -9.4500],
+            [147.2150, -9.4700],
+            [147.2000, -9.4850],
+            [147.1780, -9.4800],
+            [147.1750, -9.4500]
+          ]
+        ]
+      }
+    }
+  ]
+}

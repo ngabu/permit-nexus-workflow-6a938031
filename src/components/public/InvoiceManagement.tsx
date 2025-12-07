@@ -5,165 +5,92 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Eye, Receipt } from 'lucide-react';
+import { Search, Eye, Receipt, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { InvoiceDetailView } from './InvoiceDetailView';
-
-interface Invoice {
-  id: string;
-  invoice_number: string;
-  date: string;
-  yourRef: string;
-  contact: string;
-  telephone: string;
-  email: string;
-  client: string;
-  clientAddress: string;
-  items: {
-    quantity: number;
-    itemCode: string;
-    description: string;
-    unitPrice: number;
-    disc: number;
-    totalPrice: number;
-  }[];
-  subtotal: number;
-  freight: number;
-  gst: number;
-  totalInc: number;
-  paidToDate: number;
-  balanceDue: number;
-  status: 'paid' | 'unpaid' | 'partial';
-  permitType: string;
-  activityLevel: string;
-  prescribedActivity: string;
-  receiptUrl?: string | null;
-}
-
-// Mock data for 2 invoices with 3 permit applications
-const MOCK_INVOICES: Invoice[] = [
-  {
-    id: '1',
-    invoice_number: '23-F1-3-188',
-    date: '20/03/2025',
-    yourRef: 'EP-L3(07B)',
-    contact: 'Kavau Diagoro, Manager Revenue',
-    telephone: '(675) 3014665/3014614',
-    email: 'revenuemanager@cepa.gov.pg',
-    client: 'Morobe Consolidates Goldfields Limited',
-    clientAddress: 'P.O Box 4018 Lae, Morobe\nPapua New Guinea',
-    items: [
-      {
-        quantity: 1,
-        itemCode: 'F1',
-        description: 'Annual Fee - Level 3 Mining Operation',
-        unitPrice: 543170.00,
-        disc: 0,
-        totalPrice: 543170.00
-      }
-    ],
-    subtotal: 543170.00,
-    freight: 0.00,
-    gst: 0.00,
-    totalInc: 543170.00,
-    paidToDate: 0.00,
-    balanceDue: 543170.00,
-    status: 'unpaid',
-    permitType: 'Environment Permit',
-    activityLevel: 'Level 3',
-    prescribedActivity: 'Mining and Quarrying Operations'
-  },
-  {
-    id: '2',
-    invoice_number: '23-F2-2A-095',
-    date: '15/03/2025',
-    yourRef: 'EP-L2A(04C)',
-    contact: 'Kavau Diagoro, Manager Revenue',
-    telephone: '(675) 3014665/3014614',
-    email: 'revenuemanager@cepa.gov.pg',
-    client: 'Pacific Industrial Services Ltd',
-    clientAddress: 'Section 117, Allotment 23\nPort Moresby, NCD\nPapua New Guinea',
-    items: [
-      {
-        quantity: 1,
-        itemCode: 'F2',
-        description: 'Annual Fee - Level 2A Waste Management',
-        unitPrice: 125500.00,
-        disc: 0,
-        totalPrice: 125500.00
-      }
-    ],
-    subtotal: 125500.00,
-    freight: 0.00,
-    gst: 0.00,
-    totalInc: 125500.00,
-    paidToDate: 62750.00,
-    balanceDue: 62750.00,
-    status: 'partial',
-    permitType: 'Environment Permit',
-    activityLevel: 'Level 2A',
-    prescribedActivity: 'Waste Treatment and Disposal Facility'
-  },
-  {
-    id: '3',
-    invoice_number: '23-F3-1-042',
-    date: '10/03/2025',
-    yourRef: 'EP-L1(02A)',
-    contact: 'Kavau Diagoro, Manager Revenue',
-    telephone: '(675) 3014665/3014614',
-    email: 'revenuemanager@cepa.gov.pg',
-    client: 'Coastal Aquaculture PNG',
-    clientAddress: 'P.O Box 892\nMadang, Madang Province\nPapua New Guinea',
-    items: [
-      {
-        quantity: 1,
-        itemCode: 'F3',
-        description: 'Annual Fee - Level 1 Aquaculture Operation',
-        unitPrice: 45200.00,
-        disc: 0,
-        totalPrice: 45200.00
-      }
-    ],
-    subtotal: 45200.00,
-    freight: 0.00,
-    gst: 0.00,
-    totalInc: 45200.00,
-    paidToDate: 45200.00,
-    balanceDue: 0.00,
-    status: 'paid',
-    permitType: 'Environment Permit',
-    activityLevel: 'Level 1',
-    prescribedActivity: 'Aquaculture and Fish Farming'
-  }
-];
+import { useInvoices, Invoice } from '@/hooks/useInvoices';
 
 export function InvoiceManagement() {
-  const [invoices, setInvoices] = useState<Invoice[]>(MOCK_INVOICES);
+  const { invoices, loading, refreshInvoice, updateLocalInvoice } = useInvoices();
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
 
-  // Listen for payment success events from PublicDashboard
+  // Listen for payment success events from localStorage
   useEffect(() => {
     const handlePaymentSuccess = (event: CustomEvent<{ invoiceNumber: string; receiptUrl: string | null }>) => {
       const { invoiceNumber, receiptUrl } = event.detail;
       console.log('Payment success event received:', invoiceNumber, receiptUrl);
       
-      // Update local invoice state to show as paid with receipt URL
-      setInvoices(prev => prev.map(inv => 
-        inv.invoice_number === invoiceNumber
-          ? { ...inv, status: 'paid' as const, paidToDate: inv.totalInc, balanceDue: 0, receiptUrl: receiptUrl }
-          : inv
-      ));
+      // Update local invoice state immediately
+      updateLocalInvoice(invoiceNumber, {
+        status: 'paid',
+        paidToDate: invoices.find(i => i.invoice_number === invoiceNumber)?.totalInc || 0,
+        balanceDue: 0,
+        receiptUrl: receiptUrl
+      });
+
+      // Also refresh from database to ensure we have the latest
+      refreshInvoice(invoiceNumber);
     };
 
+    // Check localStorage for payment completion from payment callback page
+    const checkPaymentCompletion = () => {
+      const paymentData = localStorage.getItem('payment_completed');
+      if (paymentData) {
+        try {
+          const { invoiceNumber, receiptUrl, timestamp } = JSON.parse(paymentData);
+          // Only process if the payment was completed recently (within 5 minutes)
+          if (Date.now() - timestamp < 5 * 60 * 1000) {
+            console.log('Payment completion detected from localStorage:', invoiceNumber);
+            
+            // Update local state immediately
+            updateLocalInvoice(invoiceNumber, {
+              status: 'paid',
+              paidToDate: invoices.find(i => i.invoice_number === invoiceNumber)?.totalInc || 0,
+              balanceDue: 0,
+              receiptUrl: receiptUrl
+            });
+
+            // Refresh from database
+            refreshInvoice(invoiceNumber);
+
+            toast({
+              title: "Payment Successful",
+              description: `Invoice ${invoiceNumber} has been marked as paid.`,
+            });
+          }
+          // Clear the localStorage after processing
+          localStorage.removeItem('payment_completed');
+        } catch (e) {
+          console.error('Error parsing payment completion data:', e);
+        }
+      }
+    };
+
+    // Check on mount
+    checkPaymentCompletion();
+
+    // Listen for storage events (when payment callback updates localStorage)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'payment_completed' && e.newValue) {
+        checkPaymentCompletion();
+      }
+    };
+
+    // Also poll periodically while this component is visible (for same-tab updates)
+    const pollInterval = setInterval(checkPaymentCompletion, 2000);
+
     window.addEventListener('payment-success', handlePaymentSuccess as EventListener);
+    window.addEventListener('storage', handleStorageChange);
     
     return () => {
       window.removeEventListener('payment-success', handlePaymentSuccess as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(pollInterval);
     };
-  }, []);
+  }, [toast, invoices, updateLocalInvoice, refreshInvoice]);
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -200,6 +127,25 @@ export function InvoiceManagement() {
     
     return matchesSearch && matchesStatus;
   });
+
+  // Keep selected invoice in sync with latest data
+  useEffect(() => {
+    if (selectedInvoice) {
+      const updated = invoices.find(i => i.invoice_number === selectedInvoice.invoice_number);
+      if (updated && (updated.status !== selectedInvoice.status || updated.receiptUrl !== selectedInvoice.receiptUrl)) {
+        setSelectedInvoice(updated);
+      }
+    }
+  }, [invoices, selectedInvoice]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Loading invoices...</span>
+      </div>
+    );
+  }
 
   if (selectedInvoice) {
     return (

@@ -388,6 +388,8 @@ export function ComplianceIntentRegistrationsList() {
                                   district={intent.district}
                                   province={intent.province}
                                   llg={intent.llg}
+                                  customTitle="Proposed Project Site Map"
+                                  customDescription=""
                                 />
                               </TabsContent>
 

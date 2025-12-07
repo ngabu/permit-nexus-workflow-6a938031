@@ -11,3 +11,12 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.docusign-send]
+verify_jwt = false
+
+[functions.docusign-webhook]
+verify_jwt = false
+
+[functions.ai-analytics]
+verify_jwt = false

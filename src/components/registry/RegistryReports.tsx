@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Download, 
   Printer, 
@@ -18,15 +21,41 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  Users
+  Users,
+  FileStack,
+  Layers,
+  Building2
 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useToast } from "@/hooks/use-toast";
+import { usePermitAnalytics } from "./hooks/usePermitAnalytics";
+import { useAssessmentAnalytics } from "./hooks/useAssessmentAnalytics";
 
 const RegistryReports = () => {
   const { toast } = useToast();
   const [selectedPeriod, setSelectedPeriod] = useState("monthly");
   const [selectedReport, setSelectedReport] = useState("overview");
+  const { analytics: permitAnalytics, loading: analyticsLoading, refetch: refetchAnalytics } = usePermitAnalytics();
+  const { analytics: assessmentAnalytics, loading: assessmentLoading } = useAssessmentAnalytics();
+
+  // Chart colors for permit types and activity levels
+  const LEVEL_COLORS: Record<string, string> = {
+    "Level 1": "#10b981",
+    "Level 2": "#3b82f6", 
+    "Level 3": "#f59e0b",
+    "Unclassified": "#6b7280"
+  };
+
+  const SECTOR_COLORS = [
+    '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', 
+    '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#6366f1'
+  ];
+
+  // Chart colors for permit types
+  const PERMIT_COLORS = [
+    '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', 
+    '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#6366f1'
+  ];
 
   // Mock data for charts
   const assessmentTrendsData = [
@@ -134,12 +163,11 @@ const RegistryReports = () => {
 
       {/* Report Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="assessments">Assessments</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="permits">Permits</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
+          <TabsTrigger value="staff-performance">Staff Performance</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -299,61 +327,500 @@ const RegistryReports = () => {
 
         {/* Assessments Tab */}
         <TabsContent value="assessments" className="space-y-4">
+          {/* Summary Cards */}
+          {assessmentLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i}>
+                  <CardHeader className="pb-3">
+                    <Skeleton className="h-4 w-24" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-8 w-16" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : assessmentAnalytics && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <ClipboardList className="w-4 h-4 mr-2 text-blue-500" />
+                    Total Assessments
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{assessmentAnalytics.totals.total}</div>
+                  <p className="text-xs text-muted-foreground">All applications</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                    Passed
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-green-600">{assessmentAnalytics.totals.passed}</div>
+                  <p className="text-xs text-muted-foreground">Approved assessments</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <Clock className="w-4 h-4 mr-2 text-amber-500" />
+                    Pending
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-amber-600">{assessmentAnalytics.totals.pending}</div>
+                  <p className="text-xs text-muted-foreground">Awaiting review</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <TrendingUp className="w-4 h-4 mr-2 text-primary" />
+                    Approval Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{assessmentAnalytics.totals.overallApprovalRate.toFixed(1)}%</div>
+                  <p className="text-xs text-muted-foreground">Overall success rate</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Assessments by Activity Level */}
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Detailed Assessment Report</CardTitle>
-                  <CardDescription>Comprehensive assessment breakdown by status and type</CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Layers className="w-5 h-5" />
+                    Assessments by Activity Level
+                  </CardTitle>
+                  <CardDescription>Breakdown of assessments across different activity levels</CardDescription>
                 </div>
-                <ReportActions reportName="Detailed Assessments" />
+                <ReportActions reportName="Activity Level Assessments" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Completed This Month</span>
-                      <Badge variant="secondary">456</Badge>
-                    </div>
-                    <div className="text-2xl font-bold">92%</div>
-                    <p className="text-xs text-muted-foreground">Completion rate</p>
-                  </div>
-                  
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Avg Review Time</span>
-                      <Badge variant="secondary">18.5d</Badge>
-                    </div>
-                    <div className="text-2xl font-bold">-8%</div>
-                    <p className="text-xs text-muted-foreground">Improvement</p>
-                  </div>
+              {assessmentLoading ? (
+                <Skeleton className="h-64 w-full" />
+              ) : assessmentAnalytics && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Activity Level Chart */}
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={assessmentAnalytics.byActivityLevel}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="activityLevel" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="passed" fill="#10b981" name="Passed" />
+                      <Bar dataKey="pending" fill="#f59e0b" name="Pending" />
+                      <Bar dataKey="failed" fill="#ef4444" name="Failed" />
+                    </BarChart>
+                  </ResponsiveContainer>
 
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Quality Score</span>
-                      <Badge variant="secondary">4.7/5</Badge>
-                    </div>
-                    <div className="text-2xl font-bold">94%</div>
-                    <p className="text-xs text-muted-foreground">Satisfaction</p>
+                  {/* Activity Level Table */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Activity Level</TableHead>
+                          <TableHead className="text-center">Total</TableHead>
+                          <TableHead className="text-center">Passed</TableHead>
+                          <TableHead className="text-center">Pending</TableHead>
+                          <TableHead className="text-center">Failed</TableHead>
+                          <TableHead className="text-right">Approval Rate</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {assessmentAnalytics.byActivityLevel.map((level) => (
+                          <TableRow key={level.activityLevel}>
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-3 h-3 rounded-full" 
+                                  style={{ backgroundColor: LEVEL_COLORS[level.activityLevel] || '#6b7280' }}
+                                />
+                                {level.activityLevel}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">{level.total}</TableCell>
+                            <TableCell className="text-center text-green-600">{level.passed}</TableCell>
+                            <TableCell className="text-center text-amber-600">{level.pending}</TableCell>
+                            <TableCell className="text-center text-red-600">{level.failed}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Progress value={level.approvalRate} className="w-16 h-2" />
+                                <span className="text-sm font-medium w-12">{level.approvalRate.toFixed(0)}%</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Assessments by Industrial Sector */}
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="w-5 h-5" />
+                    Assessments by Industrial Sector
+                  </CardTitle>
+                  <CardDescription>Classification of assessments by industry sector</CardDescription>
+                </div>
+                <ReportActions reportName="Sector Assessments" />
               </div>
+            </CardHeader>
+            <CardContent>
+              {assessmentLoading ? (
+                <Skeleton className="h-64 w-full" />
+              ) : assessmentAnalytics && assessmentAnalytics.bySector.length > 0 ? (
+                <div className="space-y-6">
+                  {/* Sector Bar Chart - shows all sectors */}
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart 
+                      data={assessmentAnalytics.bySector} 
+                      layout="vertical"
+                      margin={{ left: 150, right: 20, top: 10, bottom: 10 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis 
+                        type="category" 
+                        dataKey="sectorName" 
+                        width={140}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="passed" fill="#10b981" name="Passed" stackId="a" />
+                      <Bar dataKey="pending" fill="#f59e0b" name="Pending" stackId="a" />
+                      <Bar dataKey="failed" fill="#ef4444" name="Failed" stackId="a" />
+                    </BarChart>
+                  </ResponsiveContainer>
+
+                  {/* Sector Table */}
+                  <div className="border rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Sector</TableHead>
+                          <TableHead className="text-center">Total</TableHead>
+                          <TableHead className="text-center">Passed</TableHead>
+                          <TableHead className="text-center">Pending</TableHead>
+                          <TableHead className="text-center">Failed</TableHead>
+                          <TableHead className="text-right">Rate</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {assessmentAnalytics.bySector.map((sector, idx) => (
+                          <TableRow key={sector.sectorId || 'unclassified'}>
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-3 h-3 rounded-full flex-shrink-0" 
+                                  style={{ backgroundColor: SECTOR_COLORS[idx % SECTOR_COLORS.length] }}
+                                />
+                                <span className="truncate max-w-[200px]" title={sector.sectorName}>
+                                  {sector.sectorName}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center font-medium">{sector.total}</TableCell>
+                            <TableCell className="text-center text-green-600">{sector.passed}</TableCell>
+                            <TableCell className="text-center text-amber-600">{sector.pending}</TableCell>
+                            <TableCell className="text-center text-red-600">{sector.failed}</TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant={sector.approvalRate >= 80 ? "default" : sector.approvalRate >= 50 ? "secondary" : "destructive"}>
+                                {sector.approvalRate.toFixed(0)}%
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <Building2 className="w-12 h-12 mb-4 opacity-50" />
+                  <p>No sector data available yet</p>
+                  <p className="text-sm">Assessments will appear here once applications have industrial sectors assigned</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Performance Tab */}
-        <TabsContent value="performance" className="space-y-4">
+
+        {/* Permits Tab */}
+        <TabsContent value="permits" className="space-y-4">
+          {/* Summary Cards */}
+          {analyticsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i}>
+                  <CardHeader className="pb-3">
+                    <Skeleton className="h-4 w-24" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-8 w-16" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : permitAnalytics && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <FileStack className="w-4 h-4 mr-2 text-blue-500" />
+                    Total Applications
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{permitAnalytics.totalApplications}</div>
+                  <p className="text-xs text-muted-foreground">All permit types</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                    Approved
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-green-600">{permitAnalytics.totalApproved}</div>
+                  <p className="text-xs text-muted-foreground">Successfully processed</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-2 text-red-500" />
+                    Rejected
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-red-600">{permitAnalytics.totalRejected}</div>
+                  <p className="text-xs text-muted-foreground">Did not meet criteria</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <TrendingUp className="w-4 h-4 mr-2 text-emerald-500" />
+                    Approval Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-emerald-600">
+                    {permitAnalytics.overallApprovalRate.toFixed(1)}%
+                  </div>
+                  <p className="text-xs text-muted-foreground">Of decided applications</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Chart and Table */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Volume by Permit Type Chart */}
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Volume by Permit Type</CardTitle>
+                    <CardDescription>Distribution of applications</CardDescription>
+                  </div>
+                  <ReportActions reportName="Permit Volume" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                {analyticsLoading ? (
+                  <Skeleton className="h-[300px] w-full" />
+                ) : permitAnalytics && permitAnalytics.byType.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={permitAnalytics.byType.map((t, i) => ({
+                          name: t.permit_type,
+                          value: t.total,
+                          color: PERMIT_COLORS[i % PERMIT_COLORS.length]
+                        }))}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {permitAnalytics.byType.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={PERMIT_COLORS[index % PERMIT_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                    No permit data available
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Approval Rate by Type Chart */}
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Approval Rate by Type</CardTitle>
+                    <CardDescription>Success rate per permit category</CardDescription>
+                  </div>
+                  <ReportActions reportName="Approval Rates" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                {analyticsLoading ? (
+                  <Skeleton className="h-[300px] w-full" />
+                ) : permitAnalytics && permitAnalytics.byType.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart 
+                      data={permitAnalytics.byType.map(t => ({
+                        name: t.permit_type.length > 15 ? t.permit_type.substring(0, 15) + '...' : t.permit_type,
+                        rate: t.approval_rate,
+                        approved: t.approved,
+                        rejected: t.rejected
+                      }))}
+                      layout="vertical"
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                      <YAxis type="category" dataKey="name" width={120} />
+                      <Tooltip 
+                        formatter={(value: number) => [`${value.toFixed(1)}%`, 'Approval Rate']}
+                        labelFormatter={(label) => `Permit Type: ${label}`}
+                      />
+                      <Bar dataKey="rate" fill="#10b981" name="Approval Rate" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                    No permit data available
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Detailed Table */}
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Officer Performance Report</CardTitle>
+                  <CardTitle>Permit Analytics Detail</CardTitle>
+                  <CardDescription>Comprehensive breakdown by permit type</CardDescription>
+                </div>
+                <ReportActions reportName="Permit Analytics Detail" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {analyticsLoading ? (
+                <div className="space-y-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : permitAnalytics && permitAnalytics.byType.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Permit Type</TableHead>
+                      <TableHead className="text-center">Total</TableHead>
+                      <TableHead className="text-center">Approved</TableHead>
+                      <TableHead className="text-center">Rejected</TableHead>
+                      <TableHead className="text-center">Pending</TableHead>
+                      <TableHead className="text-center">In Review</TableHead>
+                      <TableHead className="text-right">Approval Rate</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {permitAnalytics.byType.map((type, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-medium">{type.permit_type}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline">{type.total}</Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{type.approved}</Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge className="bg-red-100 text-red-800 hover:bg-red-100">{type.rejected}</Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">{type.pending}</Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">{type.in_review}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Progress 
+                              value={type.approval_rate} 
+                              className="w-16 h-2"
+                            />
+                            <span className="text-sm font-medium w-12 text-right">
+                              {type.approval_rate.toFixed(0)}%
+                            </span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="flex items-center justify-center h-32 text-muted-foreground">
+                  No permit applications found in the database
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Staff Performance Tab */}
+        <TabsContent value="staff-performance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Staff Performance Report</CardTitle>
                   <CardDescription>Individual performance metrics and workload</CardDescription>
                 </div>
-                <ReportActions reportName="Officer Performance" />
+                <ReportActions reportName="Staff Performance" />
               </div>
             </CardHeader>
             <CardContent>
@@ -385,101 +852,6 @@ const RegistryReports = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Permits Tab */}
-        <TabsContent value="permits" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Permit Analytics Report</CardTitle>
-                  <CardDescription>Permit types, volumes, and approval rates</CardDescription>
-                </div>
-                <ReportActions reportName="Permit Analytics" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <LineChart data={assessmentTrendsData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="passed" stroke="#10b981" strokeWidth={2} name="Approved" />
-                  <Line type="monotone" dataKey="pending" stroke="#3b82f6" strokeWidth={2} name="In Progress" />
-                  <Line type="monotone" dataKey="failed" stroke="#ef4444" strokeWidth={2} name="Rejected" />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Compliance Tab */}
-        <TabsContent value="compliance" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Compliance & Statutory Report</CardTitle>
-                  <CardDescription>Regulatory compliance and deadline tracking</CardDescription>
-                </div>
-                <ReportActions reportName="Compliance Report" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-6 border rounded-lg bg-green-50 dark:bg-green-950/20">
-                  <div className="flex items-center gap-3 mb-4">
-                    <CheckCircle className="w-8 h-8 text-green-600" />
-                    <div>
-                      <h3 className="font-semibold text-lg">Statutory Compliance</h3>
-                      <p className="text-sm text-muted-foreground">Meeting regulatory requirements</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">On-time Processing</span>
-                      <Badge variant="secondary">96.8%</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Documentation Complete</span>
-                      <Badge variant="secondary">98.2%</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Regulatory Audits Passed</span>
-                      <Badge variant="secondary">100%</Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6 border rounded-lg bg-amber-50 dark:bg-amber-950/20">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Clock className="w-8 h-8 text-amber-600" />
-                    <div>
-                      <h3 className="font-semibold text-lg">Deadline Tracking</h3>
-                      <p className="text-sm text-muted-foreground">Upcoming critical deadlines</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Due This Week</span>
-                      <Badge variant="destructive">23</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Due This Month</span>
-                      <Badge variant="secondary">67</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Overdue</span>
-                      <Badge variant="destructive">5</Badge>
-                    </div>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>

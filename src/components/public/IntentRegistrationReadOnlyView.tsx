@@ -597,6 +597,42 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
             </Collapsible>
 
           {/* Official Feedback Section - Only show if flag is true */}
+          {/* Signed Document Section - Always show if signed_document_path exists */}
+          {intent.signed_document_path && (
+            <div className="space-y-4 pt-6 border-t border-glass print:border-t-0 print:pt-4">
+              <Card className="bg-green-50 dark:bg-green-950/30 print:shadow-none print:border border-green-200 dark:border-green-800">
+                <CardHeader className="bg-green-100/50 dark:bg-green-900/30 print:bg-transparent">
+                  <CardTitle className="text-lg print:border-b print:pb-2 flex items-center gap-2 text-green-700 dark:text-green-400">
+                    <FileText className="w-5 h-5" />
+                    Signed Approval Letter
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="flex items-center justify-between p-3 bg-green-100/50 dark:bg-green-900/20 rounded-lg">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <FileText className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">Signed Approval Letter.pdf</p>
+                        <p className="text-xs text-muted-foreground">
+                          Official signed document from DocuSign
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => handleDownloadDocument(intent.signed_document_path!, 'Signed-Approval-Letter.pdf')}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {showFeedbackWithBlueHeader && intent.status !== 'pending' && intent.review_notes && (
             <div className="space-y-4 pt-6 border-t border-glass print:border-t-0 print:pt-4 print:break-before-page">
               <Card className="bg-muted/30 print:shadow-none print:border">
@@ -621,7 +657,7 @@ export function IntentRegistrationReadOnlyView({ intent, showFeedbackWithBlueHea
             </div>
           )}
 
-          {showFeedbackWithBlueHeader && intent.status === 'pending' && (
+          {showFeedbackWithBlueHeader && intent.status === 'pending' && !intent.signed_document_path && (
             <div className="space-y-4 pt-6 border-t border-glass print:border-t-0 print:pt-4 print:hidden">
               <Card className="bg-muted/30 print:shadow-none">
                 <CardHeader className="bg-primary/10 print:bg-transparent">

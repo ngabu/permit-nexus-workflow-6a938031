@@ -1796,11 +1796,20 @@ export function PermitApplicationsMap({
       return;
     }
 
-    // Non read-only mode - use draw control
-    if (!draw.current) return;
+    // Non read-only mode - handle boundary display with or without draw control
+    // First, remove existing edit-mode boundary layers if they exist
+    if (map.current.getLayer('edit-boundary-fill')) {
+      map.current.removeLayer('edit-boundary-fill');
+    }
+    if (map.current.getLayer('edit-boundary-outline')) {
+      map.current.removeLayer('edit-boundary-outline');
+    }
+    if (map.current.getSource('edit-boundary')) {
+      map.current.removeSource('edit-boundary');
+    }
 
-    // Clear previous boundary when existingBoundary changes or is null
-    if (uploadedAOIFeatureId) {
+    // Clear previous boundary from draw control when existingBoundary changes or is null
+    if (draw.current && uploadedAOIFeatureId) {
       try {
         draw.current.delete(uploadedAOIFeatureId);
       } catch (error) {
@@ -1823,27 +1832,66 @@ export function PermitApplicationsMap({
       setUploadedAOI(existingBoundary);
       setUploadedAOIFeatureId(featureId);
       
-      const feature = {
-        type: 'Feature',
-        id: featureId,
-        properties: {},
-        geometry: existingBoundary
-      };
-      
-      // Add the boundary to the map
-      draw.current.add(feature);
+      // Add a visible GeoJSON layer for the boundary (similar to read-only mode)
+      // This ensures the boundary is always visible regardless of draw control state
+      map.current.addSource('edit-boundary', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: existingBoundary
+        }
+      });
+
+      // Add fill layer with visible red color
+      map.current.addLayer({
+        id: 'edit-boundary-fill',
+        type: 'fill',
+        source: 'edit-boundary',
+        paint: {
+          'fill-color': '#ef4444',
+          'fill-opacity': 0.2
+        }
+      });
+
+      // Add outline layer with solid red line
+      map.current.addLayer({
+        id: 'edit-boundary-outline',
+        type: 'line',
+        source: 'edit-boundary',
+        paint: {
+          'line-color': '#dc2626',
+          'line-width': 3
+        }
+      });
+
+      // Also add to draw control if available for editing capability
+      if (draw.current) {
+        const feature = {
+          type: 'Feature',
+          id: featureId,
+          properties: {},
+          geometry: existingBoundary
+        };
+        draw.current.add(feature);
+      }
       
       // Zoom to boundary
-      if (existingBoundary.type === 'Polygon') {
+      if (existingBoundary.type === 'Polygon' && existingBoundary.coordinates?.[0]) {
         const bounds = new mapboxgl.LngLatBounds();
         existingBoundary.coordinates[0].forEach((coord: [number, number]) => {
           bounds.extend(coord);
         });
         map.current.fitBounds(bounds, { padding: 80, duration: 1000, maxZoom: 17 });
         
+        // Add a center marker
+        const center = bounds.getCenter();
+        new mapboxgl.Marker({ color: '#dc2626', scale: 1.0 })
+          .setLngLat([center.lng, center.lat])
+          .addTo(map.current);
+        
         // Place marker at center if marker exists
         if (marker.current && onCoordinatesChange) {
-          const center = bounds.getCenter();
           marker.current.setLngLat([center.lng, center.lat]);
           onCoordinatesChange({
             lat: parseFloat(center.lat.toFixed(6)),

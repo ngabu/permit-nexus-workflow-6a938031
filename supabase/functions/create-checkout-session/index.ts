@@ -56,8 +56,12 @@ serve(async (req) => {
     const params = new URLSearchParams();
     params.append('payment_method_types[0]', 'card');
     params.append('mode', 'payment');
-    params.append('success_url', `${successUrl}?session_id={CHECKOUT_SESSION_ID}&invoice_id=${invoiceId}&invoice_number=${invoiceNumber}`);
-    params.append('cancel_url', `${cancelUrl}?invoice_id=${invoiceId}`);
+    // Build success/cancel URLs properly - check if URL already has query params
+    const successUrlHasParams = successUrl.includes('?');
+    const cancelUrlHasParams = cancelUrl.includes('?');
+    
+    params.append('success_url', `${successUrl}${successUrlHasParams ? '&' : '?'}session_id={CHECKOUT_SESSION_ID}&invoice_id=${invoiceId}&invoice_number=${invoiceNumber}`);
+    params.append('cancel_url', `${cancelUrl}${cancelUrlHasParams ? '&' : '?'}invoice_id=${invoiceId}`);
     
     // Metadata
     params.append('metadata[invoice_id]', invoiceId);

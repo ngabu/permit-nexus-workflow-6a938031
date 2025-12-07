@@ -9,6 +9,7 @@ import { ComplianceApplicationsList } from "@/components/compliance/ComplianceAp
 import { ProfileSettings } from "@/components/public/ProfileSettings";
 import { AppSettings } from "@/components/public/AppSettings";
 import ComplianceReports from "@/components/compliance/ComplianceReports";
+import ComplianceAnalyticsReports from "@/components/compliance/ComplianceAnalyticsReports";
 import { TeamManagement } from "@/components/compliance/TeamManagement";
 import { IntentRegistrationComplianceReview } from "@/components/compliance/IntentRegistrationComplianceReview";
 import { PermitRenewalComplianceReview } from "@/components/compliance/PermitRenewalComplianceReview";
@@ -65,6 +66,7 @@ const ComplianceDashboardView = () => {
             {activeTab === 'permit-applications' && <ComplianceApplicationsList />}
             {activeTab === 'team' && isManager && <TeamManagement />}
             {activeTab === 'reports' && <ComplianceReports />}
+            {activeTab === 'analytics-reporting' && <ComplianceAnalyticsReports />}
             {activeTab === 'profile' && <ProfileSettings />}
             {activeTab === 'settings' && <AppSettings />}
             {/* Assessment submenu views with Registry + Compliance review sections */}

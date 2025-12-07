@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { UserCheck, Upload, CheckCircle, Loader2, AlertCircle, Lock } from 'lucide-react';
+import { UserCheck, Upload, CheckCircle, Loader2, AlertCircle, Lock, FileSignature } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface IntentMDReviewTabProps {
@@ -26,6 +26,7 @@ export function IntentMDReviewTab({ intentId, currentStatus, onStatusUpdate }: I
   const [status, setStatus] = useState(currentStatus);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [sendingDocuSign, setSendingDocuSign] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; path: string }[]>([]);
 
   // Check if user can edit this tab (only managing director)
@@ -213,7 +214,7 @@ export function IntentMDReviewTab({ intentId, currentStatus, onStatusUpdate }: I
           </div>
           {uploadedFiles.length > 0 && (
             <div className="mt-2 space-y-1">
-              {uploadedFiles.map((file, idx) => (
+          {uploadedFiles.map((file, idx) => (
                 <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Upload className="w-4 h-4" />
                   {file.name}
@@ -221,6 +222,71 @@ export function IntentMDReviewTab({ intentId, currentStatus, onStatusUpdate }: I
               ))}
             </div>
           )}
+        </div>
+
+        {/* DocuSign Integration */}
+        <div className="space-y-2">
+          <Label>DocuSign Electronic Signature</Label>
+          <div className="p-4 border rounded-lg bg-muted/30">
+            <p className="text-sm text-muted-foreground mb-3">
+              Send the signed documents for electronic signature via DocuSign.
+            </p>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (!canEdit) return;
+                
+                setSendingDocuSign(true);
+                try {
+                  // Get the MD's email for signing
+                  const signerEmail = profile?.email || 'md@cepa.gov.pg';
+                  const signerName = profile?.first_name && profile?.last_name 
+                    ? `${profile.first_name} ${profile.last_name}` 
+                    : 'Managing Director';
+
+                  const { data, error } = await supabase.functions.invoke('docusign-send', {
+                    body: {
+                      intentId,
+                      signerEmail,
+                      signerName,
+                      documentName: 'Intent Registration Approval Letter',
+                      documentPath: uploadedFiles.length > 0 ? uploadedFiles[0].path : null
+                    }
+                  });
+
+                  if (error) throw error;
+
+                  toast({
+                    title: 'DocuSign Request Sent',
+                    description: data.message || 'Document sent for electronic signature',
+                  });
+                } catch (error) {
+                  console.error('DocuSign error:', error);
+                  toast({
+                    title: 'Error',
+                    description: 'Failed to send document to DocuSign',
+                    variant: 'destructive'
+                  });
+                } finally {
+                  setSendingDocuSign(false);
+                }
+              }}
+              disabled={!canEdit || sendingDocuSign}
+              className={`w-full ${!canEdit ? 'cursor-not-allowed opacity-50' : ''}`}
+            >
+              {sendingDocuSign ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Sending to DocuSign...
+                </>
+              ) : (
+                <>
+                  <FileSignature className="w-4 h-4 mr-2" />
+                  Send to DocuSign for Signature
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {canEdit && (

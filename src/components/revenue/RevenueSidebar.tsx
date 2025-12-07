@@ -50,7 +50,7 @@ const revenueNavigationItems: RevenueNavigationItem[] = [
   },
   { title: "Collection", value: "collection", icon: CreditCard },
   { title: "Outstanding", value: "outstanding", icon: AlertTriangle },
-  { title: "Reports", value: "reports", icon: BarChart3 },
+  { title: "Analytics and Reporting", value: "analytics-reporting", icon: BarChart3 },
 ]
 
 const managementItems: RevenueNavigationItem[] = [
