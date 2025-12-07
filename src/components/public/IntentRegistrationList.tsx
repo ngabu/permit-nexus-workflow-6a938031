@@ -265,6 +265,7 @@ export function IntentRegistrationList() {
 
                               <TabsContent value="mapping" className="mt-4 print:hidden">
                                 <PermitApplicationsMap
+                                  key={`map-${selectedIntentData.id}`}
                                   showAllApplications={false}
                                   existingBoundary={selectedIntentData.project_boundary}
                                   onBoundarySave={() => {}}

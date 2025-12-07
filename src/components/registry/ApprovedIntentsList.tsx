@@ -349,6 +349,7 @@ export function ApprovedIntentsList() {
 
                               <TabsContent value="mapping" className="mt-4">
                                 <PermitApplicationsMap 
+                                  key={`map-${intent.id}`}
                                   showAllApplications={false} 
                                   existingBoundary={intent.project_boundary} 
                                   onBoundarySave={() => {}} 

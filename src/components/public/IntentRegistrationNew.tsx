@@ -467,6 +467,7 @@ export function IntentRegistrationNew() {
 
         <TabsContent value="mapping">
           <PermitApplicationsMap 
+            key={`map-${currentDraftId || 'new'}`}
             showAllApplications={false}
             existingBoundary={projectBoundary}
             onBoundarySave={handleBoundaryUpdate}
