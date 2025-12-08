@@ -1484,9 +1484,10 @@ export type Database = {
           id: string
           inspection_type: string
           inspector_id: string | null
+          intent_registration_id: string | null
           notes: string | null
           number_of_days: number | null
-          permit_application_id: string
+          permit_application_id: string | null
           permit_category: string | null
           province: string | null
           scheduled_date: string
@@ -1505,9 +1506,10 @@ export type Database = {
           id?: string
           inspection_type: string
           inspector_id?: string | null
+          intent_registration_id?: string | null
           notes?: string | null
           number_of_days?: number | null
-          permit_application_id: string
+          permit_application_id?: string | null
           permit_category?: string | null
           province?: string | null
           scheduled_date: string
@@ -1526,9 +1528,10 @@ export type Database = {
           id?: string
           inspection_type?: string
           inspector_id?: string | null
+          intent_registration_id?: string | null
           notes?: string | null
           number_of_days?: number | null
-          permit_application_id?: string
+          permit_application_id?: string | null
           permit_category?: string | null
           province?: string | null
           scheduled_date?: string
@@ -1538,6 +1541,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "inspections_intent_registration_id_fkey"
+            columns: ["intent_registration_id"]
+            isOneToOne: false
+            referencedRelation: "intent_registrations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "inspections_permit_application_id_fkey"
             columns: ["permit_application_id"]

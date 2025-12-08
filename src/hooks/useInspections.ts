@@ -6,7 +6,8 @@ import { generateInspectionInvoiceNumber } from '@/components/compliance/Inspect
 
 export interface Inspection {
   id: string;
-  permit_application_id: string;
+  permit_application_id: string | null;
+  intent_registration_id?: string | null;
   inspection_type: string;
   scheduled_date: string;
   inspector_id: string | null;
@@ -47,15 +48,22 @@ export function useInspections() {
     try {
       setLoading(true);
 
-      // Determine query based on user type
+      // Fetch inspections with optional permit and intent relationships
       let query = supabase
         .from('inspections')
         .select(`
           *,
-          permit_applications!inner(
+          permit_applications(
             id,
             permit_number,
             title,
+            entity_id,
+            user_id,
+            entities(id, name)
+          ),
+          intent_registrations(
+            id,
+            activity_description,
             entity_id,
             user_id,
             entities(id, name)
@@ -63,42 +71,50 @@ export function useInspections() {
         `)
         .order('scheduled_date', { ascending: false });
 
-      // If public user, only show their inspections
+      // If public user, filter by their permits or intents
       if (profile?.user_type === 'public') {
-        query = query.eq('permit_applications.user_id', profile.user_id);
+        // We need to filter based on either permit or intent ownership
+        query = query.or(`permit_applications.user_id.eq.${profile.user_id},intent_registrations.user_id.eq.${profile.user_id}`);
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
 
-      const formatted = data?.map((inspection: any) => ({
-        id: inspection.id,
-        permit_application_id: inspection.permit_application_id,
-        inspection_type: inspection.inspection_type,
-        scheduled_date: inspection.scheduled_date,
-        inspector_id: inspection.inspector_id,
-        status: inspection.status,
-        notes: inspection.notes,
-        findings: inspection.findings,
-        completed_date: inspection.completed_date,
-        created_at: inspection.created_at,
-        updated_at: inspection.updated_at,
-        accommodation_cost: inspection.accommodation_cost || 0,
-        transportation_cost: inspection.transportation_cost || 0,
-        daily_allowance: inspection.daily_allowance || 0,
-        total_travel_cost: inspection.total_travel_cost || 0,
-        number_of_days: inspection.number_of_days || 1,
-        province: inspection.province,
-        permit_category: inspection.permit_category,
-        created_by: inspection.created_by,
-        permit_number: inspection.permit_applications?.permit_number,
-        permit_title: inspection.permit_applications?.title,
-        entity_name: inspection.permit_applications?.entities?.name,
-        entity_id: inspection.permit_applications?.entity_id,
-        user_id: inspection.permit_applications?.user_id,
-        inspector_name: null
-      })) || [];
+      const formatted = data?.map((inspection: any) => {
+        // Get entity info from either permit or intent
+        const permitEntity = inspection.permit_applications?.entities;
+        const intentEntity = inspection.intent_registrations?.entities;
+        
+        return {
+          id: inspection.id,
+          permit_application_id: inspection.permit_application_id,
+          intent_registration_id: inspection.intent_registration_id,
+          inspection_type: inspection.inspection_type,
+          scheduled_date: inspection.scheduled_date,
+          inspector_id: inspection.inspector_id,
+          status: inspection.status,
+          notes: inspection.notes,
+          findings: inspection.findings,
+          completed_date: inspection.completed_date,
+          created_at: inspection.created_at,
+          updated_at: inspection.updated_at,
+          accommodation_cost: inspection.accommodation_cost || 0,
+          transportation_cost: inspection.transportation_cost || 0,
+          daily_allowance: inspection.daily_allowance || 0,
+          total_travel_cost: inspection.total_travel_cost || 0,
+          number_of_days: inspection.number_of_days || 1,
+          province: inspection.province,
+          permit_category: inspection.permit_category,
+          created_by: inspection.created_by,
+          permit_number: inspection.permit_applications?.permit_number || `Intent: ${inspection.intent_registrations?.id?.slice(0, 8)}`,
+          permit_title: inspection.permit_applications?.title || inspection.intent_registrations?.activity_description,
+          entity_name: permitEntity?.name || intentEntity?.name,
+          entity_id: inspection.permit_applications?.entity_id || inspection.intent_registrations?.entity_id,
+          user_id: inspection.permit_applications?.user_id || inspection.intent_registrations?.user_id,
+          inspector_name: null
+        };
+      }) || [];
 
       setInspections(formatted);
     } catch (error) {
@@ -121,6 +137,7 @@ export function useInspections() {
       let permitData: any = null;
       let intentData: any = null;
       let actualPermitApplicationId: string | null = null;
+      let actualIntentRegistrationId: string | null = null;
       
       // Determine the permit_application_id based on the category
       const category = inspectionData.permit_category || '';
@@ -137,25 +154,11 @@ export function useInspections() {
         if (!intent) throw new Error('Intent registration not found');
         intentData = intent;
         
-        // Use existing_permit_id if available, otherwise we need to handle this case
-        actualPermitApplicationId = intent.existing_permit_id;
+        // Set intent registration ID directly - no need for permit application
+        actualIntentRegistrationId = intent.id;
         
-        // If no linked permit, we cannot create inspection (FK constraint)
-        if (!actualPermitApplicationId) {
-          // Get any permit for the same user to satisfy FK - or throw error
-          const { data: userPermit } = await supabase
-            .from('permit_applications')
-            .select('id')
-            .eq('user_id', intent.user_id)
-            .limit(1)
-            .maybeSingle();
-          
-          if (!userPermit) {
-            toast.error('Cannot schedule inspection: No linked permit application found');
-            return false;
-          }
-          actualPermitApplicationId = userPermit.id;
-        }
+        // Use existing_permit_id if available (optional)
+        actualPermitApplicationId = intent.existing_permit_id || null;
       } else if (category === 'Permit Amalgamation') {
         const { data: amalgamation, error } = await supabase
           .from('permit_amalgamations')
@@ -266,17 +269,18 @@ export function useInspections() {
         if (!permit) throw new Error('Permit application not found');
         permitData = permit;
       }
-
-      if (!actualPermitApplicationId) {
+      // Validate that at least one reference exists
+      if (!actualPermitApplicationId && !actualIntentRegistrationId) {
         toast.error('Cannot schedule inspection: Invalid application reference');
         return false;
       }
 
-      // Create the inspection
+      // Create the inspection with appropriate IDs
       const { data: newInspection, error } = await supabase
         .from('inspections')
         .insert({
           permit_application_id: actualPermitApplicationId,
+          intent_registration_id: actualIntentRegistrationId,
           inspection_type: inspectionData.inspection_type,
           scheduled_date: inspectionData.scheduled_date,
           inspector_id: inspectionData.inspector_id,
@@ -310,7 +314,7 @@ export function useInspections() {
           .insert({
             user_id: userId,
             permit_id: actualPermitApplicationId,
-            intent_registration_id: intentData ? inspectionData.permit_application_id : null,
+            intent_registration_id: actualIntentRegistrationId,
             entity_id: entityId,
             inspection_id: newInspection.id,
             invoice_number: invoiceNumber,
