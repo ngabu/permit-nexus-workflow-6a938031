@@ -47,10 +47,18 @@ interface IntentRegistration {
   existing_permit_id: string | null;
   project_boundary: any | null;
   total_area_sqkm: number | null;
+  signed_document_path?: string | null;
+  docusign_envelope_id?: string | null;
   entity?: {
     id: string;
     name: string;
     entity_type: string;
+  };
+  reviewer?: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
   };
 }
 
@@ -390,8 +398,8 @@ export function IntentApplicationReview() {
           <IntentRegistrationReadOnlyView intent={selectedIntent} />
 
           {/* Registry Review Section */}
-          <Card className="bg-accent/50 print:hidden">
-            <CardHeader>
+          <Card className="print:hidden">
+            <CardHeader className="bg-muted/50">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary" />
                 Registry Review & Assessment

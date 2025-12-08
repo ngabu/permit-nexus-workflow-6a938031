@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ProjectAndSpecificDetailsTab from '@/components/permit-application-form/ProjectAndSpecificDetailsTab';
 import LocationTab from '@/components/permit-application-form/LocationTab';
 import DocumentsTab from '@/components/permit-application-form/DocumentsTab';
-import ComplianceTab from '@/components/permit-application-form/ComplianceTab';
+
 import { ActivityClassificationStep } from '@/components/public/steps/ActivityClassificationStep';
 import { ApplicationFeeStep } from '@/components/public/steps/ApplicationFeeStep';
 import { PublicConsultationStep } from '@/components/public/steps/PublicConsultationStep';
@@ -708,71 +708,28 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // Check if intent is selected to make related fields read-only
+  const hasLinkedIntent = !!formData.intent_registration_id;
+
   const tabComponents = {
     classification: (
-      <div className="space-y-4">
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <div className="flex items-center gap-2">
-            <Eye className="w-5 h-5 text-amber-600" />
-            <div>
-              <h4 className="font-medium text-amber-800">Read-Only: Registry Assessment Required</h4>
-              <p className="text-sm text-amber-700 mt-1">
-                Activity classification will be determined by registry staff during initial assessment. You can view the classification once assigned.
-              </p>
-            </div>
-          </div>
-        </div>
-        <ActivityClassificationStep 
-          data={formData} 
-          onChange={(updates) => setFormData(prev => ({ ...prev, ...updates }))}
-        />
-      </div>
+      <ActivityClassificationStep 
+        data={formData} 
+        onChange={(updates) => setFormData(prev => ({ ...prev, ...updates }))}
+        hasLinkedIntent={hasLinkedIntent}
+      />
     ),
-    project: <ProjectAndSpecificDetailsTab formData={formData} handleInputChange={handleInputChange} />,
-    location: <LocationTab formData={formData} handleInputChange={handleInputChange} />,
-    consultation: <PublicConsultationStep data={formData} onChange={(updates) => setFormData(prev => ({ ...prev, ...updates }))} />,
-    documents: <DocumentsTab formData={formData} handleInputChange={handleInputChange} handleFileUpload={handleFileUpload} removeFile={removeFile} formatFileSize={formatFileSize} permitId={permitId || lastSavedDraftId} />,
+    project: <ProjectAndSpecificDetailsTab formData={formData} handleInputChange={handleInputChange} hasLinkedIntent={hasLinkedIntent} />,
+    location: <LocationTab formData={formData} handleInputChange={handleInputChange} hasLinkedIntent={hasLinkedIntent} />,
+    consultation: <PublicConsultationStep data={formData} onChange={(updates) => setFormData(prev => ({ ...prev, ...updates }))} hasLinkedIntent={hasLinkedIntent} />,
+    documents: <DocumentsTab formData={formData} handleInputChange={handleInputChange} handleFileUpload={handleFileUpload} removeFile={removeFile} formatFileSize={formatFileSize} permitId={permitId || lastSavedDraftId} activityLevel={formData.activity_level} />,
     fees: (
-      <div className="space-y-4">
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <div className="flex items-center gap-2">
-            <Eye className="w-5 h-5 text-amber-600" />
-            <div>
-              <h4 className="font-medium text-amber-800">Read-Only: Registry Fee Calculation</h4>
-              <p className="text-sm text-amber-700 mt-1">
-                Application fees will be calculated by registry staff based on activity classification and permit requirements. You will be notified once fees are determined.
-              </p>
-            </div>
-          </div>
-        </div>
-        <ApplicationFeeStep 
-          data={formData} 
-          onChange={() => {}} // Disabled for public users
-        />
-      </div>
+      <ApplicationFeeStep 
+        data={formData} 
+        onChange={() => {}} // Disabled for public users
+      />
     ),
     
-    compliance: (
-      <div className="space-y-4">
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <div className="flex items-center gap-2">
-            <Eye className="w-5 h-5 text-amber-600" />
-            <div>
-              <h4 className="font-medium text-amber-800">Read-Only: Compliance Assessment Required</h4>
-              <p className="text-sm text-amber-700 mt-1">
-                Compliance requirements will be assessed and verified by the Compliance division staff during the review process. You can view the compliance status once it has been evaluated.
-              </p>
-            </div>
-          </div>
-        </div>
-        <ComplianceTab 
-          formData={formData} 
-          handleComplianceChange={handleComplianceChange}
-          handleInputChange={handleInputChange}
-          onNavigateToTab={setActiveTab}
-        />
-      </div>
-    ),
     review: <ReviewSubmitStep data={formData} onChange={(updates) => setFormData(prev => ({ ...prev, ...updates }))} />,
   };
 
@@ -831,37 +788,32 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
 
       <div className="bg-card rounded-lg border border-border p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full grid-cols-5 md:grid-cols-9 ${isStandalone ? 'mb-8' : 'mb-6'} bg-muted/50 h-auto p-1`}>
-            <TabsTrigger value="project" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
-              <Building className="w-4 h-4" />
-              <span className="hidden sm:inline">Project</span>
-              <span className="sm:hidden">Project</span>
-            </TabsTrigger>
-            <TabsTrigger value="location" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
-              <MapPin className="w-4 h-4" />
-              <span className="hidden sm:inline">Location</span>
-              <span className="sm:hidden">Location</span>
-            </TabsTrigger>
-            <TabsTrigger value="classification" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
-              <Activity className="w-4 h-4" />
-              <span className="hidden sm:inline">Classification</span>
-              <span className="sm:hidden">Class</span>
-            </TabsTrigger>
-            <TabsTrigger value="consultation" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Consultation</span>
-              <span className="sm:hidden">Consult</span>
-            </TabsTrigger>
-            <TabsTrigger value="documents" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
-              <Upload className="w-4 h-4" />
-              <span className="hidden sm:inline">Documents</span>
-              <span className="sm:hidden">Docs</span>
-            </TabsTrigger>
-            <TabsTrigger value="compliance" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
-              <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Compliance</span>
-              <span className="sm:hidden">Comply</span>
-            </TabsTrigger>
+      <TabsList className={`grid w-full grid-cols-5 md:grid-cols-8 ${isStandalone ? 'mb-8' : 'mb-6'} bg-muted/50 h-auto p-1`}>
+        <TabsTrigger value="project" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+          <Building className="w-4 h-4" />
+          <span className="hidden sm:inline">Project</span>
+          <span className="sm:hidden">Project</span>
+        </TabsTrigger>
+        <TabsTrigger value="location" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+          <MapPin className="w-4 h-4" />
+          <span className="hidden sm:inline">Location</span>
+          <span className="sm:hidden">Location</span>
+        </TabsTrigger>
+        <TabsTrigger value="classification" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+          <Activity className="w-4 h-4" />
+          <span className="hidden sm:inline">Classification</span>
+          <span className="sm:hidden">Class</span>
+        </TabsTrigger>
+        <TabsTrigger value="consultation" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+          <Users className="w-4 h-4" />
+          <span className="hidden sm:inline">Consultation</span>
+          <span className="sm:hidden">Consult</span>
+        </TabsTrigger>
+        <TabsTrigger value="documents" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+          <Upload className="w-4 h-4" />
+          <span className="hidden sm:inline">Documents</span>
+          <span className="sm:hidden">Docs</span>
+        </TabsTrigger>
             <TabsTrigger value="fees" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
               <DollarSign className="w-4 h-4" />
               <span className="hidden sm:inline">Fees</span>

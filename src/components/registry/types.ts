@@ -1,17 +1,3 @@
-
-export interface InitialAssessment {
-  id: string;
-  permit_id: string;
-  assessed_by: string;
-  assessment_status: 'pending' | 'passed' | 'failed' | 'requires_clarification';
-  assessment_notes: string;
-  assessment_date: string;
-  feedback_provided: string | null;
-  forwarded_to_compliance: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface RegistryStaff {
   id: string;
   email: string;

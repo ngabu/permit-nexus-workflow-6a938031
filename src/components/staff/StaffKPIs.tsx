@@ -30,8 +30,8 @@ export function StaffKPIs() {
 
         // Fetch compliance assessments
         const { data: assessments } = await supabase
-          .from('permit_assessments')
-          .select('requires_eia, assessment_date');
+          .from('compliance_assessments')
+          .select('assessment_status, created_at');
 
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
@@ -62,7 +62,7 @@ export function StaffKPIs() {
         const revenueCollected = transactions?.filter(t => t.status === 'completed')
           .reduce((sum, t) => sum + (parseFloat(t.amount?.toString() || '0') || 0), 0) || 0;
 
-        const complianceIssues = assessments?.filter(a => a.requires_eia).length || 0;
+        const complianceIssues = assessments?.filter(a => a.assessment_status === 'pending').length || 0;
 
         setStats({
           pendingApplications,

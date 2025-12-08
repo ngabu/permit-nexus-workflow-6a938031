@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Activity, AlertTriangle, BarChart3, Settings, CreditCard, User } from 'lucide-react';
-import { PaymentProcessing } from '@/components/revenue/PaymentProcessing';
+import { PaymentVerification } from '@/components/revenue/PaymentVerification';
 import { InvoiceManagement } from '@/components/revenue/InvoiceManagement';
 import { OutstandingPaymentsManagement } from '@/components/revenue/OutstandingPaymentsManagement';
 import { RevenueOfficerOperations } from '@/components/revenue/RevenueOfficerOperations';
@@ -11,6 +11,9 @@ import RevenueAnalyticsReports from '@/components/revenue/RevenueAnalyticsReport
 import { RevenueKPIs } from '@/components/revenue/RevenueKPIs';
 import { RevenueEntitiesList } from '@/components/revenue/RevenueEntitiesList';
 import { RevenuePermitsList } from '@/components/revenue/RevenuePermitsList';
+import { RevenueIntentRegistrationsList } from '@/components/revenue/RevenueIntentRegistrationsList';
+import { ProfileSettings } from '@/components/public/ProfileSettings';
+import { AppSettings } from '@/components/public/AppSettings';
 import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { RevenueSidebar } from '@/components/revenue/RevenueSidebar';
@@ -50,6 +53,10 @@ export default function RevenueDashboard() {
                   <RevenueOfficerOperations />
                 </TabsContent>
 
+                <TabsContent value="listings-intents" className="space-y-6">
+                  <RevenueIntentRegistrationsList />
+                </TabsContent>
+
                 <TabsContent value="listings-entities" className="space-y-6">
                   <RevenueEntitiesList />
                 </TabsContent>
@@ -62,13 +69,13 @@ export default function RevenueDashboard() {
                   <Tabs defaultValue="invoices" className="space-y-4">
                     <TabsList>
                       <TabsTrigger value="invoices">Invoice Management</TabsTrigger>
-                      <TabsTrigger value="payments">Payment Processing</TabsTrigger>
+                      <TabsTrigger value="verification">Payment Verification</TabsTrigger>
                     </TabsList>
                     <TabsContent value="invoices">
                       <InvoiceManagement />
                     </TabsContent>
-                    <TabsContent value="payments">
-                      <PaymentProcessing />
+                    <TabsContent value="verification">
+                      <PaymentVerification />
                     </TabsContent>
                   </Tabs>
                 </TabsContent>
@@ -90,19 +97,11 @@ export default function RevenueDashboard() {
                 </TabsContent>
 
                 <TabsContent value="profile" className="space-y-6">
-                  <div className="text-center p-12 bg-muted/50 rounded-lg">
-                    <User className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                    <h2 className="text-2xl font-bold mb-2">Profile Settings</h2>
-                    <p className="text-muted-foreground">Profile content will be added here</p>
-                  </div>
+                  <ProfileSettings readOnly />
                 </TabsContent>
 
                 <TabsContent value="app-settings" className="space-y-6">
-                  <div className="text-center p-12 bg-muted/50 rounded-lg">
-                    <Settings className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                    <h2 className="text-2xl font-bold mb-2">Application Settings</h2>
-                    <p className="text-muted-foreground">Settings content will be added here</p>
-                  </div>
+                  <AppSettings />
                 </TabsContent>
               </Tabs>
             </div>

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,6 +28,11 @@ export function IntentRegistryReviewTab({ intentId, currentStatus, onStatusUpdat
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; path: string }[]>([]);
+  
+  // Validation checkboxes
+  const [entityIPAValidated, setEntityIPAValidated] = useState(false);
+  const [projectSiteMapValidated, setProjectSiteMapValidated] = useState(false);
+  const [preparationWorkSatisfactory, setPreparationWorkSatisfactory] = useState(false);
 
   // Check if user can edit this tab (only registry staff)
   const canEdit = profile?.staff_unit === 'registry' || 
@@ -110,7 +116,7 @@ export function IntentRegistryReviewTab({ intentId, currentStatus, onStatusUpdat
 
   return (
     <Card>
-      <CardHeader className="bg-primary/5">
+      <CardHeader className="bg-muted/50">
         <CardTitle className="flex items-center gap-2 text-lg">
           <FileText className="w-5 h-5 text-primary" />
           Registry Review & Assessment
@@ -118,6 +124,46 @@ export function IntentRegistryReviewTab({ intentId, currentStatus, onStatusUpdat
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
+        {/* Validation Checkboxes */}
+        <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+          <Label className="text-sm font-semibold">Validation Checklist</Label>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="entityIPAValidated"
+                checked={entityIPAValidated}
+                onCheckedChange={(checked) => setEntityIPAValidated(!!checked)}
+                disabled={!canEdit}
+              />
+              <Label htmlFor="entityIPAValidated" className="text-sm font-normal cursor-pointer">
+                Entity IPA Registration validated
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="projectSiteMapValidated"
+                checked={projectSiteMapValidated}
+                onCheckedChange={(checked) => setProjectSiteMapValidated(!!checked)}
+                disabled={!canEdit}
+              />
+              <Label htmlFor="projectSiteMapValidated" className="text-sm font-normal cursor-pointer">
+                Project site map validation
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="preparationWorkSatisfactory"
+                checked={preparationWorkSatisfactory}
+                onCheckedChange={(checked) => setPreparationWorkSatisfactory(!!checked)}
+                disabled={!canEdit}
+              />
+              <Label htmlFor="preparationWorkSatisfactory" className="text-sm font-normal cursor-pointer">
+                Preparation work details satisfactory
+              </Label>
+            </div>
+          </div>
+        </div>
+
         {!canEdit && (
           <Alert>
             <Lock className="h-4 w-4" />

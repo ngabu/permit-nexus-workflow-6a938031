@@ -1473,56 +1473,6 @@ export type Database = {
         }
         Relationships: []
       }
-      initial_assessments: {
-        Row: {
-          assessed_by: string
-          assessment_date: string
-          assessment_notes: string
-          assessment_outcome: string
-          assessment_status: string
-          created_at: string
-          feedback_provided: string | null
-          id: string
-          permit_activity_type: string | null
-          permit_application_id: string
-          updated_at: string
-        }
-        Insert: {
-          assessed_by: string
-          assessment_date?: string
-          assessment_notes: string
-          assessment_outcome: string
-          assessment_status?: string
-          created_at?: string
-          feedback_provided?: string | null
-          id?: string
-          permit_activity_type?: string | null
-          permit_application_id: string
-          updated_at?: string
-        }
-        Update: {
-          assessed_by?: string
-          assessment_date?: string
-          assessment_notes?: string
-          assessment_outcome?: string
-          assessment_status?: string
-          created_at?: string
-          feedback_provided?: string | null
-          id?: string
-          permit_activity_type?: string | null
-          permit_application_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "initial_assessments_permit_application_id_fkey"
-            columns: ["permit_application_id"]
-            isOneToOne: false
-            referencedRelation: "permit_applications"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       inspections: {
         Row: {
           accommodation_cost: number | null
@@ -1949,6 +1899,7 @@ export type Database = {
           activity_id: string | null
           amount: number
           assigned_officer_id: string | null
+          cepa_receipt_path: string | null
           created_at: string
           currency: string
           document_path: string | null
@@ -1957,19 +1908,27 @@ export type Database = {
           follow_up_date: string | null
           follow_up_notes: string | null
           id: string
+          inspection_id: string | null
           intent_registration_id: string | null
           invoice_number: string
+          invoice_type: string | null
           paid_date: string | null
           payment_status: string | null
           permit_id: string | null
           status: string
+          stripe_receipt_url: string | null
           updated_at: string
           user_id: string
+          verification_notes: string | null
+          verification_status: string | null
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           activity_id?: string | null
           amount: number
           assigned_officer_id?: string | null
+          cepa_receipt_path?: string | null
           created_at?: string
           currency?: string
           document_path?: string | null
@@ -1978,19 +1937,27 @@ export type Database = {
           follow_up_date?: string | null
           follow_up_notes?: string | null
           id?: string
+          inspection_id?: string | null
           intent_registration_id?: string | null
           invoice_number: string
+          invoice_type?: string | null
           paid_date?: string | null
           payment_status?: string | null
           permit_id?: string | null
           status?: string
+          stripe_receipt_url?: string | null
           updated_at?: string
           user_id: string
+          verification_notes?: string | null
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           activity_id?: string | null
           amount?: number
           assigned_officer_id?: string | null
+          cepa_receipt_path?: string | null
           created_at?: string
           currency?: string
           document_path?: string | null
@@ -1999,14 +1966,21 @@ export type Database = {
           follow_up_date?: string | null
           follow_up_notes?: string | null
           id?: string
+          inspection_id?: string | null
           intent_registration_id?: string | null
           invoice_number?: string
+          invoice_type?: string | null
           paid_date?: string | null
           payment_status?: string | null
           permit_id?: string | null
           status?: string
+          stripe_receipt_url?: string | null
           updated_at?: string
           user_id?: string
+          verification_notes?: string | null
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
@@ -2021,6 +1995,13 @@ export type Database = {
             columns: ["entity_id"]
             isOneToOne: false
             referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "inspections"
             referencedColumns: ["id"]
           },
           {
@@ -2141,6 +2122,104 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      permit_amalgamations: {
+        Row: {
+          amalgamation_reason: string | null
+          created_at: string
+          id: string
+          permit_ids: string[]
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amalgamation_reason?: string | null
+          created_at?: string
+          id?: string
+          permit_ids: string[]
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amalgamation_reason?: string | null
+          created_at?: string
+          id?: string
+          permit_ids?: string[]
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      permit_amendments: {
+        Row: {
+          amendment_reason: string | null
+          amendment_type: string
+          created_at: string
+          id: string
+          permit_id: string
+          proposed_changes: Json | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amendment_reason?: string | null
+          amendment_type: string
+          created_at?: string
+          id?: string
+          permit_id: string
+          proposed_changes?: Json | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amendment_reason?: string | null
+          amendment_type?: string
+          created_at?: string
+          id?: string
+          permit_id?: string
+          proposed_changes?: Json | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permit_amendments_permit_id_fkey"
+            columns: ["permit_id"]
+            isOneToOne: false
+            referencedRelation: "permit_applications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       permit_applications: {
         Row: {
@@ -2514,67 +2593,168 @@ export type Database = {
           },
         ]
       }
-      permit_assessments: {
+      permit_renewals: {
         Row: {
-          additional_requirements: Json | null
-          assessed_by: string
-          assessment_date: string
-          assessment_notes: string
-          assessment_status: string
           created_at: string
-          eia_due_date: string | null
-          feedback_provided: string | null
-          forwarded_to_compliance: boolean
           id: string
-          permit_application_id: string
-          recommendations: string | null
-          requires_eia: boolean
-          requires_workplan: boolean
+          permit_id: string
+          renewal_period_years: number | null
+          renewal_reason: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string | null
           updated_at: string
-          workplan_due_date: string | null
+          user_id: string
         }
         Insert: {
-          additional_requirements?: Json | null
-          assessed_by: string
-          assessment_date?: string
-          assessment_notes?: string
-          assessment_status?: string
           created_at?: string
-          eia_due_date?: string | null
-          feedback_provided?: string | null
-          forwarded_to_compliance?: boolean
           id?: string
-          permit_application_id: string
-          recommendations?: string | null
-          requires_eia?: boolean
-          requires_workplan?: boolean
+          permit_id: string
+          renewal_period_years?: number | null
+          renewal_reason?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
           updated_at?: string
-          workplan_due_date?: string | null
+          user_id: string
         }
         Update: {
-          additional_requirements?: Json | null
-          assessed_by?: string
-          assessment_date?: string
-          assessment_notes?: string
-          assessment_status?: string
           created_at?: string
-          eia_due_date?: string | null
-          feedback_provided?: string | null
-          forwarded_to_compliance?: boolean
           id?: string
-          permit_application_id?: string
-          recommendations?: string | null
-          requires_eia?: boolean
-          requires_workplan?: boolean
+          permit_id?: string
+          renewal_period_years?: number | null
+          renewal_reason?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
           updated_at?: string
-          workplan_due_date?: string | null
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "permit_assessments_permit_application_id_fkey"
-            columns: ["permit_application_id"]
+            foreignKeyName: "permit_renewals_permit_id_fkey"
+            columns: ["permit_id"]
             isOneToOne: false
             referencedRelation: "permit_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permit_surrenders: {
+        Row: {
+          created_at: string
+          effective_date: string | null
+          id: string
+          permit_id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string | null
+          surrender_reason: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          effective_date?: string | null
+          id?: string
+          permit_id: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          surrender_reason: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          effective_date?: string | null
+          id?: string
+          permit_id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          surrender_reason?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permit_surrenders_permit_id_fkey"
+            columns: ["permit_id"]
+            isOneToOne: false
+            referencedRelation: "permit_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permit_transfers: {
+        Row: {
+          created_at: string
+          id: string
+          permit_id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string | null
+          transfer_reason: string | null
+          transferee_entity_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permit_id: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          transfer_reason?: string | null
+          transferee_entity_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permit_id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          transfer_reason?: string | null
+          transferee_entity_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permit_transfers_permit_id_fkey"
+            columns: ["permit_id"]
+            isOneToOne: false
+            referencedRelation: "permit_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permit_transfers_transferee_entity_id_fkey"
+            columns: ["transferee_entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
             referencedColumns: ["id"]
           },
         ]
@@ -2870,13 +3050,6 @@ export type Database = {
           previous_status?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "registry_audit_trail_assessment_id_fkey"
-            columns: ["assessment_id"]
-            isOneToOne: false
-            referencedRelation: "initial_assessments"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "registry_audit_trail_permit_application_id_fkey"
             columns: ["permit_application_id"]

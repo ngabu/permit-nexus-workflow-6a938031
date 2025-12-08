@@ -6,6 +6,7 @@ import { PublicSidebar } from '@/components/public/PublicSidebar';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { EntityManagement } from '@/components/public/EntityManagement';
 import { PermitManagement } from '@/components/public/PermitManagement';
+import { PermitRegistrationList } from '@/components/public/PermitRegistrationList';
 import { InvoiceManagement } from '@/components/public/InvoiceManagement';
 import { PaymentSummary } from '@/components/public/PaymentSummary';
 import { NotificationCenter } from '@/components/public/NotificationCenter';
@@ -16,7 +17,6 @@ import { AppSettings } from '@/components/public/AppSettings';
 import { ComprehensivePermitForm } from '@/components/public/ComprehensivePermitForm';
 import PermitAmalgamation from '@/pages/permit-management/PermitAmalgamation';
 import PermitAmendment from '@/pages/permit-management/PermitAmendment';
-import PermitCompliance from '@/pages/permit-management/PermitCompliance';
 import PermitRenewal from '@/pages/permit-management/PermitRenewal';
 import PermitSurrender from '@/pages/permit-management/PermitSurrender';
 import PermitTransfer from '@/pages/permit-management/PermitTransfer';
@@ -112,9 +112,9 @@ export default function PublicDashboard() {
                 <IntentRegistrationList />
               </div>
             )}
-            {activeTab === 'permits' && (
+            {activeTab === 'permit-registration-existing' && (
               <div className="max-w-7xl mx-auto">
-                <PermitManagement 
+                <PermitRegistrationList 
                   onNavigateToNewApplication={() => {
                     setSelectedApplicationId(null);
                     setActiveTab('permit-application-new');
@@ -150,11 +150,6 @@ export default function PublicDashboard() {
             {activeTab === 'permit-amendment' && (
               <div className="max-w-7xl mx-auto">
                 <PermitAmendment />
-              </div>
-            )}
-            {activeTab === 'permit-compliance' && (
-              <div className="max-w-7xl mx-auto">
-                <PermitCompliance />
               </div>
             )}
             {activeTab === 'permit-renewal' && (

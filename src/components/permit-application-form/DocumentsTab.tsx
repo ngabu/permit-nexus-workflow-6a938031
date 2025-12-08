@@ -13,6 +13,7 @@ interface DocumentsTabProps {
   removeFile: (fileId: string) => Promise<void>;
   formatFileSize: (bytes: number) => string;
   permitId?: string;
+  activityLevel?: string;
 }
 
 interface DocumentUploadState {
@@ -23,20 +24,27 @@ interface DocumentUploadState {
   fromDatabase?: boolean;
 }
 
-const DOCUMENT_TYPES = [
+const ALL_DOCUMENT_TYPES = [
+  {
+    id: 'environmental_impact_assessment',
+    name: 'Environmental Impact Assessment and Statement',
+    description: 'A comprehensive assessment document required for Level 2 and Level 3 activities that covers all relevant issues relating to possible adverse impacts on the environment. It should address: bio-physical impacts (air quality, water resources, noise, waste, biodiversity), socio-economic impacts (both direct Group A impacts like degradation and loss of resources, and secondary Group B impacts like social structure and infrastructure), mitigation measures and commitments, monitoring plans, and regulatory compliance requirements. This is the key document used to assess whether Approval-In-Principle is granted.',
+    isMandatory: true,
+    requiredForLevels: ['Level 2', 'Level 3'],
+  },
   {
     id: 'environmental_inception_report',
     name: 'Environmental Inception Report',
     description: 'A scoping document required for Level 3 activities that identifies potential environmental impacts at an early stage. It lists all issues to be covered in the Environmental Impact Statement and initiates consultation with stakeholders. The report should include: project introduction and objectives, purpose of development, project viability, description of proposed development, development timetable, bio-physical environmental issues (air, water, land, noise, flora, fauna), socio-economic issues, baseline information availability, site selection details, and consultant qualifications.',
     isMandatory: true,
-  },
-  {
-    id: 'environmental_impact_assessment',
-    name: 'Environmental Impact Assessment and Statement',
-    description: 'A comprehensive assessment document required for Level 3 activities that covers all relevant issues relating to possible adverse impacts on the environment. It should address: bio-physical impacts (air quality, water resources, noise, waste, biodiversity), socio-economic impacts (both direct Group A impacts like degradation and loss of resources, and secondary Group B impacts like social structure and infrastructure), mitigation measures and commitments, monitoring plans, and regulatory compliance requirements. This is the key document used to assess whether Approval-In-Principle is granted.',
-    isMandatory: true,
+    requiredForLevels: ['Level 3'],
   },
 ];
+
+const getDocumentTypesForLevel = (activityLevel?: string) => {
+  if (!activityLevel) return [];
+  return ALL_DOCUMENT_TYPES.filter(doc => doc.requiredForLevels.includes(activityLevel));
+};
 
 const DocumentsTab: React.FC<DocumentsTabProps> = ({ 
   formData, 
@@ -44,10 +52,14 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
   handleFileUpload, 
   removeFile, 
   formatFileSize,
-  permitId
+  permitId,
+  activityLevel
 }) => {
   const { documents, loading, uploadDocument, deleteDocument } = useDocuments(permitId);
   const [uploadingType, setUploadingType] = useState<string | null>(null);
+  
+  // Get document types based on activity level
+  const DOCUMENT_TYPES = getDocumentTypesForLevel(activityLevel || formData.activity_level);
 
   // Track uploaded documents by type using formData
   const getUploadedDocument = (documentTypeId: string): DocumentUploadState | null => {
@@ -177,13 +189,22 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
           </Alert>
         )}
 
-        <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-900">
-          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <AlertDescription className="text-blue-900 dark:text-blue-100">
-            Upload the following documents as required under the Environment Act 2000 for Level 3 activities. 
-            Files are automatically saved when uploaded. You can replace a document by uploading a new file.
-          </AlertDescription>
-        </Alert>
+        {DOCUMENT_TYPES.length === 0 ? (
+          <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-900">
+            <Info className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertDescription className="text-amber-900 dark:text-amber-100">
+              Please select an Activity Level (Level 2 or Level 3) in the Classification tab to see the required documents.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-900">
+            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <AlertDescription className="text-blue-900 dark:text-blue-100">
+              Upload the following documents as required under the Environment Act 2000 for {activityLevel || formData.activity_level} activities. 
+              Files are automatically saved when uploaded. You can replace a document by uploading a new file.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center p-8">

@@ -44,15 +44,6 @@ interface AssessmentDetail {
     commencement_date?: string | null;
     completion_date?: string | null;
   };
-  initial_assessment?: {
-    id: string;
-    assessment_status: string;
-    assessment_notes: string;
-    assessment_outcome: string;
-    feedback_provided: string | null;
-    assessed_by: string;
-    created_at: string;
-  };
 }
 
 export function useAssessmentDetail(assessmentId: string) {
@@ -111,49 +102,13 @@ export function useAssessmentDetail(assessmentId: string) {
 
       console.log('Fetched assessment:', assessment);
 
-      // Fetch initial assessment if it exists
-      console.log('Fetching initial assessment for permit application:', assessment.permit_application_id);
-      
-      const { data: initialAssessment, error: initialError } = await supabase
-        .from('initial_assessments')
-        .select(`
-          id,
-          permit_application_id,
-          assessed_by,
-          assessment_status,
-          assessment_notes,
-          assessment_date,
-          assessment_outcome,
-          feedback_provided,
-          permit_activity_type,
-          created_at,
-          updated_at
-        `)
-        .eq('permit_application_id', assessment.permit_application_id)
-        .maybeSingle();
-
-      console.log('Initial assessment query result:', { initialAssessment, initialError });
-
-      if (initialError) {
-        console.error('Initial assessment fetch error:', initialError);
-        console.error('Error details:', {
-          code: initialError.code,
-          message: initialError.message,
-          details: initialError.details,
-          hint: initialError.hint
-        });
-      } else {
-        console.log('Initial assessment fetched:', initialAssessment);
-      }
-
       const fullAssessmentData = {
         ...assessment,
-        permit_application: assessment.permit_applications,
-        initial_assessment: initialAssessment
+        permit_application: assessment.permit_applications
       };
 
       console.log('Full assessment data with fee parameters:', fullAssessmentData);
-      setAssessment(fullAssessmentData);
+      setAssessment(fullAssessmentData as AssessmentDetail);
 
     } catch (error: any) {
       console.error('Error fetching assessment:', error);

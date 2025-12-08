@@ -62,15 +62,6 @@ interface AssessmentData {
     application_date: string;
     user_id: string;
   };
-  initial_assessment?: {
-    id: string;
-    assessment_status: string;
-    assessment_notes: string;
-    assessment_outcome: string;
-    feedback_provided: string | null;
-    assessed_by: string;
-    created_at: string;
-  };
 }
 
 interface AssessmentFormData {
@@ -336,7 +327,6 @@ function OriginalComprehensiveAssessmentForm({ assessmentId, onComplete }: Compr
               <CardContent>
                 <ApplicationDetailView 
                   application={assessmentData.permit_application}
-                  initialAssessment={assessmentData.initial_assessment}
                 />
               </CardContent>
             </Card>
@@ -392,55 +382,9 @@ function OriginalComprehensiveAssessmentForm({ assessmentId, onComplete }: Compr
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {assessmentData.initial_assessment ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        {assessmentData.initial_assessment.assessment_status === 'passed' ? (
-                          <CheckCircle className="w-5 h-5 text-success" />
-                        ) : (
-                          <AlertTriangle className="w-5 h-5 text-warning" />
-                        )}
-                        <span className="font-medium">
-                          Status: {assessmentData.initial_assessment.assessment_status.replace('_', ' ').toUpperCase()}
-                        </span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(assessmentData.initial_assessment.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <Label className="text-sm font-medium">Assessment Outcome</Label>
-                        <p className="text-sm mt-1">{assessmentData.initial_assessment.assessment_outcome}</p>
-                      </div>
-
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <Label className="text-sm font-medium">Registry Assessment Notes</Label>
-                        <p className="text-sm mt-1">{assessmentData.initial_assessment.assessment_notes}</p>
-                      </div>
-
-                      {assessmentData.initial_assessment.feedback_provided && (
-                        <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
-                          <Label className="text-sm font-medium text-blue-800">
-                            Specific Requirements for Compliance Assessment
-                          </Label>
-                          <p className="text-sm mt-2 text-blue-700 leading-relaxed">
-                            {assessmentData.initial_assessment.feedback_provided}
-                          </p>
-                          <div className="mt-3 text-xs text-blue-600">
-                            💡 This feedback guides your technical assessment focus areas
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No registry assessment feedback available
-                  </div>
-                )}
+                <div className="text-center py-8 text-muted-foreground">
+                  Registry assessment workflow has been streamlined. Application details are available in the Application tab.
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

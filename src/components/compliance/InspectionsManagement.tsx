@@ -9,24 +9,22 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useInspections } from '@/hooks/useInspections';
-import { usePermitApplications } from '@/hooks/usePermitApplications';
-import { CalendarIcon, Plus, Search, Filter, MapPin, DollarSign, Calendar as CalendarDays } from 'lucide-react';
+import { useInspectionApplications } from '@/hooks/useInspectionApplications';
+import { CalendarIcon, Plus, Search, Filter, MapPin, Loader2, DollarSign, Calendar as CalendarDays } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 export const InspectionsManagement = () => {
   const { inspections, loading, createInspection } = useInspections();
-  const { applications } = usePermitApplications();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [provinceFilter, setProvinceFilter] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState<'permit' | 'intent' | 'amalgamation' | 'amendment' | 'renewal' | 'surrender' | 'transfer'>('permit');
 
-  // Filter approved permits only
-  const approvedPermits = useMemo(() => {
-    return applications.filter(app => app.status === 'approved');
-  }, [applications]);
+  // Fetch applications based on selected type
+  const { options: applicationOptions, loading: optionsLoading } = useInspectionApplications(selectedType);
 
   // Filter inspections
   const filteredInspections = useMemo(() => {
@@ -103,7 +101,10 @@ export const InspectionsManagement = () => {
     }
   };
 
-  const totalTravelCost = formData.accommodation_cost + formData.transportation_cost + formData.daily_allowance;
+  // Calculate total accommodation and daily allowance based on number of days
+  const totalAccommodation = formData.accommodation_cost * formData.number_of_days;
+  const totalDailyAllowance = formData.daily_allowance * formData.number_of_days;
+  const totalInspectionCost = totalAccommodation + formData.transportation_cost + totalDailyAllowance;
 
   if (loading) {
     return <div>Loading inspections...</div>;
@@ -152,9 +153,9 @@ export const InspectionsManagement = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-gray-600">
-              {approvedPermits.length}
+              {applicationOptions.length}
             </div>
-            <p className="text-sm text-muted-foreground">Active Permits</p>
+            <p className="text-sm text-muted-foreground">Eligible for Inspection</p>
           </CardContent>
         </Card>
       </div>
@@ -169,28 +170,75 @@ export const InspectionsManagement = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Permit *</Label>
+                  <Label>Application Type *</Label>
+                  <Select
+                    value={selectedType}
+                    onValueChange={(value: 'permit' | 'intent' | 'amalgamation' | 'amendment' | 'renewal' | 'surrender' | 'transfer') => {
+                      setSelectedType(value);
+                      setFormData({ ...formData, permit_application_id: '', permit_category: '', province: '' });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="permit">Permit Application</SelectItem>
+                      <SelectItem value="intent">Intent Registration</SelectItem>
+                      <SelectItem value="amalgamation">Permit Amalgamation</SelectItem>
+                      <SelectItem value="amendment">Permit Amendment</SelectItem>
+                      <SelectItem value="renewal">Permit Renewal</SelectItem>
+                      <SelectItem value="surrender">Permit Surrender</SelectItem>
+                      <SelectItem value="transfer">Permit Transfer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>{selectedType === 'intent' ? 'Intent' : 'Application'} *</Label>
                   <Select
                     value={formData.permit_application_id}
                     onValueChange={(value) => {
-                  const permit = approvedPermits.find(p => p.id === value);
-                  setFormData({
-                    ...formData,
-                    permit_application_id: value,
-                    permit_category: permit?.permit_type || '',
-                    province: permit?.details?.activity_location || ''
-                  });
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select approved permit" />
-                </SelectTrigger>
-                <SelectContent>
-                  {approvedPermits.map((permit) => (
-                    <SelectItem key={permit.id} value={permit.id}>
-                      {permit.permit_number || permit.title} - {permit.entity?.name || 'Unknown Entity'}
-                        </SelectItem>
-                      ))}
+                      const selected = applicationOptions.find(opt => opt.id === value);
+                      const typeLabels: Record<string, string> = {
+                        permit: 'Permit Application',
+                        intent: 'Intent Registration',
+                        amalgamation: 'Permit Amalgamation',
+                        amendment: 'Permit Amendment',
+                        renewal: 'Permit Renewal',
+                        surrender: 'Permit Surrender',
+                        transfer: 'Permit Transfer'
+                      };
+                      setFormData({
+                        ...formData,
+                        permit_application_id: value,
+                        permit_category: typeLabels[selectedType] || '',
+                        province: selected?.province || ''
+                      });
+                    }}
+                    disabled={optionsLoading}
+                  >
+                    <SelectTrigger>
+                      {optionsLoading ? (
+                        <div className="flex items-center">
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Loading...
+                        </div>
+                      ) : (
+                        <SelectValue placeholder={`Select ${selectedType === 'intent' ? 'intent' : 'application'}`} />
+                      )}
+                    </SelectTrigger>
+                    <SelectContent>
+                      {applicationOptions.length === 0 ? (
+                        <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+                          No {selectedType === 'intent' ? 'intents' : 'applications'} available
+                        </div>
+                      ) : (
+                        applicationOptions.map((option) => (
+                          <SelectItem key={option.id} value={option.id}>
+                            {option.label} - {option.entityName} ({option.status})
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -256,7 +304,7 @@ export const InspectionsManagement = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Accommodation Cost (Kina)</Label>
+                  <Label>Accommodation Costs (Kina) per day</Label>
                   <Input
                     type="number"
                     min="0"
@@ -278,7 +326,7 @@ export const InspectionsManagement = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Daily Allowance (Kina)</Label>
+                  <Label>Daily Allowance (Kina) per day</Label>
                   <Input
                     type="number"
                     min="0"
@@ -289,10 +337,10 @@ export const InspectionsManagement = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Total Travel Cost</Label>
+                  <Label>Total Inspection Cost</Label>
                   <Input
                     type="text"
-                    value={`K ${totalTravelCost.toFixed(2)}`}
+                    value={`K ${totalInspectionCost.toFixed(2)}`}
                     disabled
                     className="bg-muted"
                   />
@@ -313,7 +361,7 @@ export const InspectionsManagement = () => {
                 <Button type="button" variant="destructive" onClick={() => setShowCreateForm(false)} className="w-32">
                   Cancel
                 </Button>
-                <Button type="submit" className="w-48">Schedule Inspection</Button>
+                <Button type="submit" className="w-48">Register Inspection</Button>
               </div>
             </form>
           </CardContent>

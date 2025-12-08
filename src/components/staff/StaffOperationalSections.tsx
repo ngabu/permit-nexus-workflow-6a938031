@@ -60,26 +60,26 @@ export function StaffOperationalSections() {
     const fetchComplianceIssues = async () => {
       try {
         const { data } = await supabase
-          .from('permit_assessments')
+          .from('compliance_assessments')
           .select(`
-            assessment_date,
-            requires_eia,
-            requires_workplan,
+            created_at,
+            assessment_status,
+            assessment_notes,
             recommendations,
-            permit_applications!inner (
+            permit_applications:permit_application_id (
               entity_name,
               permit_type
             )
           `)
-          .eq('requires_eia', true)
-          .order('assessment_date', { ascending: false })
+          .eq('assessment_status', 'pending')
+          .order('created_at', { ascending: false })
           .limit(3);
 
-        const issues = (data || []).map((assessment, index) => ({
-          company: assessment.permit_applications.entity_name || `Entity ${index + 1}`,
-          issue: assessment.requires_workplan ? 'Workplan Required' : 'EIA Assessment Required',
-          severity: assessment.requires_eia && assessment.requires_workplan ? 'Critical' : 'High',
-          date: new Date(assessment.assessment_date).toISOString().split('T')[0]
+        const issues = (data || []).map((assessment: any, index) => ({
+          company: assessment.permit_applications?.entity_name || `Entity ${index + 1}`,
+          issue: 'Compliance Assessment Required',
+          severity: 'High',
+          date: new Date(assessment.created_at).toISOString().split('T')[0]
         }));
 
         setComplianceItems(issues as ComplianceItem[]);

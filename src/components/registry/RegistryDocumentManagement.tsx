@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { FileText, Download, Plus, Book, Pencil, Trash2, Loader2, Upload, X } from "lucide-react";
+import { FileText, Download, Plus, Book, Pencil, Trash2, Loader2, Upload, X, Send, Award, AlertTriangle, FileSignature } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -18,7 +18,7 @@ interface DocumentTemplate {
   id: string;
   name: string;
   description: string | null;
-  document_type: 'template' | 'guide';
+  document_type: 'template' | 'guide' | 'signing';
   category: string;
   file_path: string | null;
   is_active: boolean;
@@ -28,6 +28,7 @@ interface DocumentTemplate {
 
 const templateCategories = ['Form template', 'Report template', 'Assessment template', 'Checklist template'];
 const guideCategories = ['User guide', 'Regulatory guideline', 'Process guide', 'Information'];
+const signingCategories = ['Letter template', 'Environment Permit Certificate', 'Notice', 'Approval letter', 'Rejection letter'];
 
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
@@ -44,7 +45,7 @@ export function RegistryDocumentManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<DocumentTemplate | null>(null);
-  const [documentType, setDocumentType] = useState<'template' | 'guide'>('template');
+  const [documentType, setDocumentType] = useState<'template' | 'guide' | 'signing'>('template');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [editFile, setEditFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -261,7 +262,7 @@ export function RegistryDocumentManagement() {
     }
   };
 
-  const openCreateDialog = (type: 'template' | 'guide') => {
+  const openCreateDialog = (type: 'template' | 'guide' | 'signing') => {
     setDocumentType(type);
     resetForm();
     setIsCreateDialogOpen(true);
@@ -320,6 +321,7 @@ export function RegistryDocumentManagement() {
 
   const templates = documents?.filter(d => d.document_type === 'template') || [];
   const guides = documents?.filter(d => d.document_type === 'guide') || [];
+  const signingDocs = documents?.filter(d => d.document_type === 'signing') || [];
 
   const renderDocumentCard = (doc: DocumentTemplate, icon: React.ReactNode, iconBgClass: string) => (
     <Card key={doc.id} className="border hover:border-primary/30 transition-colors">
@@ -382,6 +384,7 @@ export function RegistryDocumentManagement() {
         <TabsList className="bg-muted/50 p-1">
           <TabsTrigger value="templates">Templates ({templates.length})</TabsTrigger>
           <TabsTrigger value="info-guidelines">Information and Guidelines ({guides.length})</TabsTrigger>
+          <TabsTrigger value="signing-docs">Docs Template for Signing ({signingDocs.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="templates" className="mt-6">
@@ -445,15 +448,73 @@ export function RegistryDocumentManagement() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="signing-docs" className="mt-6">
+          <Card className="border">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground">Docs Template for Signing</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Letter templates, Environment Permit Certificates, and Notices for MD DocuSign
+                  </p>
+                </div>
+                <Button onClick={() => openCreateDialog('signing')}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Signing Template
+                </Button>
+              </div>
+
+              {signingDocs.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <FileSignature className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No signing templates created yet</p>
+                  <p className="text-sm mt-2">Add letter templates, certificates, and notices that will be prefilled and sent for Managing Director signature</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {signingDocs.map((doc) => {
+                    const getCategoryIcon = () => {
+                      switch (doc.category) {
+                        case 'Environment Permit Certificate':
+                          return <Award className="w-5 h-5 text-green-600" />;
+                        case 'Notice':
+                          return <AlertTriangle className="w-5 h-5 text-amber-500" />;
+                        case 'Letter template':
+                        case 'Approval letter':
+                        case 'Rejection letter':
+                        default:
+                          return <FileSignature className="w-5 h-5 text-emerald-600" />;
+                      }
+                    };
+                    
+                    const getBgClass = () => {
+                      switch (doc.category) {
+                        case 'Environment Permit Certificate':
+                          return "bg-green-50 dark:bg-green-950";
+                        case 'Notice':
+                          return "bg-amber-50 dark:bg-amber-950";
+                        default:
+                          return "bg-emerald-50 dark:bg-emerald-950";
+                      }
+                    };
+                    
+                    return renderDocumentCard(doc, getCategoryIcon(), getBgClass());
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Create Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create {documentType === 'template' ? 'Template' : 'Guide'}</DialogTitle>
+            <DialogTitle>Create {documentType === 'template' ? 'Template' : documentType === 'guide' ? 'Guide' : 'Signing Template'}</DialogTitle>
             <DialogDescription>
-              Add a new {documentType === 'template' ? 'document template' : 'information guide'}
+              Add a new {documentType === 'template' ? 'document template' : documentType === 'guide' ? 'information guide' : 'signing document template for MD DocuSign'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -473,7 +534,7 @@ export function RegistryDocumentManagement() {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(documentType === 'template' ? templateCategories : guideCategories).map((cat) => (
+                  {(documentType === 'template' ? templateCategories : documentType === 'guide' ? guideCategories : signingCategories).map((cat) => (
                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                   ))}
                 </SelectContent>

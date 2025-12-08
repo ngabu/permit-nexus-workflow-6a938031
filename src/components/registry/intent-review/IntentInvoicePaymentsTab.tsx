@@ -41,6 +41,10 @@ export function IntentInvoicePaymentsTab({ intentId, entityId, onStatusUpdate }:
   const [remarks, setRemarks] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  
+  // Validation checkboxes
+  const [invoicePaymentVerified, setInvoicePaymentVerified] = useState(false);
+  const [cepaAccountsReconciled, setCepaAccountsReconciled] = useState(false);
 
   // Check if user can edit this tab (only revenue staff)
   const canEdit = profile?.staff_unit === 'revenue' || 
@@ -334,6 +338,35 @@ export function IntentInvoicePaymentsTab({ intentId, entityId, onStatusUpdate }:
             </TableBody>
           </Table>
         )}
+
+        {/* Revenue Validation Checkboxes */}
+        <div className="space-y-3 p-4 bg-emerald-500/5 rounded-lg border border-emerald-200 dark:border-emerald-900">
+          <Label className="text-sm font-semibold">Revenue Validation Checklist</Label>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="invoicePaymentVerified"
+                checked={invoicePaymentVerified}
+                onCheckedChange={(checked) => setInvoicePaymentVerified(!!checked)}
+                disabled={!canEdit}
+              />
+              <Label htmlFor="invoicePaymentVerified" className="text-sm font-normal cursor-pointer">
+                Invoice Payment verified
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="cepaAccountsReconciled"
+                checked={cepaAccountsReconciled}
+                onCheckedChange={(checked) => setCepaAccountsReconciled(!!checked)}
+                disabled={!canEdit}
+              />
+              <Label htmlFor="cepaAccountsReconciled" className="text-sm font-normal cursor-pointer">
+                CEPA Accounts reconciliation completed
+              </Label>
+            </div>
+          </div>
+        </div>
 
         {/* Remarks Section */}
         <div className="space-y-2 pt-4 border-t">

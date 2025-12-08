@@ -16,6 +16,8 @@ import { ManagingDirectorIntentsList } from '@/components/managing-director/Mana
 import { ManagingDirectorPermitsList } from '@/components/managing-director/ManagingDirectorPermitsList';
 import { ExecutiveAnalyticsDashboard } from '@/components/managing-director/ExecutiveAnalyticsDashboard';
 import { AIAnalytics } from '@/components/managing-director/AIAnalytics';
+import { ProfileSettings } from '@/components/public/ProfileSettings';
+import { AppSettings } from '@/components/public/AppSettings';
 
 export default function ManagingDirectorDashboard() {
   const { profile } = useAuth();
@@ -299,6 +301,14 @@ export default function ManagingDirectorDashboard() {
 
             {activeTab === 'ai-analytics' && (
               <AIAnalytics />
+            )}
+
+            {activeTab === 'profile' && (
+              <ProfileSettings readOnly />
+            )}
+
+            {activeTab === 'settings' && (
+              <AppSettings />
             )}
           </main>
         </div>

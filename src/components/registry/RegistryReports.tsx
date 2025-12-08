@@ -29,14 +29,14 @@ import {
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useToast } from "@/hooks/use-toast";
 import { usePermitAnalytics } from "./hooks/usePermitAnalytics";
-import { useAssessmentAnalytics } from "./hooks/useAssessmentAnalytics";
 
 const RegistryReports = () => {
   const { toast } = useToast();
   const [selectedPeriod, setSelectedPeriod] = useState("monthly");
   const [selectedReport, setSelectedReport] = useState("overview");
   const { analytics: permitAnalytics, loading: analyticsLoading, refetch: refetchAnalytics } = usePermitAnalytics();
-  const { analytics: assessmentAnalytics, loading: assessmentLoading } = useAssessmentAnalytics();
+  const assessmentAnalytics = null;
+  const assessmentLoading = false;
 
   // Chart colors for permit types and activity levels
   const LEVEL_COLORS: Record<string, string> = {

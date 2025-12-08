@@ -64,15 +64,21 @@ const publicNavigationItems: PublicNavigationItem[] = [
     ]
   },
   { 
+    title: "Permit Registration", 
+    value: "permit-registration", 
+    icon: FileCheck,
+    subItems: [
+      { title: "New Permit", value: "permit-application-new", icon: FilePlus },
+      { title: "Existing Permits", value: "permit-registration-existing", icon: List },
+    ]
+  },
+  { 
     title: "Permits Management", 
     value: "permits", 
     icon: FileText,
     subItems: [
-      { title: "Permit Listing", value: "permits", icon: List },
-      { title: "New Permit Application", value: "permit-application-new", icon: FilePlus },
       { title: "Permit Amalgamation", value: "permit-amalgamation", icon: Merge },
       { title: "Permit Amendment", value: "permit-amendment", icon: Edit },
-      { title: "Permit Compliance", value: "permit-compliance", icon: Shield },
       { title: "Permit Renewal", value: "permit-renewal", icon: RefreshCw },
       { title: "Permit Surrender", value: "permit-surrender", icon: UserX },
       { title: "Permit Transfer", value: "permit-transfer", icon: ArrowRightLeft },

@@ -36,7 +36,6 @@ export default function PerformanceMetrics() {
         .from('permit_applications')
         .select(`
           *,
-          initial_assessments(*),
           compliance_assessments(*)
         `);
 
@@ -76,11 +75,10 @@ export default function PerformanceMetrics() {
     return units.map(unit => {
       const staffCount = profiles.filter(p => p.staff_unit === unit).length;
       const pendingAssessments = applications.filter(app => 
-        app.initial_assessments?.some((a: any) => a.assessment_status === 'pending') ||
         app.compliance_assessments?.some((a: any) => a.assessment_status === 'pending')
       ).length;
       const completedThisMonth = applications.filter(app => {
-        const assessment = app.initial_assessments?.[0] || app.compliance_assessments?.[0];
+        const assessment = app.compliance_assessments?.[0];
         if (!assessment) return false;
         const assessmentDate = new Date(assessment.updated_at);
         const now = new Date();
@@ -104,12 +102,11 @@ export default function PerformanceMetrics() {
       .filter(p => p.staff_unit && p.staff_position)
       .map(profile => {
         const assessedApplications = applications.filter(app => 
-          app.initial_assessments?.some((a: any) => a.assessed_by === profile.user_id) ||
           app.compliance_assessments?.some((a: any) => a.assessed_by === profile.user_id)
         );
         
         const thisMonthAssessments = assessedApplications.filter(app => {
-          const assessment = app.initial_assessments?.[0] || app.compliance_assessments?.[0];
+          const assessment = app.compliance_assessments?.[0];
           if (!assessment) return false;
           const date = new Date(assessment.updated_at);
           const now = new Date();

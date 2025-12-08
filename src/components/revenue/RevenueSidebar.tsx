@@ -44,6 +44,7 @@ const revenueNavigationItems: RevenueNavigationItem[] = [
     value: "listings", 
     icon: List,
     subItems: [
+      { title: "Intents", value: "listings-intents", icon: FileText },
       { title: "Entities", value: "listings-entities", icon: Building2 },
       { title: "Permits", value: "listings-permits", icon: FileText },
     ]

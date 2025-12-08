@@ -1,13 +1,10 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRightLeft, Building, CheckCircle } from "lucide-react";
+import { ArrowRightLeft, Building } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-
+import { CEPAInternalReviewTabs } from "@/components/shared/CEPAInternalReviewTabs";
 export function PermitTransferReview() {
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
   const [reviewStatus, setReviewStatus] = useState("");
@@ -159,48 +156,13 @@ export function PermitTransferReview() {
             </CardContent>
           </Card>
 
-          <Card className="bg-accent/50">
-            <CardHeader>
-              <CardTitle>Registry Review & Assessment</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="reviewStatus">Review Decision</Label>
-                <Select value={reviewStatus} onValueChange={setReviewStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select review decision" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="approved">Approve Transfer</SelectItem>
-                    <SelectItem value="requires_clarification">Requires Clarification</SelectItem>
-                    <SelectItem value="rejected">Reject Transfer</SelectItem>
-                    <SelectItem value="forward_to_compliance">Forward to Compliance</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="reviewNotes">Registry Review Notes</Label>
-                <Textarea
-                  id="reviewNotes"
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  placeholder="Assess transferee qualifications, document completeness, and provide recommendations..."
-                  rows={6}
-                />
-              </div>
-
-              <div className="flex gap-3 justify-end">
-                <Button variant="secondary" className="w-32">
-                  Save Draft
-                </Button>
-                <Button onClick={handleSubmitReview} className="w-40">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Submit Review
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {/* CEPA Internal Review Tabs */}
+          <CEPAInternalReviewTabs
+            applicationId={selectedRequestData.id}
+            applicationType="permit_transfer"
+            applicationNumber={selectedRequestData.permitNumber}
+            currentStatus={selectedRequestData.status}
+          />
         </>
       )}
     </>

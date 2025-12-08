@@ -2158,39 +2158,26 @@ export function PermitApplicationsMap({
         </div>
       </CardHeader>
       <CardContent className="relative space-y-4">
-        {/* Drawing Tool Info and File Upload - Hidden when hideDrawingTools is true or readOnly */}
+        {/* File Upload - Hidden when hideDrawingTools is true or readOnly */}
         {!hideDrawingTools && !readOnly && (
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-              <div className="flex items-start gap-2 text-sm">
-                <Edit3 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <span className="font-medium block mb-1">AOI Drawing Tool</span>
-                  <p className="text-xs text-muted-foreground">
-                    Use the polygon tool (top-left of map) to draw your project boundary directly on the map. Click points to create a polygon shape, and double-click or connect back to the starting point to complete.
-                  </p>
+          <div className="p-3 sm:p-4 bg-primary/5 rounded-lg border border-primary/20">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+              <Upload className="w-5 h-5 text-primary flex-shrink-0 hidden sm:block" />
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2 sm:block">
+                  <Upload className="w-4 h-4 text-primary sm:hidden" />
+                  <span className="font-medium text-sm sm:text-base">Upload AOI Files</span>
                 </div>
-              </div>
-            </div>
-            
-            <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-              <div className="flex items-start gap-2 text-sm">
-                <Upload className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <span className="font-medium block mb-1">Upload AOI Files</span>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Or upload existing geographic files (KML, KMZ, GeoJSON, GPX, CSV, or ZIP containing these formats).
-                  </p>
-                  <div>
-                    <Input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".kml,.kmz,.json,.geojson,.zip,.gpx,.csv"
-                      onChange={handleFileUpload}
-                      className="h-8 text-xs cursor-pointer"
-                    />
-                  </div>
-                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Upload existing geographic files (KML, KMZ, GeoJSON, GPX, CSV, or ZIP containing these formats).
+                </p>
+                <Input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".kml,.kmz,.json,.geojson,.zip,.gpx,.csv"
+                  onChange={handleFileUpload}
+                  className="h-9 sm:h-10 text-xs sm:text-sm cursor-pointer w-full"
+                />
               </div>
             </div>
           </div>

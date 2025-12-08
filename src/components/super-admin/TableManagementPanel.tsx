@@ -12,7 +12,6 @@ const TABLE_CATEGORIES = {
     color: 'blue',
     tables: [
       { name: 'permit_applications', description: 'Core permit application data', records: 'Variable' },
-      { name: 'initial_assessments', description: 'Registry initial assessments', records: 'Variable' },
       { name: 'prescribed_activities', description: 'Prescribed activity definitions', records: '~100' },
       { name: 'activity_levels', description: 'Activity level classifications', records: '~5' },
       { name: 'permit_types', description: 'Available permit types', records: '~20' },

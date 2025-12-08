@@ -30,10 +30,9 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface ComprehensivePermitApplicationViewProps {
   application: any;
-  initialAssessment?: any;
 }
 
-export function ComprehensivePermitApplicationView({ application, initialAssessment }: ComprehensivePermitApplicationViewProps) {
+export function ComprehensivePermitApplicationView({ application }: ComprehensivePermitApplicationViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [activeTab, setActiveTab] = useState("basic-info");
@@ -526,48 +525,6 @@ export function ComprehensivePermitApplicationView({ application, initialAssessm
                   </div>
                 </div>
 
-                {/* Registry Assessment Feedback */}
-                {initialAssessment && (
-                  <div>
-                    <Label className="text-sm font-medium">Registry Assessment</Label>
-                    <div className="mt-4 p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          {initialAssessment.assessment_status === 'passed' ? (
-                            <CheckCircle className="w-5 h-5 text-green-500" />
-                          ) : (
-                            <AlertTriangle className="w-5 h-5 text-yellow-500" />
-                          )}
-                          <span className="font-medium">
-                            Status: {initialAssessment.assessment_status.replace('_', ' ').toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(initialAssessment.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="p-3 bg-muted/50 rounded-lg">
-                          <Label className="text-sm font-medium">Assessment Outcome</Label>
-                          <p className="text-sm mt-1">{initialAssessment.assessment_outcome}</p>
-                        </div>
-
-                        <div className="p-3 bg-muted/50 rounded-lg">
-                          <Label className="text-sm font-medium">Registry Notes</Label>
-                          <p className="text-sm mt-1">{initialAssessment.assessment_notes}</p>
-                        </div>
-
-                        {initialAssessment.feedback_provided && (
-                          <div className="p-3 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
-                            <Label className="text-sm font-medium text-blue-800">Specific Feedback</Label>
-                            <p className="text-sm mt-1 text-blue-700">{initialAssessment.feedback_provided}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </TabsContent>
           </Tabs>

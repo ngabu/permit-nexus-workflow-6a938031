@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,6 +28,12 @@ export function IntentComplianceReviewTab({ intentId, currentStatus, onStatusUpd
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; path: string }[]>([]);
+  
+  // Validation checkboxes
+  const [activityLevelJustified, setActivityLevelJustified] = useState(false);
+  const [projectSiteVerified, setProjectSiteVerified] = useState(false);
+  const [siteInspectionCompleted, setSiteInspectionCompleted] = useState(false);
+  const [workplanConfirmed, setWorkplanConfirmed] = useState(false);
 
   // Check if user can edit this tab (only compliance staff)
   const canEdit = profile?.staff_unit === 'compliance' || 
@@ -117,6 +124,57 @@ export function IntentComplianceReviewTab({ intentId, currentStatus, onStatusUpd
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
+        {/* Validation Checkboxes */}
+        <div className="space-y-3 p-4 bg-orange-500/5 rounded-lg border border-orange-200 dark:border-orange-900">
+          <Label className="text-sm font-semibold">Compliance Validation Checklist</Label>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="activityLevelJustified"
+                checked={activityLevelJustified}
+                onCheckedChange={(checked) => setActivityLevelJustified(!!checked)}
+                disabled={!canEdit}
+              />
+              <Label htmlFor="activityLevelJustified" className="text-sm font-normal cursor-pointer">
+                Project Activity Level and Prescribed Activity justified
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="projectSiteVerified"
+                checked={projectSiteVerified}
+                onCheckedChange={(checked) => setProjectSiteVerified(!!checked)}
+                disabled={!canEdit}
+              />
+              <Label htmlFor="projectSiteVerified" className="text-sm font-normal cursor-pointer">
+                Project Site Verified
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="siteInspectionCompleted"
+                checked={siteInspectionCompleted}
+                onCheckedChange={(checked) => setSiteInspectionCompleted(!!checked)}
+                disabled={!canEdit}
+              />
+              <Label htmlFor="siteInspectionCompleted" className="text-sm font-normal cursor-pointer">
+                Site Inspection completed
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="workplanConfirmed"
+                checked={workplanConfirmed}
+                onCheckedChange={(checked) => setWorkplanConfirmed(!!checked)}
+                disabled={!canEdit}
+              />
+              <Label htmlFor="workplanConfirmed" className="text-sm font-normal cursor-pointer">
+                Workplan Confirmed
+              </Label>
+            </div>
+          </div>
+        </div>
+
         {!canEdit && (
           <Alert>
             <Lock className="h-4 w-4" />

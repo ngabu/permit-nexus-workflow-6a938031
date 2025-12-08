@@ -29,18 +29,6 @@ interface ApplicationDetails {
   entity_name: string | null;
 }
 
-interface InitialAssessment {
-  id: string;
-  assessment_status: string;
-  assessment_outcome: string;
-  assessment_notes: string | null;
-  feedback_provided: string | null;
-  assessed_by: string | null;
-  created_at: string;
-  updated_at: string;
-  assessor_name: string | null;
-}
-
 interface ComplianceAssessment {
   id: string;
   assessment_status: string;
@@ -58,7 +46,6 @@ interface ComplianceAssessment {
 export function ApplicationDetailDialog({ open, onOpenChange, permitApplicationId }: ApplicationDetailDialogProps) {
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<ApplicationDetails | null>(null);
-  const [initialAssessment, setInitialAssessment] = useState<InitialAssessment | null>(null);
   const [complianceAssessment, setComplianceAssessment] = useState<ComplianceAssessment | null>(null);
   const [showFullApplication, setShowFullApplication] = useState(false);
   const { toast } = useToast();
@@ -96,46 +83,7 @@ export function ApplicationDetailDialog({ open, onOpenChange, permitApplicationI
       }
       setApplication(appData);
 
-      // Fetch initial assessment with better error handling
-      const { data: initialData, error: initialError } = await supabase
-        .from('initial_assessments')
-        .select(`
-          id,
-          assessment_status,
-          assessment_outcome,
-          assessment_notes,
-          feedback_provided,
-          assessed_by,
-          created_at,
-          updated_at
-        `)
-        .eq('permit_application_id', permitApplicationId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (initialError) {
-        console.error('Error fetching initial assessment:', initialError);
-      } else if (initialData) {
-        // Fetch assessor profile separately to avoid foreign key issues
-        let assessorName = null;
-        if (initialData.assessed_by && initialData.assessed_by !== '00000000-0000-0000-0000-000000000000') {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('first_name, last_name')
-            .eq('user_id', initialData.assessed_by)
-            .single();
-          
-          if (profileData) {
-            assessorName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
-          }
-        }
-
-        setInitialAssessment({
-          ...initialData,
-          assessor_name: assessorName
-        });
-      }
+      // Note: initial_assessments table has been removed - no longer needed
 
       // Fetch compliance assessment with better error handling
       const { data: complianceData, error: complianceError } = await supabase
@@ -299,62 +247,12 @@ export function ApplicationDetailDialog({ open, onOpenChange, permitApplicationI
             </TabsList>
 
             <TabsContent value="registry" className="space-y-4">
-              {initialAssessment ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <span>Registry Assessment</span>
-                      <Badge variant={getStatusBadgeVariant(initialAssessment.assessment_status)}>
-                        {initialAssessment.assessment_status.replace(/_/g, ' ')}
-                      </Badge>
-                    </CardTitle>
-                    <CardDescription>
-                      Initial assessment by registry team
-                      {initialAssessment.assessor_name && ` • Assessed by ${initialAssessment.assessor_name}`}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {initialAssessment.assessment_outcome && (
-                      <div>
-                        <h4 className="font-medium mb-2">Assessment Outcome</h4>
-                        <p className="text-sm bg-sidebar p-3 rounded-lg">
-                          {initialAssessment.assessment_outcome}
-                        </p>
-                      </div>
-                    )}
-                    
-                    {initialAssessment.assessment_notes && (
-                      <div>
-                        <h4 className="font-medium mb-2">Assessment Notes</h4>
-                        <p className="text-sm bg-sidebar p-3 rounded-lg">
-                          {initialAssessment.assessment_notes}
-                        </p>
-                      </div>
-                    )}
-                    
-                    {initialAssessment.feedback_provided && (
-                      <div>
-                        <h4 className="font-medium mb-2 text-blue-700">Registry Feedback</h4>
-                        <p className="text-sm bg-blue-50 border border-blue-200 p-3 rounded-lg text-blue-800">
-                          {initialAssessment.feedback_provided}
-                        </p>
-                      </div>
-                    )}
-                    
-                    <Separator />
-                    <div className="text-xs text-muted-foreground">
-                      Last updated: {formatDistanceToNow(new Date(initialAssessment.updated_at), { addSuffix: true })}
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card>
-                  <CardContent className="text-center py-8">
-                    <Clock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground">No registry assessment available yet</p>
-                  </CardContent>
-                </Card>
-              )}
+              <Card>
+                <CardContent className="text-center py-8">
+                  <Clock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">Registry assessment information is tracked in the workflow system</p>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="compliance" className="space-y-4">

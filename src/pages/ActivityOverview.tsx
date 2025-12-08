@@ -113,12 +113,7 @@ export default function ActivityOverview({ onNavigate }: ActivityOverviewProps) 
           status, 
           updated_at, 
           application_number,
-          initial_assessments!inner (
-            assessment_notes,
-            feedback_provided,
-            assessment_status,
-            assessment_outcome
-          )
+          description
         `)
         .eq('user_id', user?.id)
         .order('updated_at', { ascending: false })
@@ -126,11 +121,10 @@ export default function ActivityOverview({ onNavigate }: ActivityOverviewProps) 
 
       if (!appError && applications) {
         applications.forEach(app => {
-          const assessment = app.initial_assessments?.[0];
           let description = `${app.title || 'Permit Application'} ${app.application_number ? `(${app.application_number})` : ''}`;
           
-          if (assessment?.feedback_provided) {
-            description += ` - ${assessment.feedback_provided}`;
+          if (app.description) {
+            description += ` - ${app.description.substring(0, 50)}`;
           }
 
           activities.push({

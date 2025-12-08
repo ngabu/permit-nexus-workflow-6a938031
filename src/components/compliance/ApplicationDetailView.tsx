@@ -21,26 +21,14 @@ interface ApplicationDetail {
   completion_date?: string;
 }
 
-interface InitialAssessment {
-  id: string;
-  assessment_status: string;
-  assessment_notes: string;
-  assessment_outcome: string;
-  feedback_provided: string | null;
-  assessed_by: string;
-  created_at: string;
-}
-
 interface ApplicationDetailViewProps {
   application: ApplicationDetail | null;
-  initialAssessment?: InitialAssessment;
 }
 
-export function ApplicationDetailView({ application, initialAssessment }: ApplicationDetailViewProps) {
+export function ApplicationDetailView({ application }: ApplicationDetailViewProps) {
   return (
     <ComprehensivePermitApplicationView 
       application={application} 
-      initialAssessment={initialAssessment} 
     />
   );
 }

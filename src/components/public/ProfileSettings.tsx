@@ -8,7 +8,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Mail, Phone, MapPin, Building } from 'lucide-react';
 
-export function ProfileSettings() {
+interface ProfileSettingsProps {
+  readOnly?: boolean;
+}
+
+export function ProfileSettings({ readOnly = false }: ProfileSettingsProps) {
   const { user, profile, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -81,7 +85,11 @@ export function ProfileSettings() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-forest-800">Profile Settings</h1>
-        <p className="text-forest-600 mt-1">Manage your personal information and preferences</p>
+        <p className="text-forest-600 mt-1">
+          {readOnly 
+            ? "View your personal information. Contact Admin to make changes." 
+            : "Manage your personal information and preferences"}
+        </p>
       </div>
 
       <Card>
@@ -91,7 +99,9 @@ export function ProfileSettings() {
             Personal Information
           </CardTitle>
           <CardDescription>
-            Update your personal details and contact information
+            {readOnly 
+              ? "Your profile information (read-only)" 
+              : "Update your personal details and contact information"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,6 +114,8 @@ export function ProfileSettings() {
                   value={formData.first_name}
                   onChange={(e) => handleInputChange('first_name', e.target.value)}
                   placeholder="Enter your first name"
+                  readOnly={readOnly}
+                  className={readOnly ? "bg-muted cursor-not-allowed" : ""}
                 />
               </div>
               <div className="space-y-2">
@@ -113,6 +125,8 @@ export function ProfileSettings() {
                   value={formData.last_name}
                   onChange={(e) => handleInputChange('last_name', e.target.value)}
                   placeholder="Enter your last name"
+                  readOnly={readOnly}
+                  className={readOnly ? "bg-muted cursor-not-allowed" : ""}
                 />
               </div>
             </div>
@@ -126,8 +140,9 @@ export function ProfileSettings() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 ${readOnly ? "bg-muted cursor-not-allowed" : ""}`}
                   placeholder="Enter your email address"
+                  readOnly={readOnly}
                 />
               </div>
             </div>
@@ -141,8 +156,9 @@ export function ProfileSettings() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 ${readOnly ? "bg-muted cursor-not-allowed" : ""}`}
                   placeholder="Enter your phone number"
+                  readOnly={readOnly}
                 />
               </div>
             </div>
@@ -155,8 +171,9 @@ export function ProfileSettings() {
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 ${readOnly ? "bg-muted cursor-not-allowed" : ""}`}
                   placeholder="Enter your address"
+                  readOnly={readOnly}
                 />
               </div>
             </div>
@@ -169,19 +186,22 @@ export function ProfileSettings() {
                   id="organization"
                   value={formData.organization}
                   onChange={(e) => handleInputChange('organization', e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 ${readOnly ? "bg-muted cursor-not-allowed" : ""}`}
                   placeholder="Enter your organization (optional)"
+                  readOnly={readOnly}
                 />
               </div>
             </div>
 
-            <Button 
-              type="submit" 
-              disabled={loading}
-              className="w-full md:w-auto"
-            >
-              {loading ? 'Updating...' : 'Update Profile'}
-            </Button>
+            {!readOnly && (
+              <Button 
+                type="submit" 
+                disabled={loading}
+                className="w-full md:w-auto"
+              >
+                {loading ? 'Updating...' : 'Update Profile'}
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>

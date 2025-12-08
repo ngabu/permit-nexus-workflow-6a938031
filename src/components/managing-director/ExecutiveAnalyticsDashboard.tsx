@@ -109,9 +109,21 @@ export function ExecutiveAnalyticsDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('permit_applications')
-        .select('id, status, permit_type, created_at, updated_at, province, district, entity_name, title')
+        .select('id, status, permit_type, created_at, updated_at, province, district, entity_name, title, activity_level, estimated_cost_kina')
         .gte('created_at', dateFilters.start.toISOString())
         .lte('created_at', dateFilters.end.toISOString());
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch all permit applications for investment value calculation (not filtered by date)
+  const { data: allPermitApplications = [] } = useQuery({
+    queryKey: ['executive-permits-all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('permit_applications')
+        .select('id, status, activity_level, estimated_cost_kina, created_at');
       if (error) throw error;
       return data || [];
     },
@@ -171,13 +183,13 @@ export function ExecutiveAnalyticsDashboard() {
     },
   });
 
-  // Fetch intent registrations (all for investment value by year)
+  // Fetch intent registrations (for other metrics)
   const { data: intentRegistrations = [] } = useQuery({
     queryKey: ['executive-intents-all'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('intent_registrations')
-        .select('id, status, province, created_at, estimated_cost_kina, activity_level');
+        .select('id, status, province, created_at');
       if (error) throw error;
       return data || [];
     },
@@ -216,44 +228,46 @@ export function ExecutiveAnalyticsDashboard() {
     const years = new Set<number>();
     const currentYear = new Date().getFullYear();
     years.add(currentYear);
-    intentRegistrations.forEach(intent => {
-      if (intent.created_at) {
-        years.add(new Date(intent.created_at).getFullYear());
+    allPermitApplications.forEach(permit => {
+      if (permit.created_at) {
+        years.add(new Date(permit.created_at).getFullYear());
       }
     });
     return Array.from(years).sort((a, b) => b - a);
-  }, [intentRegistrations]);
+  }, [allPermitApplications]);
 
   // Calculate investment values by activity level for selected year (only approved/active permits)
   const investmentByLevel = useMemo(() => {
     const yearStart = new Date(investmentYearFilter, 0, 1);
     const yearEnd = new Date(investmentYearFilter, 11, 31, 23, 59, 59);
     
-    // Filter for active (approved) intent registrations within the selected year
-    const activeYearIntents = intentRegistrations.filter(intent => {
-      const createdDate = new Date(intent.created_at);
-      return createdDate >= yearStart && createdDate <= yearEnd && intent.status === 'approved';
+    // Filter for approved/active/issued permits within the selected year
+    const approvedStatuses = ['approved', 'active', 'issued'];
+    const activeYearPermits = allPermitApplications.filter(permit => {
+      const createdDate = new Date(permit.created_at);
+      return createdDate >= yearStart && createdDate <= yearEnd && 
+             approvedStatuses.includes(permit.status?.toLowerCase() || '');
     });
 
-    const level2Intents = activeYearIntents.filter(i => i.activity_level === 'Level 2' || i.activity_level === '2');
-    const level3Intents = activeYearIntents.filter(i => i.activity_level === 'Level 3' || i.activity_level === '3');
+    const level2Permits = activeYearPermits.filter(p => p.activity_level === 'Level 2' || p.activity_level === '2');
+    const level3Permits = activeYearPermits.filter(p => p.activity_level === 'Level 3' || p.activity_level === '3');
 
-    const level2Value = level2Intents.reduce((sum, i) => sum + Number(i.estimated_cost_kina || 0), 0);
-    const level3Value = level3Intents.reduce((sum, i) => sum + Number(i.estimated_cost_kina || 0), 0);
+    const level2Value = level2Permits.reduce((sum, p) => sum + Number(p.estimated_cost_kina || 0), 0);
+    const level3Value = level3Permits.reduce((sum, p) => sum + Number(p.estimated_cost_kina || 0), 0);
     
     return {
       level2: {
         value: level2Value,
-        count: level2Intents.length,
+        count: level2Permits.length,
       },
       level3: {
         value: level3Value,
-        count: level3Intents.length,
+        count: level3Permits.length,
       },
       total: level2Value + level3Value,
-      totalCount: level2Intents.length + level3Intents.length,
+      totalCount: level2Permits.length + level3Permits.length,
     };
-  }, [intentRegistrations, investmentYearFilter]);
+  }, [allPermitApplications, investmentYearFilter]);
 
   // Compliance tab data
   const complianceTabData = useMemo(() => {
@@ -308,7 +322,9 @@ export function ExecutiveAnalyticsDashboard() {
     const approvalRate = totalApplications > 0 ? Math.round((approvedApplications / totalApplications) * 100) : 0;
     const collectionRate = totalRevenue > 0 ? Math.round((collectedRevenue / totalRevenue) * 100) : 0;
     
-    const totalProjectValue = intentRegistrations.reduce((sum, i) => sum + Number(i.estimated_cost_kina || 0), 0);
+    const totalProjectValue = allPermitApplications
+      .filter(p => ['approved', 'active', 'issued'].includes(p.status?.toLowerCase() || ''))
+      .reduce((sum, p) => sum + Number(p.estimated_cost_kina || 0), 0);
     
     return {
       totalApplications,

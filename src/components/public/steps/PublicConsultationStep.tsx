@@ -11,10 +11,14 @@ import { supabase } from '@/integrations/supabase/client';
 interface PublicConsultationStepProps {
   data: any;
   onChange: (data: any) => void;
+  hasLinkedIntent?: boolean;
 }
 
-export function PublicConsultationStep({ data, onChange }: PublicConsultationStepProps) {
+export function PublicConsultationStep({ data, onChange, hasLinkedIntent = false }: PublicConsultationStepProps) {
   const isPublicConsultationRequired = ['Level 2', 'Level 3'].includes(data.activity_level);
+  
+  // Styles for intent-populated fields
+  const intentFieldStyles = hasLinkedIntent ? "bg-amber-50 cursor-not-allowed" : "";
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -129,7 +133,10 @@ export function PublicConsultationStep({ data, onChange }: PublicConsultationSte
             {/* Agreement with Government */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="government_agreement">Agreement with Government of Papua New Guinea *</Label>
+                <Label htmlFor="government_agreement">
+                  Agreement with Government of Papua New Guinea *
+                  {hasLinkedIntent && <span className="text-amber-600 text-xs ml-1">(From Intent)</span>}
+                </Label>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -145,13 +152,18 @@ export function PublicConsultationStep({ data, onChange }: PublicConsultationSte
                 onChange={(e) => onChange({ government_agreement: e.target.value })}
                 placeholder="Specify any agreements with PNG Government..."
                 rows={3}
+                readOnly={hasLinkedIntent}
+                className={intentFieldStyles}
               />
             </div>
 
             {/* Other Government Departments Approached */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="departments_approached">Other Government Departments or Statutory Bodies Approached *</Label>
+                <Label htmlFor="departments_approached">
+                  Other Government Departments or Statutory Bodies Approached *
+                  {hasLinkedIntent && <span className="text-amber-600 text-xs ml-1">(From Intent)</span>}
+                </Label>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -167,13 +179,18 @@ export function PublicConsultationStep({ data, onChange }: PublicConsultationSte
                 onChange={(e) => onChange({ departments_approached: e.target.value })}
                 placeholder="List any government departments or statutory bodies you have consulted..."
                 rows={3}
+                readOnly={hasLinkedIntent}
+                className={intentFieldStyles}
               />
             </div>
 
             {/* Other Formal Government Approvals Required */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="approvals_required">Other Formal Government Approvals Required *</Label>
+                <Label htmlFor="approvals_required">
+                  Other Formal Government Approvals Required *
+                  {hasLinkedIntent && <span className="text-amber-600 text-xs ml-1">(From Intent)</span>}
+                </Label>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -189,13 +206,18 @@ export function PublicConsultationStep({ data, onChange }: PublicConsultationSte
                 onChange={(e) => onChange({ approvals_required: e.target.value })}
                 placeholder="List any other government approvals required..."
                 rows={3}
+                readOnly={hasLinkedIntent}
+                className={intentFieldStyles}
               />
             </div>
 
             {/* Landowner Negotiation Status */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="landowner_negotiation_status">Landowner Negotiation Status *</Label>
+                <Label htmlFor="landowner_negotiation_status">
+                  Landowner Negotiation Status *
+                  {hasLinkedIntent && <span className="text-amber-600 text-xs ml-1">(From Intent)</span>}
+                </Label>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -211,6 +233,8 @@ export function PublicConsultationStep({ data, onChange }: PublicConsultationSte
                 onChange={(e) => onChange({ landowner_negotiation_status: e.target.value })}
                 placeholder="Describe the status of landowner negotiations..."
                 rows={3}
+                readOnly={hasLinkedIntent}
+                className={intentFieldStyles}
               />
             </div>
           </CardContent>

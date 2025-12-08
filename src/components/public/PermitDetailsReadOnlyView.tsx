@@ -59,7 +59,6 @@ interface PermitDetailsReadOnlyViewProps {
 export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewProps) {
   const [documents, setDocuments] = useState<any[]>([]);
   const [entity, setEntity] = useState<any>(null);
-  const [initialAssessment, setInitialAssessment] = useState<any>(null);
   const [complianceAssessment, setComplianceAssessment] = useState<any>(null);
   const [feePayments, setFeePayments] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
@@ -102,23 +101,7 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
           if (entityData) setEntity(entityData);
         }
         
-        // Fetch initial assessment
-        const { data: initialAssessmentData } = await supabase
-          .from('initial_assessments')
-          .select(`
-            *,
-            profiles:assessed_by (
-              first_name,
-              last_name,
-              email
-            )
-          `)
-          .eq('permit_application_id', permit.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-        
-        if (initialAssessmentData) setInitialAssessment(initialAssessmentData);
+        // Note: initial_assessments table has been removed - no longer needed
         
         // Fetch compliance assessment
         const { data: complianceAssessmentData } = await supabase
@@ -745,113 +728,39 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
 
           {/* REVIEW TAB */}
           <TabsContent value="review" className="space-y-4">
-            {initialAssessment ? (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center justify-between">
-                    <div className="flex items-center">
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Initial Assessment Review
-                    </div>
-                    <Badge className={`${
-                      initialAssessment.assessment_status === 'passed' ? 'bg-green-100 text-green-800' :
-                      initialAssessment.assessment_status === 'failed' ? 'bg-red-100 text-red-800' :
-                      initialAssessment.assessment_status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {initialAssessment.assessment_status?.toUpperCase() || 'PENDING'}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Assessment Outcome</label>
-                      <p className="text-sm text-foreground">{initialAssessment.assessment_outcome || 'Not determined'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Assessment Date</label>
-                      <p className="text-sm text-foreground">{formatDate(initialAssessment.assessment_date)}</p>
-                    </div>
-                    {initialAssessment.profiles && (
-                      <div className="md:col-span-2">
-                        <label className="text-sm font-medium text-muted-foreground">Assessed By</label>
-                        <p className="text-sm text-foreground">
-                          {initialAssessment.profiles.first_name} {initialAssessment.profiles.last_name} ({initialAssessment.profiles.email})
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {initialAssessment.assessment_notes && (
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Assessment Notes</label>
-                      <p className="text-sm mt-1 text-foreground whitespace-pre-wrap bg-muted/30 p-3 rounded-lg">
-                        {initialAssessment.assessment_notes}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {initialAssessment.feedback_provided && (
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Feedback Provided</label>
-                      <p className="text-sm mt-1 text-foreground whitespace-pre-wrap bg-muted/30 p-3 rounded-lg">
-                        {initialAssessment.feedback_provided}
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
-                    <div className="p-4 bg-muted/30 rounded-lg">
-                      <h4 className="font-medium mb-2 text-sm text-muted-foreground">Legal Declaration</h4>
-                      <Badge variant={permit.legal_declaration_accepted ? 'default' : 'secondary'}>
-                        {permit.legal_declaration_accepted ? 'Accepted' : 'Pending'}
-                      </Badge>
-                    </div>
-                    <div className="p-4 bg-muted/30 rounded-lg">
-                      <h4 className="font-medium mb-2 text-sm text-muted-foreground">Compliance Commitment</h4>
-                      <Badge variant={permit.compliance_commitment ? 'default' : 'secondary'}>
-                        {permit.compliance_commitment ? 'Committed' : 'Pending'}
-                      </Badge>
-                    </div>
-                    <div className="p-4 bg-muted/30 rounded-lg">
-                      <h4 className="font-medium mb-2 text-sm text-muted-foreground">Activity Type</h4>
-                      <p className="text-sm text-foreground">{initialAssessment.permit_activity_type || 'Not specified'}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center">
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Application Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Application Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 bg-muted/30 rounded-lg">
-                    <h4 className="font-medium mb-2">Legal Declaration</h4>
+                    <h4 className="font-medium mb-2 text-sm text-muted-foreground">Legal Declaration</h4>
                     <Badge variant={permit.legal_declaration_accepted ? 'default' : 'secondary'}>
                       {permit.legal_declaration_accepted ? 'Accepted' : 'Pending'}
                     </Badge>
                   </div>
                   <div className="p-4 bg-muted/30 rounded-lg">
-                    <h4 className="font-medium mb-2">Compliance Commitment</h4>
+                    <h4 className="font-medium mb-2 text-sm text-muted-foreground">Compliance Commitment</h4>
                     <Badge variant={permit.compliance_commitment ? 'default' : 'secondary'}>
                       {permit.compliance_commitment ? 'Committed' : 'Pending'}
                     </Badge>
                   </div>
                   <div className="p-4 bg-muted/30 rounded-lg">
-                    <h4 className="font-medium mb-2">Payment Status</h4>
+                    <h4 className="font-medium mb-2 text-sm text-muted-foreground">Payment Status</h4>
                     <Badge variant={permit.payment_status === 'paid' ? 'default' : 'secondary'}>
                       {permit.payment_status?.toUpperCase() || 'PENDING'}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-4">No initial assessment record found in the system</p>
-                </CardContent>
-              </Card>
-            )}
+                </div>
+                <p className="text-sm text-muted-foreground mt-4">
+                  Review status is tracked in the application workflow system
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
         </div>
       </Tabs>

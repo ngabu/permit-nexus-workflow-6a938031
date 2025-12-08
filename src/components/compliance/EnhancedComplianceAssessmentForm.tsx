@@ -571,7 +571,6 @@ export function EnhancedComplianceAssessmentForm({ assessmentId, onComplete }: E
                 <CardContent>
                   <ApplicationDetailView 
                     application={assessmentData.permit_application}
-                    initialAssessment={assessmentData.initial_assessment}
                   />
                 </CardContent>
               </Card>
@@ -642,176 +641,18 @@ export function EnhancedComplianceAssessmentForm({ assessmentId, onComplete }: E
                   Registry Assessment & Feedback
                 </CardTitle>
                 <CardDescription>
-                  Comprehensive review of registry team's initial assessment, findings, and specific requirements
+                  Registry workflow information is tracked in the application workflow system
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {assessmentData.initial_assessment ? (
-                  <div className="space-y-6">
-                    {/* Assessment Status Overview */}
-                    <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        {assessmentData.initial_assessment.assessment_status === 'passed' ? (
-                          <CheckCircle className="w-6 h-6 text-green-500" />
-                        ) : assessmentData.initial_assessment.assessment_status === 'failed' ? (
-                          <XCircle className="w-6 h-6 text-red-500" />
-                        ) : (
-                          <AlertTriangle className="w-6 h-6 text-yellow-500" />
-                        )}
-                        <div>
-                          <span className="font-semibold text-lg">
-                            Registry Status: {assessmentData.initial_assessment.assessment_status.replace('_', ' ').toUpperCase()}
-                          </span>
-                          <p className="text-sm text-muted-foreground">
-                            Assessment completed on {new Date(assessmentData.initial_assessment.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge 
-                        variant={
-                          assessmentData.initial_assessment.assessment_status === 'passed' ? 'default' : 
-                          assessmentData.initial_assessment.assessment_status === 'failed' ? 'destructive' : 'secondary'
-                        }
-                        className="text-sm px-3 py-1"
-                      >
-                        {assessmentData.initial_assessment.assessment_status === 'passed' ? 'APPROVED' :
-                         assessmentData.initial_assessment.assessment_status === 'failed' ? 'REJECTED' : 'PENDING'}
-                      </Badge>
-                    </div>
-
-                    {/* Assessment Details Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Assessment Outcome */}
-                      <Card>
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-base flex items-center">
-                            <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
-                            Assessment Outcome
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm leading-relaxed">{assessmentData.initial_assessment.assessment_outcome}</p>
-                        </CardContent>
-                      </Card>
-
-                      {/* Registry Notes */}
-                      <Card>
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-base flex items-center">
-                            <MessageSquare className="w-4 h-4 mr-2 text-blue-500" />
-                            Registry Assessment Notes
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm leading-relaxed">{assessmentData.initial_assessment.assessment_notes}</p>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Specific Feedback Section */}
-                    {assessmentData.initial_assessment.feedback_provided && (
-                      <Card className="border-l-4 border-l-blue-500">
-                        <CardHeader className="bg-blue-50/50">
-                          <CardTitle className="text-base flex items-center text-blue-800">
-                            <AlertTriangle className="w-4 h-4 mr-2" />
-                            🎯 Priority Focus Areas for Compliance Assessment
-                          </CardTitle>
-                          <CardDescription className="text-blue-600">
-                            Specific guidance from registry team to prioritize your technical assessment
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="bg-blue-50/30">
-                          <div className="p-4 bg-white rounded-lg border border-blue-200">
-                            <p className="text-sm leading-relaxed text-blue-900">
-                              {assessmentData.initial_assessment.feedback_provided}
-                            </p>
-                          </div>
-                          <div className="mt-3 flex items-start gap-2">
-                            <div className="text-blue-600 text-xs font-medium">💡 Assessment Tip:</div>
-                            <p className="text-xs text-blue-600 leading-relaxed">
-                              Use this guidance to structure your compliance review and ensure all priority areas are thoroughly assessed
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {/* Assessment Timeline & Metadata */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="p-4 border rounded-lg">
-                        <Label className="text-sm font-medium text-muted-foreground">Assessment Date</Label>
-                        <p className="text-sm font-medium mt-1">
-                          {new Date(assessmentData.initial_assessment.created_at).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </p>
-                      </div>
-                      
-                      <div className="p-4 border rounded-lg">
-                        <Label className="text-sm font-medium text-muted-foreground">Activity Type</Label>
-                        <p className="text-sm font-medium mt-1">
-                          Standard Assessment
-                        </p>
-                      </div>
-
-                      <div className="p-4 border rounded-lg">
-                        <Label className="text-sm font-medium text-muted-foreground">Forwarded to Compliance</Label>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {assessmentData.initial_assessment.assessment_status === 'passed' ? 'Yes' : 'No'}
-                          </Badge>
-                          {assessmentData.initial_assessment.assessment_status === 'passed' && (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Items for Compliance Officer */}
-                    <Card className="bg-green-50/50 border-green-200">
-                      <CardHeader>
-                        <CardTitle className="text-base text-green-800 flex items-center">
-                          <Shield className="w-4 h-4 mr-2" />
-                          Compliance Officer Action Items
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="flex items-start gap-3">
-                            <div className="w-2 h-2 rounded-full bg-green-500 mt-2"></div>
-                            <p className="text-sm text-green-800">
-                              Review registry assessment findings and incorporate into technical evaluation
-                            </p>
-                          </div>
-                          <div className="flex items-start gap-3">
-                            <div className="w-2 h-2 rounded-full bg-green-500 mt-2"></div>
-                            <p className="text-sm text-green-800">
-                              Focus on priority areas highlighted in registry feedback
-                            </p>
-                          </div>
-                          <div className="flex items-start gap-3">
-                            <div className="w-2 h-2 rounded-full bg-green-500 mt-2"></div>
-                            <p className="text-sm text-green-800">
-                              Ensure all technical compliance requirements are verified based on activity classification
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-                    <h3 className="text-lg font-medium text-muted-foreground mb-2">No Registry Assessment Available</h3>
-                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                      This application has not yet been processed by the registry team. 
-                      Registry assessment must be completed before compliance review can proceed.
-                    </p>
-                  </div>
-                )}
+                <div className="text-center py-12">
+                  <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                  <h3 className="text-lg font-medium text-muted-foreground mb-2">Registry Assessment Information</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Registry assessment is now tracked in the application workflow system. 
+                    Please refer to the workflow state for registry processing status.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

@@ -40,13 +40,13 @@ export function ReportsAndAnalysis() {
     },
   });
 
-  // Fetch registry data
+  // Fetch registry data from permit_applications
   const { data: registryData } = useQuery({
     queryKey: ['registry-analytics'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('initial_assessments')
-        .select('assessment_status, assessment_outcome, created_at, permit_activity_type')
+        .from('permit_applications')
+        .select('status, permit_type, created_at, activity_level')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -146,31 +146,31 @@ export function ReportsAndAnalysis() {
 
   // Process registry data for charts
   const registryStatusData = registryData?.reduce((acc: any[], item) => {
-    const existing = acc.find(x => x.name === item.assessment_status);
+    const existing = acc.find(x => x.name === item.status);
     if (existing) {
       existing.value += 1;
     } else {
-      acc.push({ name: item.assessment_status, value: 1 });
+      acc.push({ name: item.status, value: 1 });
     }
     return acc;
   }, []) || [];
 
   const registryOutcomeData = registryData?.reduce((acc: any[], item) => {
-    const existing = acc.find(x => x.name === item.assessment_outcome);
+    const existing = acc.find(x => x.name === item.permit_type);
     if (existing) {
       existing.value += 1;
     } else {
-      acc.push({ name: item.assessment_outcome, value: 1 });
+      acc.push({ name: item.permit_type, value: 1 });
     }
     return acc;
   }, []) || [];
 
   const registryActivityTypeData = registryData?.reduce((acc: any[], item) => {
-    const existing = acc.find(x => x.type === item.permit_activity_type);
+    const existing = acc.find(x => x.type === item.activity_level);
     if (existing) {
       existing.count += 1;
     } else {
-      acc.push({ type: item.permit_activity_type || 'Unknown', count: 1 });
+      acc.push({ type: item.activity_level || 'Unknown', count: 1 });
     }
     return acc;
   }, []) || [];
@@ -453,7 +453,7 @@ export function ReportsAndAnalysis() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-green-600">
-                    {registryData?.filter(item => item.assessment_outcome === 'approved').length || 0}
+                    {registryData?.filter(item => item.status === 'approved').length || 0}
                   </div>
                 </CardContent>
               </Card>
@@ -463,7 +463,7 @@ export function ReportsAndAnalysis() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-yellow-600">
-                    {registryData?.filter(item => item.assessment_status === 'pending').length || 0}
+                    {registryData?.filter(item => item.status === 'submitted' || item.status === 'under_review').length || 0}
                   </div>
                 </CardContent>
               </Card>

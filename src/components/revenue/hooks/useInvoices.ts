@@ -18,6 +18,17 @@ export interface Invoice {
   follow_up_date: string | null;
   follow_up_notes: string | null;
   paid_date?: string;
+  invoice_type?: string;
+  inspection_id?: string | null;
+  intent_registration_id?: string | null;
+  document_path?: string | null;
+  // Verification fields
+  verification_status?: string | null;
+  verified_by?: string | null;
+  verified_at?: string | null;
+  verification_notes?: string | null;
+  cepa_receipt_path?: string | null;
+  stripe_receipt_url?: string | null;
   permit?: {
     title: string;
     permit_number: string | null;
@@ -26,6 +37,18 @@ export interface Invoice {
   entity?: {
     name: string;
     entity_type: string;
+  };
+  inspection?: {
+    id: string;
+    inspection_type: string;
+    scheduled_date: string;
+    province: string | null;
+    number_of_days: number;
+  };
+  intent_registration?: {
+    id: string;
+    activity_description: string;
+    status: string;
   };
   assigned_officer?: {
     full_name: string | null;
@@ -52,6 +75,23 @@ export function useInvoices() {
             entity_name,
             entity_type
           ),
+          inspections (
+            id,
+            inspection_type,
+            scheduled_date,
+            province,
+            number_of_days
+          ),
+          intent_registrations (
+            id,
+            activity_description,
+            status
+          ),
+          entities (
+            id,
+            name,
+            entity_type
+          ),
           profiles!assigned_officer_id (
             id,
             full_name,
@@ -75,18 +115,32 @@ export function useInvoices() {
           permit_number: (invoice.permit_applications as any).permit_number,
           permit_type: (invoice.permit_applications as any).permit_type
         } : undefined,
-        entity: invoice.permit_applications && typeof invoice.permit_applications === 'object' ? {
+        entity: invoice.entities && typeof invoice.entities === 'object' ? {
+          name: (invoice.entities as any).name,
+          entity_type: (invoice.entities as any).entity_type
+        } : (invoice.permit_applications && typeof invoice.permit_applications === 'object' ? {
           name: (invoice.permit_applications as any).entity_name,
           entity_type: (invoice.permit_applications as any).entity_type
+        } : undefined),
+        inspection: invoice.inspections && typeof invoice.inspections === 'object' ? {
+          id: (invoice.inspections as any).id,
+          inspection_type: (invoice.inspections as any).inspection_type,
+          scheduled_date: (invoice.inspections as any).scheduled_date,
+          province: (invoice.inspections as any).province,
+          number_of_days: (invoice.inspections as any).number_of_days
+        } : undefined,
+        intent_registration: invoice.intent_registrations && typeof invoice.intent_registrations === 'object' ? {
+          id: (invoice.intent_registrations as any).id,
+          activity_description: (invoice.intent_registrations as any).activity_description,
+          status: (invoice.intent_registrations as any).status
         } : undefined,
         assigned_officer: invoice.profiles && typeof invoice.profiles === 'object' && invoice.profiles !== null ? {
           full_name: (invoice.profiles as any).full_name,
           email: (invoice.profiles as any).email
         } : undefined,
         payment_status: invoice.status,
-        assigned_officer_id: invoice.user_id,
-        follow_up_date: null,
-        follow_up_notes: null
+        follow_up_date: invoice.follow_up_date,
+        follow_up_notes: invoice.follow_up_notes
       }));
       
       setInvoices(transformedData);

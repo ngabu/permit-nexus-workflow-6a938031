@@ -11,10 +11,16 @@ import PNGMap from './PNGMap';
 interface LocationTabProps {
   formData: any;
   handleInputChange: (field: string, value: any) => void;
+  hasLinkedIntent?: boolean;
 }
 
-const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange }) => {
+const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange, hasLinkedIntent = false }) => {
   const [isOpen, setIsOpen] = useState(true);
+  
+  // Read-only styling for fields populated from intent
+  const intentFieldStyles = hasLinkedIntent 
+    ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 cursor-not-allowed' 
+    : 'bg-glass/50';
 
   return (
     <TooltipProvider>
@@ -50,7 +56,12 @@ const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange }
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="projectLocation">Project Site Address *</Label>
+                      <Label htmlFor="projectLocation">
+                        Project Site Address *
+                        {hasLinkedIntent && (
+                          <span className="text-xs text-amber-600 dark:text-amber-400 font-normal ml-2">(From Intent)</span>
+                        )}
+                      </Label>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -63,15 +74,21 @@ const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange }
                     <Input
                       id="projectLocation"
                       value={formData.projectLocation || ''}
-                      onChange={(e) => handleInputChange('projectLocation', e.target.value)}
+                      onChange={(e) => !hasLinkedIntent && handleInputChange('projectLocation', e.target.value)}
                       placeholder="Enter the physical address of the project site..."
-                      className="bg-glass/50"
+                      className={intentFieldStyles}
+                      readOnly={hasLinkedIntent}
                     />
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="total_area_sqkm">Total Area (sq km)</Label>
+                      <Label htmlFor="total_area_sqkm">
+                        Total Area (sq km)
+                        {hasLinkedIntent && (
+                          <span className="text-xs text-amber-600 dark:text-amber-400 font-normal ml-2">(From Intent)</span>
+                        )}
+                      </Label>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -85,10 +102,11 @@ const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange }
                       id="total_area_sqkm"
                       type="number"
                       value={formData.total_area_sqkm || ''}
-                      onChange={(e) => handleInputChange('total_area_sqkm', e.target.value)}
+                      onChange={(e) => !hasLinkedIntent && handleInputChange('total_area_sqkm', e.target.value)}
                       placeholder="Enter total area"
                       step="0.01"
-                      className="bg-glass/50"
+                      className={intentFieldStyles}
+                      readOnly={hasLinkedIntent}
                     />
                   </div>
                 </div>
@@ -97,7 +115,12 @@ const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange }
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="llg">LLG</Label>
+                      <Label htmlFor="llg">
+                        LLG
+                        {hasLinkedIntent && (
+                          <span className="text-xs text-amber-600 dark:text-amber-400 font-normal ml-2">(From Intent)</span>
+                        )}
+                      </Label>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -110,15 +133,21 @@ const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange }
                     <Input
                       id="llg"
                       value={formData.llg || ''}
-                      onChange={(e) => handleInputChange('llg', e.target.value)}
+                      onChange={(e) => !hasLinkedIntent && handleInputChange('llg', e.target.value)}
                       placeholder="Enter LLG"
-                      className="bg-glass/50"
+                      className={intentFieldStyles}
+                      readOnly={hasLinkedIntent}
                     />
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="district">District</Label>
+                      <Label htmlFor="district">
+                        District
+                        {hasLinkedIntent && (
+                          <span className="text-xs text-amber-600 dark:text-amber-400 font-normal ml-2">(From Intent)</span>
+                        )}
+                      </Label>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -131,15 +160,21 @@ const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange }
                     <Input
                       id="district"
                       value={formData.district || ''}
-                      onChange={(e) => handleInputChange('district', e.target.value)}
+                      onChange={(e) => !hasLinkedIntent && handleInputChange('district', e.target.value)}
                       placeholder="Enter district"
-                      className="bg-glass/50"
+                      className={intentFieldStyles}
+                      readOnly={hasLinkedIntent}
                     />
                   </div>
                   
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="province">Province</Label>
+                      <Label htmlFor="province">
+                        Province
+                        {hasLinkedIntent && (
+                          <span className="text-xs text-amber-600 dark:text-amber-400 font-normal ml-2">(From Intent)</span>
+                        )}
+                      </Label>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -152,9 +187,10 @@ const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange }
                     <Input
                       id="province"
                       value={formData.province || ''}
-                      onChange={(e) => handleInputChange('province', e.target.value)}
+                      onChange={(e) => !hasLinkedIntent && handleInputChange('province', e.target.value)}
                       placeholder="Enter province"
-                      className="bg-glass/50"
+                      className={intentFieldStyles}
+                      readOnly={hasLinkedIntent}
                     />
                   </div>
                 </div>
@@ -162,7 +198,12 @@ const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange }
                 {/* Description of Project Site */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="project_site_description">Description of Project Site *</Label>
+                    <Label htmlFor="project_site_description">
+                      Description of Project Site *
+                      {hasLinkedIntent && (
+                        <span className="text-xs text-amber-600 dark:text-amber-400 font-normal ml-2">(From Intent)</span>
+                      )}
+                    </Label>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -175,17 +216,23 @@ const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange }
                   <Textarea
                     id="project_site_description"
                     value={formData.project_site_description || ''}
-                    onChange={(e) => handleInputChange('project_site_description', e.target.value)}
+                    onChange={(e) => !hasLinkedIntent && handleInputChange('project_site_description', e.target.value)}
                     placeholder="Provide details about the project site location and characteristics..."
                     rows={4}
-                    className="bg-glass/50"
+                    className={intentFieldStyles}
+                    readOnly={hasLinkedIntent}
                   />
                 </div>
 
                 {/* Details of Site Ownership */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="site_ownership_details">Details of Site Ownership *</Label>
+                    <Label htmlFor="site_ownership_details">
+                      Details of Site Ownership *
+                      {hasLinkedIntent && (
+                        <span className="text-xs text-amber-600 dark:text-amber-400 font-normal ml-2">(From Intent)</span>
+                      )}
+                    </Label>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -198,10 +245,11 @@ const LocationTab: React.FC<LocationTabProps> = ({ formData, handleInputChange }
                   <Textarea
                     id="site_ownership_details"
                     value={formData.site_ownership_details || ''}
-                    onChange={(e) => handleInputChange('site_ownership_details', e.target.value)}
+                    onChange={(e) => !hasLinkedIntent && handleInputChange('site_ownership_details', e.target.value)}
                     placeholder="Provide information about land ownership, tenure, and legal description..."
                     rows={4}
-                    className="bg-glass/50"
+                    className={intentFieldStyles}
+                    readOnly={hasLinkedIntent}
                   />
                 </div>
 

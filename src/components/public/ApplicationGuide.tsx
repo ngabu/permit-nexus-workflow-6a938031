@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Info, FileText, Building2, CheckCircle, Upload, AlertCircle, MapPin } from 'lucide-react';
+import { Info, FileText, Building2, CheckCircle, Upload, AlertCircle, MapPin, FolderOpen } from 'lucide-react';
 
 export const ApplicationGuide = () => {
   return (
@@ -114,7 +114,7 @@ export const ApplicationGuide = () => {
             </li>
             <li className="flex items-start gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span>If you don't receive a confirmation, check your notifications or assume the submission was not successful.</span>
+              <span>Continue checking the dashboards for notifications or updates on your submissions.</span>
             </li>
           </ul>
         </div>
@@ -132,7 +132,7 @@ export const ApplicationGuide = () => {
             </li>
             <li className="flex items-start gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span>Allow sufficient time for each file to upload before attaching another. Files can be up to 25MB each.</span>
+              <span>Allow sufficient time for each file to upload before attaching another.</span>
             </li>
             <li className="flex items-start gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
@@ -185,6 +185,28 @@ export const ApplicationGuide = () => {
           </div>
         </div>
 
+        {/* Documents Management */}
+        <div className="space-y-3">
+          <h3 className="font-semibold text-lg flex items-center gap-2">
+            <FolderOpen className="w-5 h-5 text-primary" />
+            Guidelines, Templates & Document Uploads
+          </h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+              <span><strong>Guidelines and Templates:</strong> Official guidelines and templates for conducting various permit-related activities are available under the <strong>Documents Management</strong> section in the sidebar menu.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+              <span><strong>Upload Your Documents:</strong> You can upload files relating to your applications under various categories in the Documents Management section, including environmental reports, site plans, compliance documents, and other supporting materials.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+              <span>Organize your documents by category to ensure easy access during the application and review process.</span>
+            </li>
+          </ul>
+        </div>
+
         {/* Contact Information */}
         <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
           <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
@@ -195,7 +217,7 @@ export const ApplicationGuide = () => {
             For queries about the application process, guidelines, deadlines, or technical issues, please contact CEPA:
           </p>
           <div className="space-y-1 text-sm">
-            <p><strong>Phone:</strong> +675 [CEPA Contact Number] (during business hours)</p>
+            <p><strong>Phone:</strong> +675 301 4500 (during business hours)</p>
             <p><strong>Email:</strong> permits@cepa.gov.pg</p>
             <p><strong>Office Hours:</strong> Monday to Friday, 8:00 AM - 4:00 PM</p>
           </div>

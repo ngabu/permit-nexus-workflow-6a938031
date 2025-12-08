@@ -70,7 +70,7 @@ export function IntentRegistrationsList() {
   const [intents, setIntents] = useState<IntentRegistration[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  
   const [levelFilter, setLevelFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedIntentId, setExpandedIntentId] = useState<string | null>(null);
@@ -99,7 +99,7 @@ export function IntentRegistrationsList() {
       } = await supabase.from('intent_registrations').select(`
           *,
           entity:entities(id, name, entity_type)
-        `).order('created_at', {
+        `).eq('status', 'approved').order('created_at', {
         ascending: false
       });
       if (error) throw error;
@@ -125,18 +125,17 @@ export function IntentRegistrationsList() {
   const filteredIntents = useMemo(() => {
     return intents.filter(intent => {
       const matchesSearch = intent.activity_description.toLowerCase().includes(searchTerm.toLowerCase()) || intent.entity?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || intent.province?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || intent.status === statusFilter;
       const matchesLevel = levelFilter === 'all' || intent.activity_level === levelFilter;
-      return matchesSearch && matchesStatus && matchesLevel;
+      return matchesSearch && matchesLevel;
     });
-  }, [intents, searchTerm, statusFilter, levelFilter]);
+  }, [intents, searchTerm, levelFilter]);
   const totalPages = Math.ceil(filteredIntents.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedIntents = filteredIntents.slice(startIndex, endIndex);
   useMemo(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, levelFilter]);
+  }, [searchTerm, levelFilter]);
   const activityLevels = useMemo(() => {
     return Array.from(new Set(intents.map(i => i.activity_level)));
   }, [intents]);
@@ -290,7 +289,7 @@ export function IntentRegistrationsList() {
       <CardHeader className="print:hidden">
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <CardTitle>All Intent Registrations</CardTitle>
+            <CardTitle>Approved Intent Registrations</CardTitle>
             <div className="flex gap-2">
               <Button onClick={exportToExcel} className="bg-primary hover:bg-primary/90 text-primary-foreground" size="sm">
                 <FileDown className="h-4 w-4 mr-2" />
@@ -310,20 +309,6 @@ export function IntentRegistrationsList() {
             </div>
             
             <div className="flex gap-2">
-               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px] bg-background">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent className="bg-background border border-border z-50">
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="under_review">Under Review</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-              
               <Select value={levelFilter} onValueChange={setLevelFilter}>
                 <SelectTrigger className="w-[180px] bg-background">
                   <Filter className="h-4 w-4 mr-2" />
@@ -361,7 +346,7 @@ export function IntentRegistrationsList() {
           <TableBody>
             {filteredIntents.length === 0 ? <TableRow className="print:hidden">
                 <TableCell colSpan={8} className="text-center text-muted-foreground">
-                  {searchTerm || statusFilter !== 'all' || levelFilter !== 'all' ? 'No intent registrations match your search criteria' : 'No intent registrations found'}
+                  {searchTerm || levelFilter !== 'all' ? 'No approved intent registrations match your search criteria' : 'No approved intent registrations found'}
                 </TableCell>
               </TableRow> : paginatedIntents.map(intent => {
             const isExpanded = expandedIntentId === intent.id;

@@ -4,18 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { KPICard } from '@/components/kpi-card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Settings, Shield, Database, Activity, TrendingUp, UserCheck, AlertCircle, BarChart3, FileText, Monitor, Globe, Server, Lock, Building } from 'lucide-react';
+import { Users, Settings, Shield, Database, Activity, TrendingUp, UserCheck, AlertCircle, BarChart3, FileText, Monitor, Globe, Building, CheckCircle2 } from 'lucide-react';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { EntityManagement } from '@/components/admin/EntityManagement';
 import { PrescribedActivitiesManagement } from '@/components/admin/PrescribedActivitiesManagement';
 import { ActivityLevelsManagement } from '@/components/admin/ActivityLevelsManagement';
 import { PermitTypesManagement } from '@/components/admin/PermitTypesManagement';
 import { FeeManagement } from '@/components/admin/FeeManagement';
+import { UserActivityLogs } from '@/components/admin/UserActivityLogs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminStats } from '@/hooks/useAdminStats';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import { PermitApplicationsMap } from '@/components/public/PermitApplicationsMap';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminDashboard() {
   const { profile } = useAuth();
@@ -132,27 +133,8 @@ export default function AdminDashboard() {
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Approved Permits Map */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-forest-800 flex items-center">
-                    <Globe className="w-5 h-5 mr-2" />
-                    Approved Permits Map
-                  </CardTitle>
-                  <CardDescription>Geospatial view of all approved permits with GIS layers</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[500px]">
-                    <PermitApplicationsMap 
-                      showAllApplications={true}
-                      defaultStatuses={['approved']}
-                      hideDrawingTools={true}
-                      customTitle="Approved Permits"
-                      customDescription="View all approved permits on the map with filtering options"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              {/* User Activity Logs */}
+              <UserActivityLogs />
 
               {/* Administrative Functions */}
               <Card>

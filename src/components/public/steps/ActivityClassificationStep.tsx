@@ -14,6 +14,7 @@ import { useIndustrialSectors } from '@/hooks/useIndustrialSectors';
 interface ActivityClassificationStepProps {
   data: any;
   onChange: (data: any) => void;
+  hasLinkedIntent?: boolean;
 }
 
 const ACTIVITY_LEVELS = [
@@ -22,7 +23,7 @@ const ACTIVITY_LEVELS = [
   { value: 'Level 3', label: 'Level 3 - High Impact Activities', description: 'High-impact activities requiring comprehensive EIA and EIS' }
 ];
 
-export function ActivityClassificationStep({ data, onChange }: ActivityClassificationStepProps) {
+export function ActivityClassificationStep({ data, onChange, hasLinkedIntent = false }: ActivityClassificationStepProps) {
   const selectedLevel = ACTIVITY_LEVELS.find(level => level.value === data.activity_level);
   const { data: prescribedActivities, isLoading: activitiesLoading } = usePrescribedActivities();
   const { permitTypes, loading: permitTypesLoading } = usePermitTypes();
@@ -143,50 +144,76 @@ export function ActivityClassificationStep({ data, onChange }: ActivityClassific
       <CardContent className="space-y-6">
         <div className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="activity_level">Activity Level *</Label>
-            <Select value={data.activity_level || ''} onValueChange={(value) => onChange({ activity_level: value })}>
-              <SelectTrigger><SelectValue placeholder="Select activity level" /></SelectTrigger>
-              <SelectContent>
-                {ACTIVITY_LEVELS.map((level) => (
-                  <SelectItem key={level.value} value={level.value}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{level.label}</span>
-                      <span className="text-xs text-muted-foreground">{level.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {data.activity_level && (
-            <div className="space-y-2">
-              <Label htmlFor="prescribed_activity">Prescribed Activity *</Label>
-              <Select value={data.prescribed_activity_id || ''} 
-                onValueChange={(value) => {
-                  const selectedActivity = filteredActivities.find(activity => activity.id === value);
-                  onChange({ 
-                    prescribed_activity_id: value, activity_id: value,
-                    activity_category: selectedActivity?.category_type,
-                    activity_subcategory: selectedActivity?.sub_category,
-                    activity_description: selectedActivity?.activity_description
-                  });
-                }}
-                disabled={activitiesLoading || filteredActivities.length === 0}>
-                <SelectTrigger>
-                  <SelectValue placeholder={activitiesLoading ? "Loading activities..." : filteredActivities.length === 0 ? "No activities available for this level" : "Select prescribed activity"} />
-                </SelectTrigger>
+            <Label htmlFor="activity_level">
+              Activity Level *
+              {hasLinkedIntent && (
+                <span className="text-xs text-amber-600 dark:text-amber-400 font-normal ml-2">(From Intent Registration)</span>
+              )}
+            </Label>
+            {hasLinkedIntent ? (
+              <Input 
+                value={data.activity_level || ''} 
+                readOnly 
+                className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 cursor-not-allowed"
+              />
+            ) : (
+              <Select value={data.activity_level || ''} onValueChange={(value) => onChange({ activity_level: value })}>
+                <SelectTrigger><SelectValue placeholder="Select activity level" /></SelectTrigger>
                 <SelectContent>
-                  {filteredActivities.map((activity) => (
-                    <SelectItem key={activity.id} value={activity.id}>
+                  {ACTIVITY_LEVELS.map((level) => (
+                    <SelectItem key={level.value} value={level.value}>
                       <div className="flex flex-col">
-                        <span className="font-medium">{activity.category_number} - {activity.category_type}</span>
-                        <span className="text-xs text-muted-foreground">{activity.activity_description}</span>
+                        <span className="font-medium">{level.label}</span>
+                        <span className="text-xs text-muted-foreground">{level.description}</span>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            )}
+          </div>
+
+          {data.activity_level && (
+            <div className="space-y-2">
+              <Label htmlFor="prescribed_activity">
+                Prescribed Activity *
+                {hasLinkedIntent && data.prescribed_activity_id && (
+                  <span className="text-xs text-amber-600 dark:text-amber-400 font-normal ml-2">(From Intent Registration)</span>
+                )}
+              </Label>
+              {hasLinkedIntent && data.prescribed_activity_id ? (
+                <Input 
+                  value={selectedActivity ? `${selectedActivity.category_number} - ${selectedActivity.category_type}` : data.prescribed_activity_id} 
+                  readOnly 
+                  className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 cursor-not-allowed"
+                />
+              ) : (
+                <Select value={data.prescribed_activity_id || ''} 
+                  onValueChange={(value) => {
+                    const selectedActivity = filteredActivities.find(activity => activity.id === value);
+                    onChange({ 
+                      prescribed_activity_id: value, activity_id: value,
+                      activity_category: selectedActivity?.category_type,
+                      activity_subcategory: selectedActivity?.sub_category,
+                      activity_description: selectedActivity?.activity_description
+                    });
+                  }}
+                  disabled={activitiesLoading || filteredActivities.length === 0}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={activitiesLoading ? "Loading activities..." : filteredActivities.length === 0 ? "No activities available for this level" : "Select prescribed activity"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredActivities.map((activity) => (
+                      <SelectItem key={activity.id} value={activity.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{activity.category_number} - {activity.category_type}</span>
+                          <span className="text-xs text-muted-foreground">{activity.activity_description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           )}
 
@@ -602,6 +629,37 @@ export function ActivityClassificationStep({ data, onChange }: ActivityClassific
                 ))}
               </ul>
             </div>
+
+            {/* Required Document Attachments based on Activity Level */}
+            {(data.activity_level === 'Level 2' || data.activity_level === 'Level 3') && (
+              <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <h4 className="font-medium text-amber-800 dark:text-amber-200 mb-3 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  Required Document Attachments
+                </h4>
+                <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                  The following documents must be attached in the Documents tab:
+                </p>
+                <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <FileText className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-medium">Environmental Impact Assessment (EIA)</span>
+                      <p className="text-xs text-amber-600 dark:text-amber-400">A comprehensive assessment of potential environmental impacts of the proposed activity</p>
+                    </div>
+                  </li>
+                  {data.activity_level === 'Level 3' && (
+                    <li className="flex items-start gap-2">
+                      <FileText className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <span className="font-medium">Environmental Impact Statement (EIS)</span>
+                        <p className="text-xs text-amber-600 dark:text-amber-400">A detailed statement outlining the environmental implications and mitigation strategies for high-impact activities</p>
+                      </div>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

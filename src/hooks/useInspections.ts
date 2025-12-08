@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { generateInspectionInvoiceNumber } from '@/components/compliance/InspectionInvoiceGenerator';
 
 export interface Inspection {
   id: string;
@@ -26,6 +27,8 @@ export interface Inspection {
   permit_number?: string;
   permit_title?: string;
   entity_name?: string;
+  entity_id?: string;
+  user_id?: string;
   inspector_name?: string | null;
 }
 
@@ -54,7 +57,8 @@ export function useInspections() {
             permit_number,
             title,
             entity_id,
-            entities(name)
+            user_id,
+            entities(id, name)
           )
         `)
         .order('scheduled_date', { ascending: false });
@@ -91,6 +95,8 @@ export function useInspections() {
         permit_number: inspection.permit_applications?.permit_number,
         permit_title: inspection.permit_applications?.title,
         entity_name: inspection.permit_applications?.entities?.name,
+        entity_id: inspection.permit_applications?.entity_id,
+        user_id: inspection.permit_applications?.user_id,
         inspector_name: null
       })) || [];
 
@@ -103,12 +109,174 @@ export function useInspections() {
     }
   };
 
-  const createInspection = async (inspectionData: Partial<Inspection>) => {
+  const createInspection = async (inspectionData: Partial<Inspection> & { isIntent?: boolean }) => {
     try {
-      const { error } = await supabase
+      const numberOfDays = inspectionData.number_of_days || 1;
+      
+      // Calculate total travel cost: accommodation and daily allowance are multiplied by number of days
+      const totalAccommodation = (inspectionData.accommodation_cost || 0) * numberOfDays;
+      const totalDailyAllowance = (inspectionData.daily_allowance || 0) * numberOfDays;
+      const totalTravelCost = totalAccommodation + (inspectionData.transportation_cost || 0) + totalDailyAllowance;
+
+      let permitData: any = null;
+      let intentData: any = null;
+      let actualPermitApplicationId: string | null = null;
+      
+      // Determine the permit_application_id based on the category
+      const category = inspectionData.permit_category || '';
+      
+      if (category === 'Intent Registration') {
+        // Fetch intent registration details
+        const { data: intent, error: intentError } = await supabase
+          .from('intent_registrations')
+          .select('id, entity_id, user_id, activity_description, existing_permit_id, entities(id, name)')
+          .eq('id', inspectionData.permit_application_id)
+          .maybeSingle();
+        
+        if (intentError) throw intentError;
+        if (!intent) throw new Error('Intent registration not found');
+        intentData = intent;
+        
+        // Use existing_permit_id if available, otherwise we need to handle this case
+        actualPermitApplicationId = intent.existing_permit_id;
+        
+        // If no linked permit, we cannot create inspection (FK constraint)
+        if (!actualPermitApplicationId) {
+          // Get any permit for the same user to satisfy FK - or throw error
+          const { data: userPermit } = await supabase
+            .from('permit_applications')
+            .select('id')
+            .eq('user_id', intent.user_id)
+            .limit(1)
+            .maybeSingle();
+          
+          if (!userPermit) {
+            toast.error('Cannot schedule inspection: No linked permit application found');
+            return false;
+          }
+          actualPermitApplicationId = userPermit.id;
+        }
+      } else if (category === 'Permit Amalgamation') {
+        const { data: amalgamation, error } = await supabase
+          .from('permit_amalgamations')
+          .select('id, user_id, permit_ids')
+          .eq('id', inspectionData.permit_application_id)
+          .maybeSingle();
+        
+        if (error) throw error;
+        if (!amalgamation) throw new Error('Amalgamation not found');
+        
+        // Use first permit from the array
+        actualPermitApplicationId = amalgamation.permit_ids?.[0] || null;
+        if (!actualPermitApplicationId) {
+          toast.error('Cannot schedule inspection: No permits in amalgamation');
+          return false;
+        }
+        
+        // Fetch permit data for invoice
+        const { data: permit } = await supabase
+          .from('permit_applications')
+          .select('id, permit_number, title, entity_id, user_id, entities(id, name)')
+          .eq('id', actualPermitApplicationId)
+          .maybeSingle();
+        permitData = permit;
+      } else if (category === 'Permit Amendment') {
+        const { data: amendment, error } = await supabase
+          .from('permit_amendments')
+          .select('id, user_id, permit_id')
+          .eq('id', inspectionData.permit_application_id)
+          .maybeSingle();
+        
+        if (error) throw error;
+        if (!amendment) throw new Error('Amendment not found');
+        
+        actualPermitApplicationId = amendment.permit_id;
+        
+        const { data: permit } = await supabase
+          .from('permit_applications')
+          .select('id, permit_number, title, entity_id, user_id, entities(id, name)')
+          .eq('id', actualPermitApplicationId)
+          .maybeSingle();
+        permitData = permit;
+      } else if (category === 'Permit Renewal') {
+        const { data: renewal, error } = await supabase
+          .from('permit_renewals')
+          .select('id, user_id, permit_id')
+          .eq('id', inspectionData.permit_application_id)
+          .maybeSingle();
+        
+        if (error) throw error;
+        if (!renewal) throw new Error('Renewal not found');
+        
+        actualPermitApplicationId = renewal.permit_id;
+        
+        const { data: permit } = await supabase
+          .from('permit_applications')
+          .select('id, permit_number, title, entity_id, user_id, entities(id, name)')
+          .eq('id', actualPermitApplicationId)
+          .maybeSingle();
+        permitData = permit;
+      } else if (category === 'Permit Surrender') {
+        const { data: surrender, error } = await supabase
+          .from('permit_surrenders')
+          .select('id, user_id, permit_id')
+          .eq('id', inspectionData.permit_application_id)
+          .maybeSingle();
+        
+        if (error) throw error;
+        if (!surrender) throw new Error('Surrender not found');
+        
+        actualPermitApplicationId = surrender.permit_id;
+        
+        const { data: permit } = await supabase
+          .from('permit_applications')
+          .select('id, permit_number, title, entity_id, user_id, entities(id, name)')
+          .eq('id', actualPermitApplicationId)
+          .maybeSingle();
+        permitData = permit;
+      } else if (category === 'Permit Transfer') {
+        const { data: transfer, error } = await supabase
+          .from('permit_transfers')
+          .select('id, user_id, permit_id')
+          .eq('id', inspectionData.permit_application_id)
+          .maybeSingle();
+        
+        if (error) throw error;
+        if (!transfer) throw new Error('Transfer not found');
+        
+        actualPermitApplicationId = transfer.permit_id;
+        
+        const { data: permit } = await supabase
+          .from('permit_applications')
+          .select('id, permit_number, title, entity_id, user_id, entities(id, name)')
+          .eq('id', actualPermitApplicationId)
+          .maybeSingle();
+        permitData = permit;
+      } else {
+        // Default: Permit Application
+        actualPermitApplicationId = inspectionData.permit_application_id || null;
+        
+        const { data: permit, error: permitError } = await supabase
+          .from('permit_applications')
+          .select('id, permit_number, title, entity_id, user_id, entities(id, name)')
+          .eq('id', actualPermitApplicationId)
+          .maybeSingle();
+
+        if (permitError) throw permitError;
+        if (!permit) throw new Error('Permit application not found');
+        permitData = permit;
+      }
+
+      if (!actualPermitApplicationId) {
+        toast.error('Cannot schedule inspection: Invalid application reference');
+        return false;
+      }
+
+      // Create the inspection
+      const { data: newInspection, error } = await supabase
         .from('inspections')
         .insert({
-          permit_application_id: inspectionData.permit_application_id,
+          permit_application_id: actualPermitApplicationId,
           inspection_type: inspectionData.inspection_type,
           scheduled_date: inspectionData.scheduled_date,
           inspector_id: inspectionData.inspector_id,
@@ -117,20 +285,57 @@ export function useInspections() {
           accommodation_cost: inspectionData.accommodation_cost || 0,
           transportation_cost: inspectionData.transportation_cost || 0,
           daily_allowance: inspectionData.daily_allowance || 0,
-          number_of_days: inspectionData.number_of_days || 1,
+          total_travel_cost: totalTravelCost,
+          number_of_days: numberOfDays,
           province: inspectionData.province,
           permit_category: inspectionData.permit_category,
           created_by: profile?.user_id
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      toast.success('Inspection scheduled successfully');
+      // Create invoice for the inspection if there are travel costs
+      if (totalTravelCost > 0 && newInspection) {
+        const invoiceNumber = generateInspectionInvoiceNumber();
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 30); // 30 days from now
+
+        const userId = permitData?.user_id || intentData?.user_id;
+        const entityId = permitData?.entity_id || intentData?.entity_id;
+
+        const { error: invoiceError } = await supabase
+          .from('invoices')
+          .insert({
+            user_id: userId,
+            permit_id: actualPermitApplicationId,
+            intent_registration_id: intentData ? inspectionData.permit_application_id : null,
+            entity_id: entityId,
+            inspection_id: newInspection.id,
+            invoice_number: invoiceNumber,
+            invoice_type: 'inspection_fee',
+            amount: totalTravelCost,
+            currency: 'PGK',
+            status: 'unpaid',
+            due_date: dueDate.toISOString()
+          });
+
+        if (invoiceError) {
+          console.error('Error creating inspection invoice:', invoiceError);
+          toast.error('Inspection registered but invoice creation failed');
+        } else {
+          toast.success('Inspection registered and invoice generated successfully');
+        }
+      } else {
+        toast.success('Inspection registered successfully');
+      }
+
       await fetchInspections();
       return true;
     } catch (error) {
       console.error('Error creating inspection:', error);
-      toast.error('Failed to schedule inspection');
+      toast.error('Failed to register inspection');
       return false;
     }
   };

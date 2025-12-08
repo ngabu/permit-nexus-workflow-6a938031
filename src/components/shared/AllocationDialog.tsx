@@ -73,14 +73,14 @@ export function AllocationDialog({
     try {
       console.log('Allocating application:', applicationId, 'to officer:', selectedOfficer);
       
-      // Update the initial_assessment with the selected officer's UUID
+      // Update the permit_applications with the selected officer's UUID
       const { error } = await supabase
-        .from('initial_assessments')
+        .from('permit_applications')
         .update({ 
-          assessed_by: selectedOfficer,  // This is the actual user_id from profiles table
-          assessment_notes: notes || 'Assessment assigned to officer'
+          assigned_officer_id: selectedOfficer,
+          updated_at: new Date().toISOString()
         })
-        .eq('permit_application_id', applicationId);
+        .eq('id', applicationId);
 
       if (error) {
         console.error('Error allocating application:', error);

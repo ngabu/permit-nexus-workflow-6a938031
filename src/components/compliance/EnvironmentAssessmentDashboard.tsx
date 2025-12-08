@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
@@ -274,26 +274,6 @@ export function EnvironmentAssessmentDashboard({ isManager }: EnvironmentAssessm
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="deadlines" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="deadlines">Statutory Deadlines</TabsTrigger>
-          {isManager && <TabsTrigger value="assignments">Assignments</TabsTrigger>}
-        </TabsList>
-
-        <TabsContent value="deadlines">
-          <div className="text-center py-8 text-muted-foreground">
-            Statutory deadlines feature will be connected to real application data.
-          </div>
-        </TabsContent>
-
-        {isManager && (
-          <TabsContent value="assignments">
-            <div className="text-center py-8 text-muted-foreground">
-              Assignment panel will be connected to real application data.
-            </div>
-          </TabsContent>
-        )}
-      </Tabs>
     </div>
   );
 }

@@ -49,6 +49,8 @@ interface IntentRegistration {
   existing_permit_id: string | null;
   project_boundary: any | null;
   total_area_sqkm: number | null;
+  signed_document_path?: string | null;
+  docusign_envelope_id?: string | null;
   entity?: {
     id: string;
     name: string;

@@ -157,30 +157,59 @@ export function useInvoices() {
       }
 
       if (dbInvoices && dbInvoices.length > 0) {
+        // Fetch entity names for invoices
+        const entityIds = [...new Set(dbInvoices.filter(inv => inv.entity_id).map(inv => inv.entity_id))];
+        let entitiesMap: Record<string, string> = {};
+        
+        if (entityIds.length > 0) {
+          const { data: entities } = await supabase
+            .from('entities')
+            .select('id, name')
+            .in('id', entityIds);
+          
+          if (entities) {
+            entitiesMap = entities.reduce((acc, e) => ({ ...acc, [e.id]: e.name }), {});
+          }
+        }
+
         // Map database invoices to our Invoice interface
-        const mappedInvoices: Invoice[] = dbInvoices.map(inv => ({
-          id: inv.id,
-          invoice_number: inv.invoice_number || '',
-          date: inv.created_at ? new Date(inv.created_at).toLocaleDateString('en-GB') : '',
-          yourRef: '', // Not in DB yet
-          contact: 'Kavau Diagoro, Manager Revenue',
-          telephone: '(675) 3014665/3014614',
-          email: 'revenuemanager@cepa.gov.pg',
-          client: '', // Would need to join with entity
-          clientAddress: '',
-          items: [], // Would need separate invoice_items table
-          subtotal: Number(inv.amount) || 0,
-          freight: 0,
-          gst: 0,
-          totalInc: Number(inv.amount) || 0,
-          paidToDate: inv.payment_status === 'paid' ? Number(inv.amount) : 0,
-          balanceDue: inv.payment_status === 'paid' ? 0 : Number(inv.amount),
-          status: (inv.payment_status || inv.status || 'unpaid') as 'paid' | 'unpaid' | 'partial',
-          permitType: 'Environment Permit',
-          activityLevel: '',
-          prescribedActivity: '',
-          receiptUrl: inv.document_path
-        }));
+        const mappedInvoices: Invoice[] = dbInvoices.map(inv => {
+          const invoiceType = inv.invoice_type || 'permit_fee';
+          const isInspectionFee = invoiceType === 'inspection_fee';
+          
+          return {
+            id: inv.id,
+            invoice_number: inv.invoice_number || '',
+            date: inv.created_at ? new Date(inv.created_at).toLocaleDateString('en-GB') : '',
+            yourRef: isInspectionFee ? 'INS-FEE' : '',
+            contact: 'Kavau Diagoro, Manager Revenue',
+            telephone: '(675) 3014665/3014614',
+            email: 'revenuemanager@cepa.gov.pg',
+            client: inv.entity_id ? (entitiesMap[inv.entity_id] || 'Unknown Entity') : '',
+            clientAddress: '',
+            items: isInspectionFee ? [
+              {
+                quantity: 1,
+                itemCode: 'INS-FEE',
+                description: 'Inspection Travel Costs',
+                unitPrice: Number(inv.amount) || 0,
+                disc: 0,
+                totalPrice: Number(inv.amount) || 0
+              }
+            ] : [],
+            subtotal: Number(inv.amount) || 0,
+            freight: 0,
+            gst: 0,
+            totalInc: Number(inv.amount) || 0,
+            paidToDate: inv.payment_status === 'paid' ? Number(inv.amount) : 0,
+            balanceDue: inv.payment_status === 'paid' ? 0 : Number(inv.amount),
+            status: (inv.payment_status || inv.status || 'unpaid') as 'paid' | 'unpaid' | 'partial',
+            permitType: isInspectionFee ? 'Inspection Fee' : 'Environment Permit',
+            activityLevel: '',
+            prescribedActivity: isInspectionFee ? 'Site Inspection' : '',
+            receiptUrl: inv.document_path
+          };
+        });
         setInvoices(mappedInvoices);
       } else {
         // No invoices in DB - seed with mock data

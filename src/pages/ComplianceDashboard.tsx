@@ -67,7 +67,7 @@ const ComplianceDashboardView = () => {
             {activeTab === 'team' && isManager && <TeamManagement />}
             {activeTab === 'reports' && <ComplianceReports />}
             {activeTab === 'analytics-reporting' && <ComplianceAnalyticsReports />}
-            {activeTab === 'profile' && <ProfileSettings />}
+            {activeTab === 'profile' && <ProfileSettings readOnly />}
             {activeTab === 'settings' && <AppSettings />}
             {/* Assessment submenu views with Registry + Compliance review sections */}
             {activeTab === 'intent-reviews' && <IntentRegistrationComplianceReview />}

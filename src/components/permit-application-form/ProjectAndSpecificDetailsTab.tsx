@@ -11,13 +11,20 @@ import { useEntityPermits } from '@/hooks/useEntityPermits';
 interface ProjectAndSpecificDetailsTabProps {
   formData: any;
   handleInputChange: (field: string, value: any) => void;
+  hasLinkedIntent?: boolean;
 }
 
 const ProjectAndSpecificDetailsTab: React.FC<ProjectAndSpecificDetailsTabProps> = ({ 
   formData, 
-  handleInputChange 
+  handleInputChange,
+  hasLinkedIntent = false
 }) => {
   const { permits, loading: permitsLoading } = useEntityPermits(formData.entity_id);
+  
+  // Read-only styling for fields populated from intent
+  const intentFieldStyles = hasLinkedIntent 
+    ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 cursor-not-allowed' 
+    : '';
   
   return (
     <div className="space-y-6">
@@ -51,6 +58,8 @@ const ProjectAndSpecificDetailsTab: React.FC<ProjectAndSpecificDetailsTabProps> 
             onEntityCreate={() => {
               console.log('Entity created successfully');
             }}
+            disabled={hasLinkedIntent}
+            hideAddButton={true}
           />
 
           {/* Existing Permit Selection */}
@@ -129,14 +138,21 @@ const ProjectAndSpecificDetailsTab: React.FC<ProjectAndSpecificDetailsTabProps> 
           </div>
 
           <div>
-            <Label htmlFor="projectDescription">Project Description *</Label>
+            <Label htmlFor="projectDescription" className="flex items-center gap-2">
+              Project Description *
+              {hasLinkedIntent && (
+                <span className="text-xs text-amber-600 dark:text-amber-400 font-normal">(From Intent Registration)</span>
+              )}
+            </Label>
             <Textarea
               id="projectDescription"
               value={formData.projectDescription || ''}
-              onChange={(e) => handleInputChange('projectDescription', e.target.value)}
+              onChange={(e) => !hasLinkedIntent && handleInputChange('projectDescription', e.target.value)}
               placeholder="Provide a detailed description of your project, including objectives, scope, and activities"
               rows={4}
               required
+              readOnly={hasLinkedIntent}
+              className={intentFieldStyles}
             />
           </div>
 

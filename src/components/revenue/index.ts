@@ -1,5 +1,6 @@
 // Revenue Management Components
 export { PaymentProcessing } from './PaymentProcessing';
+export { PaymentVerification } from './PaymentVerification';
 export { InvoiceManagement } from './InvoiceManagement';
 export { OutstandingPaymentsManagement } from './OutstandingPaymentsManagement';
 export { RevenueOfficerOperations } from './RevenueOfficerOperations';

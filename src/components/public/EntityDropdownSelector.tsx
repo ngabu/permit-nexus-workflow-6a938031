@@ -11,9 +11,17 @@ interface EntityDropdownSelectorProps {
   selectedEntityId: string | null;
   onEntitySelect: (entityId: string, entityData?: Entity) => void;
   onEntityCreate?: () => void;
+  disabled?: boolean;
+  hideAddButton?: boolean;
 }
 
-export function EntityDropdownSelector({ selectedEntityId, onEntitySelect, onEntityCreate }: EntityDropdownSelectorProps) {
+export function EntityDropdownSelector({ 
+  selectedEntityId, 
+  onEntitySelect, 
+  onEntityCreate,
+  disabled = false,
+  hideAddButton = false
+}: EntityDropdownSelectorProps) {
   const { entities, loading, refetchEntities } = useEntities();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
@@ -42,8 +50,9 @@ export function EntityDropdownSelector({ selectedEntityId, onEntitySelect, onEnt
             const selectedEntity = entities.find(entity => entity.id === entityId);
             onEntitySelect(entityId, selectedEntity);
           }}
+          disabled={disabled}
         >
-          <SelectTrigger id="entity-select">
+          <SelectTrigger id="entity-select" className={disabled ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800' : ''}>
             <SelectValue placeholder="Select an entity" />
           </SelectTrigger>
           <SelectContent>
@@ -71,25 +80,32 @@ export function EntityDropdownSelector({ selectedEntityId, onEntitySelect, onEnt
             )}
           </SelectContent>
         </Select>
+        {disabled && (
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            Entity is auto-populated from the linked Intent Registration
+          </p>
+        )}
       </div>
       
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogTrigger asChild>
-          <Button type="button" variant="outline" size="default" className="shrink-0">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Entity
-          </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Entity</DialogTitle>
-          </DialogHeader>
-          <EntityForm
-            onSuccess={handleEntityCreated}
-            onCancel={() => setShowCreateDialog(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      {!hideAddButton && (
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline" size="default" className="shrink-0">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Entity
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Entity</DialogTitle>
+            </DialogHeader>
+            <EntityForm
+              onSuccess={handleEntityCreated}
+              onCancel={() => setShowCreateDialog(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

@@ -403,6 +403,7 @@ export function TabbedPermitForm({ permitId, onComplete }: TabbedPermitFormProps
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
               }}
               permitId={permitId}
+              activityLevel={formData.activity_level}
             />
           )}
 
