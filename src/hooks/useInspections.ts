@@ -276,6 +276,7 @@ export function useInspections() {
       }
 
       // Create the inspection with appropriate IDs
+      // Note: total_travel_cost is a generated column in the database, so we don't include it
       const { data: newInspection, error } = await supabase
         .from('inspections')
         .insert({
@@ -289,7 +290,6 @@ export function useInspections() {
           accommodation_cost: inspectionData.accommodation_cost || 0,
           transportation_cost: inspectionData.transportation_cost || 0,
           daily_allowance: inspectionData.daily_allowance || 0,
-          total_travel_cost: totalTravelCost,
           number_of_days: numberOfDays,
           province: inspectionData.province,
           permit_category: inspectionData.permit_category,
