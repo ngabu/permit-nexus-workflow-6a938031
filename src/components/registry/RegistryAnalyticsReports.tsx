@@ -35,20 +35,24 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays, startOfMonth, endOfMonth, parseISO, differenceInDays } from "date-fns";
+import { useDateFilter, type DateFilterPeriod } from "@/hooks/useDateFilter";
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899'];
 
 const RegistryAnalyticsReports = () => {
   const { toast } = useToast();
-  const [selectedPeriod, setSelectedPeriod] = useState("monthly");
+  const [selectedPeriod, setSelectedPeriod] = useState<DateFilterPeriod>("monthly");
+  const dateRange = useDateFilter(selectedPeriod);
 
   // Fetch entities data
   const { data: entitiesData, isLoading: entitiesLoading } = useQuery({
-    queryKey: ['registry-entities-analytics'],
+    queryKey: ['registry-entities-analytics', selectedPeriod],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('entities')
-        .select('*');
+        .select('*')
+        .gte('created_at', dateRange.start.toISOString())
+        .lte('created_at', dateRange.end.toISOString());
       if (error) throw error;
       return data || [];
     }
@@ -56,11 +60,13 @@ const RegistryAnalyticsReports = () => {
 
   // Fetch permit applications data
   const { data: permitsData, isLoading: permitsLoading } = useQuery({
-    queryKey: ['registry-permits-analytics'],
+    queryKey: ['registry-permits-analytics', selectedPeriod],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('permit_applications')
-        .select('*');
+        .select('*')
+        .gte('created_at', dateRange.start.toISOString())
+        .lte('created_at', dateRange.end.toISOString());
       if (error) throw error;
       return data || [];
     }
@@ -68,11 +74,13 @@ const RegistryAnalyticsReports = () => {
 
   // Fetch intent registrations data
   const { data: intentsData, isLoading: intentsLoading } = useQuery({
-    queryKey: ['registry-intents-analytics'],
+    queryKey: ['registry-intents-analytics', selectedPeriod],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('intent_registrations')
-        .select('*');
+        .select('*')
+        .gte('created_at', dateRange.start.toISOString())
+        .lte('created_at', dateRange.end.toISOString());
       if (error) throw error;
       return data || [];
     }
@@ -80,11 +88,13 @@ const RegistryAnalyticsReports = () => {
 
   // Fetch workflow state for processing times
   const { data: workflowData, isLoading: workflowLoading } = useQuery({
-    queryKey: ['registry-workflow-analytics'],
+    queryKey: ['registry-workflow-analytics', selectedPeriod],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('application_workflow_state')
-        .select('*');
+        .select('*')
+        .gte('created_at', dateRange.start.toISOString())
+        .lte('created_at', dateRange.end.toISOString());
       if (error) throw error;
       return data || [];
     }
@@ -297,7 +307,7 @@ const RegistryAnalyticsReports = () => {
               <CardDescription className="text-sm">Comprehensive analytics for permit processing and registry operations</CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <Select value={selectedPeriod} onValueChange={(value) => setSelectedPeriod(value as DateFilterPeriod)}>
                 <SelectTrigger className="w-full sm:w-[160px]">
                   <Calendar className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Period" />
