@@ -32,50 +32,58 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays, differenceInDays, parseISO } from "date-fns";
+import { useDateFilter, filterByDateRange, type DateFilterPeriod } from "@/hooks/useDateFilter";
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899'];
 
 const RevenueAnalyticsReportsNew = () => {
   const { toast } = useToast();
-  const [selectedPeriod, setSelectedPeriod] = useState("monthly");
+  const [selectedPeriod, setSelectedPeriod] = useState<DateFilterPeriod>("monthly");
+  const dateRange = useDateFilter(selectedPeriod);
 
   // Fetch invoices data
-  const { data: invoicesData, isLoading: invoicesLoading } = useQuery({
-    queryKey: ['revenue-invoices-analytics'],
+  const { data: invoicesDataRaw, isLoading: invoicesLoading } = useQuery({
+    queryKey: ['revenue-invoices-analytics', selectedPeriod],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('invoices')
-        .select('*');
+        .select('*')
+        .gte('created_at', dateRange.start.toISOString())
+        .lte('created_at', dateRange.end.toISOString());
       if (error) throw error;
       return data || [];
     }
   });
 
   // Fetch fee payments data
-  const { data: paymentsData, isLoading: paymentsLoading } = useQuery({
-    queryKey: ['revenue-payments-analytics'],
+  const { data: paymentsDataRaw, isLoading: paymentsLoading } = useQuery({
+    queryKey: ['revenue-payments-analytics', selectedPeriod],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('fee_payments')
-        .select('*');
+        .select('*')
+        .gte('created_at', dateRange.start.toISOString())
+        .lte('created_at', dateRange.end.toISOString());
       if (error) throw error;
       return data || [];
     }
   });
 
   // Fetch financial transactions
-  const { data: transactionsData, isLoading: transactionsLoading } = useQuery({
-    queryKey: ['revenue-transactions-analytics'],
+  const { data: transactionsDataRaw, isLoading: transactionsLoading } = useQuery({
+    queryKey: ['revenue-transactions-analytics', selectedPeriod],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('financial_transactions')
-        .select('*');
+        .select('*')
+        .gte('created_at', dateRange.start.toISOString())
+        .lte('created_at', dateRange.end.toISOString());
       if (error) throw error;
       return data || [];
     }
   });
 
-  // Fetch entities for debtor analysis
+  // Fetch entities for debtor analysis (not date filtered - we need all entities)
   const { data: entitiesData, isLoading: entitiesLoading } = useQuery({
     queryKey: ['revenue-entities-analytics'],
     queryFn: async () => {
@@ -86,6 +94,11 @@ const RevenueAnalyticsReportsNew = () => {
       return data || [];
     }
   });
+
+  // Use filtered data
+  const invoicesData = invoicesDataRaw;
+  const paymentsData = paymentsDataRaw;
+  const transactionsData = transactionsDataRaw;
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -342,7 +355,7 @@ const RevenueAnalyticsReportsNew = () => {
               <CardDescription className="text-sm">Comprehensive financial analytics and collection reports</CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <Select value={selectedPeriod} onValueChange={(value) => setSelectedPeriod(value as DateFilterPeriod)}>
                 <SelectTrigger className="w-full sm:w-[160px]">
                   <Calendar className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Period" />

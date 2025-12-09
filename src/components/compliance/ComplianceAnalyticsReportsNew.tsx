@@ -33,20 +33,24 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, differenceInDays } from "date-fns";
+import { useDateFilter, type DateFilterPeriod } from "@/hooks/useDateFilter";
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899'];
 
 const ComplianceAnalyticsReportsNew = () => {
   const { toast } = useToast();
-  const [selectedPeriod, setSelectedPeriod] = useState("monthly");
+  const [selectedPeriod, setSelectedPeriod] = useState<DateFilterPeriod>("monthly");
+  const dateRange = useDateFilter(selectedPeriod);
 
   // Fetch compliance assessments
   const { data: assessmentsData, isLoading: assessmentsLoading } = useQuery({
-    queryKey: ['compliance-assessments-analytics-new'],
+    queryKey: ['compliance-assessments-analytics-new', selectedPeriod],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('compliance_assessments')
-        .select('*');
+        .select('*')
+        .gte('created_at', dateRange.start.toISOString())
+        .lte('created_at', dateRange.end.toISOString());
       if (error) throw error;
       return data || [];
     }
@@ -54,11 +58,13 @@ const ComplianceAnalyticsReportsNew = () => {
 
   // Fetch inspections
   const { data: inspectionsData, isLoading: inspectionsLoading } = useQuery({
-    queryKey: ['compliance-inspections-analytics-new'],
+    queryKey: ['compliance-inspections-analytics-new', selectedPeriod],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('inspections')
-        .select('*');
+        .select('*')
+        .gte('created_at', dateRange.start.toISOString())
+        .lte('created_at', dateRange.end.toISOString());
       if (error) throw error;
       return data || [];
     }
@@ -66,11 +72,13 @@ const ComplianceAnalyticsReportsNew = () => {
 
   // Fetch compliance reports
   const { data: reportsData, isLoading: reportsLoading } = useQuery({
-    queryKey: ['compliance-reports-data-new'],
+    queryKey: ['compliance-reports-data-new', selectedPeriod],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('compliance_reports')
-        .select('*');
+        .select('*')
+        .gte('created_at', dateRange.start.toISOString())
+        .lte('created_at', dateRange.end.toISOString());
       if (error) throw error;
       return data || [];
     }
@@ -78,11 +86,13 @@ const ComplianceAnalyticsReportsNew = () => {
 
   // Fetch compliance tasks
   const { data: tasksData, isLoading: tasksLoading } = useQuery({
-    queryKey: ['compliance-tasks-analytics'],
+    queryKey: ['compliance-tasks-analytics', selectedPeriod],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('compliance_tasks')
-        .select('*');
+        .select('*')
+        .gte('created_at', dateRange.start.toISOString())
+        .lte('created_at', dateRange.end.toISOString());
       if (error) throw error;
       return data || [];
     }
@@ -316,7 +326,7 @@ const ComplianceAnalyticsReportsNew = () => {
               <CardDescription className="text-sm">Environmental compliance monitoring and performance analytics</CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <Select value={selectedPeriod} onValueChange={(value) => setSelectedPeriod(value as DateFilterPeriod)}>
                 <SelectTrigger className="w-full sm:w-[160px]">
                   <Calendar className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Period" />
