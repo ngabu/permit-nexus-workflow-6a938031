@@ -550,13 +550,25 @@ export function EnhancedComplianceAssessmentForm({ assessmentId, onComplete }: E
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="application" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="application">Application</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="registry">Registry Feedback</TabsTrigger>
-            <TabsTrigger value="compliance">Compliance Review</TabsTrigger>
-            <TabsTrigger value="fees">Fees & Invoice</TabsTrigger>
-            <TabsTrigger value="decision">Final Decision</TabsTrigger>
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1 w-full justify-start">
+            <TabsTrigger value="application" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">Application</TabsTrigger>
+            <TabsTrigger value="documents" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">Documents</TabsTrigger>
+            <TabsTrigger value="registry" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+              <span className="hidden sm:inline">Registry Feedback</span>
+              <span className="sm:hidden">Registry</span>
+            </TabsTrigger>
+            <TabsTrigger value="compliance" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+              <span className="hidden sm:inline">Compliance Review</span>
+              <span className="sm:hidden">Compliance</span>
+            </TabsTrigger>
+            <TabsTrigger value="fees" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+              <span className="hidden sm:inline">Fees & Invoice</span>
+              <span className="sm:hidden">Fees</span>
+            </TabsTrigger>
+            <TabsTrigger value="decision" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+              <span className="hidden sm:inline">Final Decision</span>
+              <span className="sm:hidden">Decision</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="application">

@@ -4,6 +4,7 @@ export { PaymentVerification } from './PaymentVerification';
 export { InvoiceManagement } from './InvoiceManagement';
 export { OutstandingPaymentsManagement } from './OutstandingPaymentsManagement';
 export { RevenueOfficerOperations } from './RevenueOfficerOperations';
+export { RevenueInvoiceDetailView } from './RevenueInvoiceDetailView';
 
 // Existing Components
 export { InvoicesList } from './InvoicesList';

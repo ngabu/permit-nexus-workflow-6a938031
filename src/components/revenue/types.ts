@@ -9,11 +9,12 @@ export interface Invoice {
   currency: string;
   due_date: string;
   paid_date?: string;
-  payment_status: string; // Changed from union type to string to match database
+  payment_status: string;
   status: string;
   follow_up_date?: string;
   follow_up_notes?: string;
   assigned_officer_id?: string;
+  source_dashboard?: string;
   created_at: string;
   updated_at: string;
   assigned_officer?: {

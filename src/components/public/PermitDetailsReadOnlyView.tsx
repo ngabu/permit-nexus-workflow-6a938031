@@ -211,46 +211,38 @@ export function PermitDetailsReadOnlyView({ permit }: PermitDetailsReadOnlyViewP
       </div>
 
       <Tabs defaultValue="project" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-1 bg-glass border-glass h-auto">
-          <TabsTrigger value="project" className="text-xs flex flex-col items-center gap-1 py-2">
+        <TabsList className="flex flex-wrap h-auto gap-1 p-1 w-full justify-start bg-glass border-glass">
+          <TabsTrigger value="project" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
             <Building className="w-4 h-4" />
             <span className="hidden sm:inline">Project</span>
-            <span className="sm:hidden">Proj</span>
           </TabsTrigger>
-          <TabsTrigger value="location" className="text-xs flex flex-col items-center gap-1 py-2">
+          <TabsTrigger value="location" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
             <MapPin className="w-4 h-4" />
             <span className="hidden sm:inline">Location</span>
-            <span className="sm:hidden">Loc</span>
           </TabsTrigger>
-          <TabsTrigger value="consultation" className="text-xs flex flex-col items-center gap-1 py-2">
+          <TabsTrigger value="consultation" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
             <Users className="w-4 h-4" />
             <span className="hidden sm:inline">Consultation</span>
-            <span className="sm:hidden">Consult</span>
           </TabsTrigger>
-          <TabsTrigger value="documents" className="text-xs flex flex-col items-center gap-1 py-2">
+          <TabsTrigger value="documents" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
             <FileText className="w-4 h-4" />
             <span className="hidden sm:inline">Documents</span>
-            <span className="sm:hidden">Docs</span>
           </TabsTrigger>
-          <TabsTrigger value="classification" className="text-xs flex flex-col items-center gap-1 py-2">
+          <TabsTrigger value="classification" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
             <Activity className="w-4 h-4" />
             <span className="hidden sm:inline">Classification</span>
-            <span className="sm:hidden">Class</span>
           </TabsTrigger>
-          <TabsTrigger value="compliance" className="text-xs flex flex-col items-center gap-1 py-2">
+          <TabsTrigger value="compliance" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
             <CheckCircle className="w-4 h-4" />
             <span className="hidden sm:inline">Compliance</span>
-            <span className="sm:hidden">Comp</span>
           </TabsTrigger>
-          <TabsTrigger value="fees" className="text-xs flex flex-col items-center gap-1 py-2">
+          <TabsTrigger value="fees" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
             <DollarSign className="w-4 h-4" />
             <span className="hidden sm:inline">Fees</span>
-            <span className="sm:hidden">Fees</span>
           </TabsTrigger>
-          <TabsTrigger value="review" className="text-xs flex flex-col items-center gap-1 py-2">
+          <TabsTrigger value="review" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
             <CheckCircle className="w-4 h-4" />
             <span className="hidden sm:inline">Review</span>
-            <span className="sm:hidden">Rev</span>
           </TabsTrigger>
         </TabsList>
 

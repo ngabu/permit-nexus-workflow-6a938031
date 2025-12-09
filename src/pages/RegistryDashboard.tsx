@@ -12,10 +12,11 @@ import { AllocationDialog } from "@/components/shared/AllocationDialog";
 import { FileText, Clock, CheckCircle, Users, AlertCircle, Plus, UserCheck, ClipboardList, ArrowRight, FileCheck, XCircle, User, Bell } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useRegistryStaff } from "@/components/registry/hooks/useRegistryStaff";
-import { TeamManagement } from "@/components/registry/TeamManagement";
+import { StaffManagement } from '@/components/shared/StaffManagement';
 import { ProfileSettings } from "@/components/public/ProfileSettings";
 import { AppSettings } from "@/components/public/AppSettings";
 import RegistryReports from "@/components/registry/RegistryReports";
+import RegistryAnalyticsReports from "@/components/registry/RegistryAnalyticsReports";
 import { ApprovedIntentsList } from "@/components/registry/ApprovedIntentsList";
 import { PermitApplicationReview } from "@/components/registry/PermitApplicationReview";
 import { PermitRenewalReview } from "@/components/registry/PermitRenewalReview";
@@ -31,6 +32,7 @@ import { UnitNotificationsPanel } from "@/components/notifications/UnitNotificat
 import { useUnitNotifications } from "@/hooks/useUnitNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { RegistryDocumentManagement } from "@/components/registry/RegistryDocumentManagement";
+import { RegistryUserGuide } from "@/components/registry/RegistryUserGuide";
 
 const RegistryDashboard = () => {
   const { profile } = useAuth();
@@ -157,7 +159,7 @@ const RegistryDashboard = () => {
             </div>
           </header>
 
-          <main className="flex-1 p-4 md:p-6 overflow-auto">
+          <main className="flex-1 p-4 md:p-6 overflow-auto" id="registry-main-content">
             {activeTab === 'dashboard' && (
               <div className="space-y-4 md:space-y-6">
                 {/* Dashboard KPI Cards */}
@@ -339,10 +341,11 @@ const RegistryDashboard = () => {
             {activeTab === 'permit-surrender' && <PermitSurrenderReview />}
             {activeTab === 'permit-transfer' && <PermitTransferReview />}
             {activeTab === 'notifications' && <UnitNotificationsPanel unit="registry" />}
-            {activeTab === 'reports' && <RegistryReports />}
-            {activeTab === 'team' && isManager && <TeamManagement />}
+            {activeTab === 'reports' && <RegistryAnalyticsReports />}
+            {activeTab === 'team' && isManager && <StaffManagement unit="registry" />}
             {activeTab === 'profile' && <ProfileSettings readOnly />}
             {activeTab === 'settings' && <AppSettings />}
+            {activeTab === 'user-guide' && <RegistryUserGuide />}
           </main>
         </div>
       </div>

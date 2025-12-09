@@ -36,7 +36,8 @@ import {
   ArrowRightLeft,
   Building,
   FileCheck,
-  FolderOpen
+  FolderOpen,
+  BookOpen
 } from "lucide-react"
 import { useState } from "react"
 import { useUnitNotifications } from "@/hooks/useUnitNotifications"
@@ -56,8 +57,9 @@ const registryNavigationItems: RegistryNavigationItem[] = [
 
 const managementItems: RegistryNavigationItem[] = [
   { title: "Documents Management", value: "documents-management", icon: FolderOpen },
-  { title: "Team Management", value: "team", icon: Users, managerOnly: true },
+  { title: "Staff Management", value: "team", icon: Users, managerOnly: true },
   { title: "Analytics and Reporting", value: "reports", icon: BarChart3 },
+  { title: "User Guide", value: "user-guide", icon: BookOpen },
 ]
 
 const endMenuItems: RegistryNavigationItem[] = [
@@ -269,28 +271,6 @@ export function RegistrySidebar({ activeTab, onTabChange }: RegistrySidebarProps
                         >
                           <FileEdit className="w-4 h-4 shrink-0" />
                           <span className="ml-2">Permit Amendments</span>
-                        </button>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild>
-                        <button
-                          onClick={() => onTabChange('permit-compliance')}
-                          className={`w-full ${getNavCls(activeTab === 'permit-compliance')}`}
-                        >
-                          <ShieldCheck className="w-4 h-4 shrink-0" />
-                          <span className="ml-2">Permit Compliance</span>
-                        </button>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild>
-                        <button
-                          onClick={() => onTabChange('permit-enforcement')}
-                          className={`w-full ${getNavCls(activeTab === 'permit-enforcement')}`}
-                        >
-                          <Gavel className="w-4 h-4 shrink-0" />
-                          <span className="ml-2">Permit Enforcement</span>
                         </button>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>

@@ -7,12 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useInvoices } from './hooks/useInvoices';
+import { useInvoices, Invoice } from './hooks/useInvoices';
 import { useEntitiesForInvoice } from '@/hooks/useEntitiesForInvoice';
 import { usePermitApplicationsByEntity } from '@/hooks/usePermitApplicationsByEntity';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { FileText, Plus, Edit, Trash2, Send, Eye, Download, Search, Filter } from 'lucide-react';
+import { FileText, Plus, Send, Eye, Download, Search, Filter, Ban, Loader2, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -20,16 +20,21 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { RevenueInvoiceDetailView } from './RevenueInvoiceDetailView';
+import { generateInvoicePdf } from './utils/generateInvoicePdf';
 
 export function InvoiceManagement() {
-  const { invoices, loading, updateInvoice, refetch } = useInvoices();
+  const { invoices, loading, suspendInvoice, reactivateInvoice, refetch } = useInvoices();
   const { data: entities = [], isLoading: entitiesLoading } = useEntitiesForInvoice();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [suspendingInvoiceId, setSuspendingInvoiceId] = useState<string | null>(null);
+  const [reactivatingInvoiceId, setReactivatingInvoiceId] = useState<string | null>(null);
   const [entitySearchOpen, setEntitySearchOpen] = useState(false);
   const [entitySearchValue, setEntitySearchValue] = useState('');
 
@@ -97,11 +102,76 @@ export function InvoiceManagement() {
         return;
       }
 
-      // Implementation for creating invoice would go here
-      // For now, just show success message
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: 'Error',
+          description: 'You must be logged in to create an invoice',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      // Find the selected application to determine if it's an intent or permit
+      const selectedApp = permitApplications.find(app => app.id === formData.permitApplication);
+      const isIntent = selectedApp?.type === 'intent';
+
+      // Generate sequential invoice number in format INV-YYYY-XXX
+      const currentYear = new Date().getFullYear();
+      const yearPrefix = `INV-${currentYear}-`;
+      
+      // Get the latest invoice number for this year
+      const { data: latestInvoice } = await supabase
+        .from('invoices')
+        .select('invoice_number')
+        .like('invoice_number', `${yearPrefix}%`)
+        .order('invoice_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      let nextNumber = 1;
+      if (latestInvoice?.invoice_number) {
+        const match = latestInvoice.invoice_number.match(/INV-\d{4}-(\d+)/);
+        if (match) {
+          nextNumber = parseInt(match[1], 10) + 1;
+        }
+      }
+      
+      const invoiceNumber = `${yearPrefix}${nextNumber.toString().padStart(3, '0')}`;
+
+      // Find selected item code for description
+      const selectedItemCode = itemCodes.find(item => item.id === formData.itemCode);
+
+      // Create the invoice in the database
+      const { data: newInvoice, error } = await supabase
+        .from('invoices')
+        .insert({
+          invoice_number: invoiceNumber,
+          user_id: user.id,
+          entity_id: formData.entity,
+          permit_id: isIntent ? null : formData.permitApplication,
+          intent_registration_id: isIntent ? formData.permitApplication : null,
+          amount: parseFloat(formData.amount),
+          due_date: formData.dueDate,
+          status: 'pending',
+          payment_status: 'pending',
+          invoice_type: isIntent ? 'intent_fee' : 'permit_fee',
+          source_dashboard: 'revenue',
+          item_code: selectedItemCode?.item_number || null,
+          item_description: selectedItemCode?.item_name || formData.description || null
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating invoice:', error);
+        throw error;
+      }
+
       toast({
         title: 'Invoice Created',
-        description: 'New invoice has been generated successfully',
+        description: `Invoice ${invoiceNumber} has been generated successfully`,
       });
       setCreateDialogOpen(false);
       setFormData({
@@ -116,24 +186,136 @@ export function InvoiceManagement() {
       });
       refetch();
     } catch (error) {
+      console.error('Error creating invoice:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create invoice',
+        description: 'Failed to create invoice. Please try again.',
         variant: 'destructive'
       });
     }
   };
 
-  const handleSendInvoice = async (invoiceId: string) => {
-    try {
+  const handleViewInvoice = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setViewDialogOpen(true);
+  };
+
+  const handleSuspendInvoice = async (invoice: Invoice) => {
+    // Check if invoice was created from a different dashboard
+    if (invoice.source_dashboard && invoice.source_dashboard !== 'revenue') {
+      const sourceDashboardName = invoice.source_dashboard.charAt(0).toUpperCase() + invoice.source_dashboard.slice(1);
       toast({
-        title: 'Invoice Sent',
-        description: 'Invoice has been sent to the entity via email',
+        title: 'Cannot Suspend Invoice',
+        description: `This invoice was created on the ${sourceDashboardName} Dashboard. Only invoices created from the Revenue Dashboard can be suspended here. Please contact the ${sourceDashboardName} team to manage this invoice.`,
+        variant: 'destructive',
+        duration: 6000,
       });
+      return;
+    }
+    
+    setSuspendingInvoiceId(invoice.id);
+    
+    try {
+      const result = await suspendInvoice(invoice.id, invoice.source_dashboard);
+      if (result.success) {
+        toast({
+          title: 'Invoice Suspended',
+          description: `Invoice ${invoice.invoice_number} has been suspended successfully.`,
+        });
+        // Close the detail view if open
+        if (viewDialogOpen) {
+          setViewDialogOpen(false);
+          setSelectedInvoice(null);
+        }
+      } else {
+        toast({
+          title: 'Failed to Suspend Invoice',
+          description: result.error || 'An unexpected error occurred while suspending the invoice.',
+          variant: 'destructive',
+          duration: 6000,
+        });
+      }
     } catch (error) {
+      console.error('Error suspending invoice:', error);
       toast({
         title: 'Error',
-        description: 'Failed to send invoice',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setSuspendingInvoiceId(null);
+    }
+  };
+
+  const handleReactivateInvoice = async (invoice: Invoice) => {
+    if (invoice.source_dashboard && invoice.source_dashboard !== 'revenue') {
+      const sourceDashboardName = invoice.source_dashboard.charAt(0).toUpperCase() + invoice.source_dashboard.slice(1);
+      toast({
+        title: 'Cannot Reactivate Invoice',
+        description: `This invoice was created on the ${sourceDashboardName} Dashboard. Please contact the ${sourceDashboardName} team to manage this invoice.`,
+        variant: 'destructive',
+        duration: 6000,
+      });
+      return;
+    }
+    
+    setReactivatingInvoiceId(invoice.id);
+    
+    try {
+      const result = await reactivateInvoice(invoice.id, invoice.source_dashboard);
+      if (result.success) {
+        toast({
+          title: 'Invoice Reactivated',
+          description: `Invoice ${invoice.invoice_number} has been reactivated successfully.`,
+        });
+        if (viewDialogOpen) {
+          setViewDialogOpen(false);
+          setSelectedInvoice(null);
+        }
+      } else {
+        toast({
+          title: 'Failed to Reactivate Invoice',
+          description: result.error || 'An unexpected error occurred while reactivating the invoice.',
+          variant: 'destructive',
+          duration: 6000,
+        });
+      }
+    } catch (error) {
+      console.error('Error reactivating invoice:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setReactivatingInvoiceId(null);
+    }
+  };
+
+  const handleDownloadInvoice = (invoice: Invoice) => {
+    try {
+      generateInvoicePdf({
+        invoice_number: invoice.invoice_number,
+        created_at: invoice.created_at,
+        amount: invoice.amount,
+        status: invoice.status,
+        entity: invoice.entity,
+        permit: invoice.permit,
+        inspection: invoice.inspection,
+        intent_registration: invoice.intent_registration,
+        invoice_type: invoice.invoice_type,
+        item_code: invoice.item_code,
+        item_description: invoice.item_description
+      });
+      toast({
+        title: 'Invoice Downloaded',
+        description: `Invoice ${invoice.invoice_number} has been downloaded as PDF.`,
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: 'Download Failed',
+        description: 'Failed to generate PDF. Please try again.',
         variant: 'destructive'
       });
     }
@@ -146,6 +328,7 @@ export function InvoiceManagement() {
       case 'sent': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       case 'overdue': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       case 'cancelled': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+      case 'suspended': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
       default: return 'bg-muted text-muted-foreground';
     }
   };
@@ -162,7 +345,7 @@ export function InvoiceManagement() {
                   <FileText className="w-5 h-5" />
                   Invoice Management
                 </CardTitle>
-                <CardDescription>Create, manage, and track new and unpaid invoices</CardDescription>
+                <CardDescription>View and manage invoices (view only - suspend available for revenue-created invoices)</CardDescription>
               </div>
               <Button onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -192,6 +375,7 @@ export function InvoiceManagement() {
                   <SelectItem value="sent">Sent</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="overdue">Overdue</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
@@ -251,62 +435,108 @@ export function InvoiceManagement() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredInvoices.map((invoice) => (
-                      <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={
-                            invoice.invoice_type === 'inspection_fee' 
-                              ? 'border-blue-300 text-blue-700 bg-blue-50'
-                              : 'border-green-300 text-green-700 bg-green-50'
-                          }>
-                            {invoice.invoice_type === 'inspection_fee' ? 'Inspection' : 'Permit Fee'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{invoice.entity?.name || 'N/A'}</TableCell>
-                        <TableCell className="max-w-xs truncate">
-                          {invoice.invoice_type === 'inspection_fee' && invoice.inspection
-                            ? `${invoice.inspection.inspection_type} - ${invoice.inspection.province || 'N/A'}`
-                            : invoice.permit?.title || 'N/A'}
-                        </TableCell>
-                        <TableCell className="font-semibold">K{invoice.amount.toLocaleString()}</TableCell>
-                        <TableCell>{format(new Date(invoice.due_date), 'MMM dd, yyyy')}</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(invoice.status)}>
-                            {invoice.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button size="sm" variant="ghost">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost">
-                              <Download className="w-4 h-4" />
-                            </Button>
-                            {invoice.status === 'draft' && (
+                    {filteredInvoices.map((invoice) => {
+                      const canSuspend = invoice.source_dashboard === 'revenue';
+                      const isNotSuspended = invoice.status !== 'suspended';
+                      
+                      // Find matching item code for the invoice type
+                      const matchingItemCode = itemCodes.find(code => {
+                        const invoiceType = invoice.invoice_type?.toLowerCase() || '';
+                        const itemName = code.item_name.toLowerCase();
+                        // Match based on invoice_type to item_name
+                        if (invoiceType === 'inspection_fee' && itemName.includes('inspection')) return true;
+                        if (invoiceType === 'permit_fee' && (itemName.includes('permit') && itemName.includes('annual'))) return true;
+                        if (invoiceType === 'application_fee' && itemName.includes('application')) return true;
+                        return false;
+                      });
+                      
+                      return (
+                        <TableRow key={invoice.id}>
+                          <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={
+                              invoice.invoice_type === 'inspection_fee' 
+                                ? 'border-blue-300 text-blue-700 bg-blue-50'
+                                : 'border-green-300 text-green-700 bg-green-50'
+                            }>
+                              {matchingItemCode 
+                                ? matchingItemCode.item_name
+                                : invoice.invoice_type === 'inspection_fee' ? 'Inspection Fee' : 'Permit Fee'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{invoice.entity?.name || 'N/A'}</TableCell>
+                          <TableCell className="max-w-xs truncate">
+                            {invoice.invoice_type === 'inspection_fee' && invoice.inspection
+                              ? `${invoice.inspection.inspection_type} - ${invoice.inspection.province || 'N/A'}`
+                              : invoice.permit?.title || 'N/A'}
+                          </TableCell>
+                          <TableCell className="font-semibold">K{invoice.amount.toLocaleString()}</TableCell>
+                          <TableCell>{format(new Date(invoice.due_date), 'MMM dd, yyyy')}</TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(invoice.status)}>
+                              {invoice.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
                               <Button 
                                 size="sm" 
-                                variant="ghost"
-                                onClick={() => handleSendInvoice(invoice.id)}
+                                variant="ghost" 
+                                title="View Details"
+                                onClick={() => handleViewInvoice(invoice)}
                               >
-                                <Send className="w-4 h-4" />
+                                <Eye className="w-4 h-4" />
                               </Button>
-                            )}
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              onClick={() => {
-                                setSelectedInvoice(invoice);
-                                setEditDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                title="Download PDF"
+                                onClick={() => handleDownloadInvoice(invoice)}
+                              >
+                                <Download className="w-4 h-4" />
+                              </Button>
+                              {canSuspend && isNotSuspended && (
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                  onClick={() => handleSuspendInvoice(invoice)}
+                                  disabled={suspendingInvoiceId === invoice.id}
+                                  title="Suspend Invoice"
+                                >
+                                  {suspendingInvoiceId === invoice.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Ban className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              )}
+                              {canSuspend && invoice.status === 'suspended' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  onClick={() => handleReactivateInvoice(invoice)}
+                                  disabled={reactivatingInvoiceId === invoice.id}
+                                  title="Reactivate Invoice"
+                                >
+                                  {reactivatingInvoiceId === invoice.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <RefreshCw className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              )}
+                              {!canSuspend && (
+                                <span className="text-xs text-muted-foreground px-2">
+                                  Manage on {invoice.source_dashboard}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
@@ -393,7 +623,7 @@ export function InvoiceManagement() {
                 </Popover>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="permitApplication">Permit Application *</Label>
+                <Label htmlFor="permitApplication">Intent / Permit Application *</Label>
                 <Select 
                   value={formData.permitApplication} 
                   onValueChange={(val) => setFormData({...formData, permitApplication: val})}
@@ -406,15 +636,24 @@ export function InvoiceManagement() {
                         : applicationsLoading 
                           ? "Loading applications..." 
                           : permitApplications.length === 0
-                            ? "No applications found"
-                            : "Select permit application"
+                            ? "No intents or permits found"
+                            : "Select intent or permit"
                     } />
                   </SelectTrigger>
                   <SelectContent>
                     {permitApplications.map((app) => (
                       <SelectItem key={app.id} value={app.id}>
                         <div className="flex flex-col">
-                          <span className="font-medium">{app.permit_number || app.title}</span>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className={
+                              app.type === 'intent' 
+                                ? 'border-purple-300 text-purple-700 bg-purple-50 text-xs px-1.5 py-0'
+                                : 'border-green-300 text-green-700 bg-green-50 text-xs px-1.5 py-0'
+                            }>
+                              {app.type === 'intent' ? 'Intent' : 'Permit'}
+                            </Badge>
+                            <span className="font-medium">{app.permit_number || app.title}</span>
+                          </div>
                           <span className="text-xs text-muted-foreground">
                             {app.permit_type} • {app.status}
                           </span>
@@ -527,6 +766,32 @@ export function InvoiceManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* View Invoice Details Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              Invoice Details - {selectedInvoice?.invoice_number}
+            </DialogTitle>
+            <DialogDescription>
+              View detailed invoice information
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedInvoice && (
+            <RevenueInvoiceDetailView
+              invoice={selectedInvoice as any}
+              itemCodes={itemCodes}
+              onBack={() => {
+                setViewDialogOpen(false);
+                setSelectedInvoice(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
     </>
   );
 }

@@ -47,6 +47,7 @@ interface ReportData {
   };
   investmentYear: number;
   provincialData: Array<{ province: string; activePermits: number }>;
+  sectoralDistribution: { data: Array<{ sector: string; count: number }>; total: number };
   permitTypeDistribution: Array<{ name: string; value: number }>;
   statusDistribution: Array<{ name: string; value: number }>;
   entityTypeDistribution: Array<{ name: string; value: number }>;
@@ -57,6 +58,8 @@ interface ReportData {
     totalInspectionsCarried: number;
     violationsReported: number;
   };
+  complianceReportsPerMonth: { months: Array<{ month: string; reports: number }>; total: number };
+  yearlySuccessfulInspections: Array<{ year: number; completed: number; total: number; successRate: number }>;
   monthlyTrends: Array<{ month: string; applications: number; approvals: number; revenue: number }>;
 }
 
@@ -339,13 +342,23 @@ export const exportReportToDocx = async (data: ReportData) => {
   // Geographic Analysis Section
   const geographicSection = [
     createSectionHeading("3. Geographic Analysis"),
-    createDescriptionPlaceholder("Provincial distribution of active permits across Papua New Guinea"),
+    createDescriptionPlaceholder("Provincial and sectoral distribution of active permits across Papua New Guinea"),
     createSubsectionHeading("Active Permits by Province"),
     createDataTable(
       ["Province", "Active Permits"],
       data.provincialData.filter(p => p.activePermits > 0).map(item => [
         item.province,
         String(item.activePermits),
+      ])
+    ),
+    new Paragraph({ spacing: { before: 300 } }),
+    createSubsectionHeading(`Sectoral Distribution of Active Permits (Total: ${data.sectoralDistribution.total})`),
+    createDataTable(
+      ["Sector", "Count", "Percentage"],
+      data.sectoralDistribution.data.slice(0, 15).map(item => [
+        item.sector,
+        String(item.count),
+        `${data.sectoralDistribution.total > 0 ? ((item.count / data.sectoralDistribution.total) * 100).toFixed(1) : 0}%`
       ])
     ),
   ];
@@ -362,13 +375,23 @@ export const exportReportToDocx = async (data: ReportData) => {
       { label: "Violations Reported", value: data.complianceTabData.violationsReported },
     ]),
     new Paragraph({ spacing: { before: 300 } }),
-    createSubsectionHeading("Permits by Sector"),
+    createSubsectionHeading(`Total Compliance Reports per Month (Total: ${data.complianceReportsPerMonth.total})`),
     createDataTable(
-      ["Sector", "Count", "Percentage"],
-      data.complianceTabData.permitsBySector.slice(0, 10).map(item => [
-        item.sector,
-        String(item.count),
-        `${data.complianceTabData.totalPermits > 0 ? ((item.count / data.complianceTabData.totalPermits) * 100).toFixed(1) : 0}%`
+      ["Month", "Reports Submitted"],
+      data.complianceReportsPerMonth.months.map(item => [
+        item.month,
+        String(item.reports),
+      ])
+    ),
+    new Paragraph({ spacing: { before: 300 } }),
+    createSubsectionHeading("Yearly Successful Inspections"),
+    createDataTable(
+      ["Year", "Completed", "Total", "Success Rate"],
+      data.yearlySuccessfulInspections.map(item => [
+        String(item.year),
+        String(item.completed),
+        String(item.total),
+        `${item.successRate}%`
       ])
     ),
   ];

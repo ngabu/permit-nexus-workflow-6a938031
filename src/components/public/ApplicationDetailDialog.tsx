@@ -235,14 +235,16 @@ export function ApplicationDetailDialog({ open, onOpenChange, permitApplicationI
 
           {/* Assessment Details */}
           <Tabs defaultValue="registry" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="registry" className="flex items-center gap-2">
+            <TabsList className="flex flex-wrap h-auto gap-1 p-1 w-full justify-start">
+              <TabsTrigger value="registry" className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <User className="w-4 h-4" />
-                Registry Assessment
+                <span className="hidden sm:inline">Registry Assessment</span>
+                <span className="sm:hidden">Registry</span>
               </TabsTrigger>
-              <TabsTrigger value="compliance" className="flex items-center gap-2">
+              <TabsTrigger value="compliance" className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <MessageSquare className="w-4 h-4" />
-                Technical Assessment
+                <span className="hidden sm:inline">Technical Assessment</span>
+                <span className="sm:hidden">Technical</span>
               </TabsTrigger>
             </TabsList>
 

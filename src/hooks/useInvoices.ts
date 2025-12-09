@@ -6,130 +6,57 @@ import { useToast } from '@/hooks/use-toast';
 export interface Invoice {
   id: string;
   invoice_number: string;
-  date: string;
-  yourRef: string;
-  contact: string;
-  telephone: string;
-  email: string;
-  client: string;
-  clientAddress: string;
-  items: {
-    quantity: number;
-    itemCode: string;
-    description: string;
-    unitPrice: number;
-    disc: number;
-    totalPrice: number;
-  }[];
-  subtotal: number;
-  freight: number;
-  gst: number;
-  totalInc: number;
-  paidToDate: number;
-  balanceDue: number;
-  status: 'paid' | 'unpaid' | 'partial';
-  permitType: string;
-  activityLevel: string;
-  prescribedActivity: string;
-  receiptUrl?: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  payment_status: string | null;
+  due_date: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  assigned_officer_id: string | null;
+  follow_up_date: string | null;
+  follow_up_notes: string | null;
+  paid_date?: string;
+  invoice_type?: string;
+  inspection_id?: string | null;
+  intent_registration_id?: string | null;
+  document_path?: string | null;
+  source_dashboard?: string | null;
+  item_code?: string | null;
+  item_description?: string | null;
+  verification_status?: string | null;
+  verified_by?: string | null;
+  verified_at?: string | null;
+  verification_notes?: string | null;
+  cepa_receipt_path?: string | null;
+  stripe_receipt_url?: string | null;
+  permit?: {
+    title: string;
+    permit_number: string | null;
+    permit_type: string;
+  };
+  entity?: {
+    name: string;
+    entity_type: string;
+  };
+  inspection?: {
+    id: string;
+    inspection_type: string;
+    scheduled_date: string;
+    province: string | null;
+    number_of_days: number;
+  };
+  intent_registration?: {
+    id: string;
+    activity_description: string;
+    status: string;
+  };
+  assigned_officer?: {
+    full_name: string | null;
+    email: string;
+  };
 }
-
-// Mock data for demo purposes - will be synced to database
-const MOCK_INVOICES: Invoice[] = [
-  {
-    id: '1',
-    invoice_number: '23-F1-3-188',
-    date: '20/03/2025',
-    yourRef: 'EP-L3(07B)',
-    contact: 'Kavau Diagoro, Manager Revenue',
-    telephone: '(675) 3014665/3014614',
-    email: 'revenuemanager@cepa.gov.pg',
-    client: 'Morobe Consolidates Goldfields Limited',
-    clientAddress: 'P.O Box 4018 Lae, Morobe\nPapua New Guinea',
-    items: [
-      {
-        quantity: 1,
-        itemCode: 'F1',
-        description: 'Annual Fee - Level 3 Mining Operation',
-        unitPrice: 543170.00,
-        disc: 0,
-        totalPrice: 543170.00
-      }
-    ],
-    subtotal: 543170.00,
-    freight: 0.00,
-    gst: 0.00,
-    totalInc: 543170.00,
-    paidToDate: 0.00,
-    balanceDue: 543170.00,
-    status: 'unpaid',
-    permitType: 'Environment Permit',
-    activityLevel: 'Level 3',
-    prescribedActivity: 'Mining and Quarrying Operations'
-  },
-  {
-    id: '2',
-    invoice_number: '23-F2-2A-095',
-    date: '15/03/2025',
-    yourRef: 'EP-L2A(04C)',
-    contact: 'Kavau Diagoro, Manager Revenue',
-    telephone: '(675) 3014665/3014614',
-    email: 'revenuemanager@cepa.gov.pg',
-    client: 'Pacific Industrial Services Ltd',
-    clientAddress: 'Section 117, Allotment 23\nPort Moresby, NCD\nPapua New Guinea',
-    items: [
-      {
-        quantity: 1,
-        itemCode: 'F2',
-        description: 'Annual Fee - Level 2A Waste Management',
-        unitPrice: 125500.00,
-        disc: 0,
-        totalPrice: 125500.00
-      }
-    ],
-    subtotal: 125500.00,
-    freight: 0.00,
-    gst: 0.00,
-    totalInc: 125500.00,
-    paidToDate: 62750.00,
-    balanceDue: 62750.00,
-    status: 'partial',
-    permitType: 'Environment Permit',
-    activityLevel: 'Level 2A',
-    prescribedActivity: 'Waste Treatment and Disposal Facility'
-  },
-  {
-    id: '3',
-    invoice_number: '23-F3-1-042',
-    date: '10/03/2025',
-    yourRef: 'EP-L1(02A)',
-    contact: 'Kavau Diagoro, Manager Revenue',
-    telephone: '(675) 3014665/3014614',
-    email: 'revenuemanager@cepa.gov.pg',
-    client: 'Coastal Aquaculture PNG',
-    clientAddress: 'P.O Box 892\nMadang, Madang Province\nPapua New Guinea',
-    items: [
-      {
-        quantity: 1,
-        itemCode: 'F3',
-        description: 'Annual Fee - Level 1 Aquaculture Operation',
-        unitPrice: 45200.00,
-        disc: 0,
-        totalPrice: 45200.00
-      }
-    ],
-    subtotal: 45200.00,
-    freight: 0.00,
-    gst: 0.00,
-    totalInc: 45200.00,
-    paidToDate: 45200.00,
-    balanceDue: 0.00,
-    status: 'paid',
-    permitType: 'Environment Permit',
-    activityLevel: 'Level 1',
-    prescribedActivity: 'Aquaculture and Fish Farming'
-  }
-];
 
 export function useInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -137,150 +64,153 @@ export function useInvoices() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Fetch invoices from database, seeding with mock data if empty
   const fetchInvoices = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      // First check if we have any invoices in the database for this user
-      const { data: dbInvoices, error } = await supabase
+      // Fetch invoices with related data for the current user
+      const { data, error } = await supabase
         .from('invoices')
-        .select('*')
+        .select(`
+          *,
+          inspections (
+            id,
+            inspection_type,
+            scheduled_date,
+            province,
+            number_of_days
+          ),
+          intent_registrations (
+            id,
+            activity_description,
+            status
+          ),
+          entities (
+            id,
+            name,
+            entity_type
+          )
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching invoices:', error);
-        // Fall back to mock data if there's an error
-        setInvoices(MOCK_INVOICES);
+        setInvoices([]);
+        setLoading(false);
         return;
       }
 
-      if (dbInvoices && dbInvoices.length > 0) {
-        // Fetch entity names for invoices
-        const entityIds = [...new Set(dbInvoices.filter(inv => inv.entity_id).map(inv => inv.entity_id))];
-        let entitiesMap: Record<string, string> = {};
+      // Fetch permit applications separately for invoices that have permit_id
+      const permitIds = (data || [])
+        .filter(inv => inv.permit_id)
+        .map(inv => inv.permit_id);
+      
+      let permitsMap: Record<string, any> = {};
+      if (permitIds.length > 0) {
+        const { data: permits } = await supabase
+          .from('permit_applications')
+          .select('id, title, permit_number, permit_type, entity_name, entity_type')
+          .in('id', permitIds);
         
-        if (entityIds.length > 0) {
-          const { data: entities } = await supabase
-            .from('entities')
-            .select('id, name')
-            .in('id', entityIds);
-          
-          if (entities) {
-            entitiesMap = entities.reduce((acc, e) => ({ ...acc, [e.id]: e.name }), {});
-          }
+        if (permits) {
+          permitsMap = permits.reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
         }
-
-        // Map database invoices to our Invoice interface
-        const mappedInvoices: Invoice[] = dbInvoices.map(inv => {
-          const invoiceType = inv.invoice_type || 'permit_fee';
-          const isInspectionFee = invoiceType === 'inspection_fee';
-          
-          return {
-            id: inv.id,
-            invoice_number: inv.invoice_number || '',
-            date: inv.created_at ? new Date(inv.created_at).toLocaleDateString('en-GB') : '',
-            yourRef: isInspectionFee ? 'INS-FEE' : '',
-            contact: 'Kavau Diagoro, Manager Revenue',
-            telephone: '(675) 3014665/3014614',
-            email: 'revenuemanager@cepa.gov.pg',
-            client: inv.entity_id ? (entitiesMap[inv.entity_id] || 'Unknown Entity') : '',
-            clientAddress: '',
-            items: isInspectionFee ? [
-              {
-                quantity: 1,
-                itemCode: 'INS-FEE',
-                description: 'Inspection Travel Costs',
-                unitPrice: Number(inv.amount) || 0,
-                disc: 0,
-                totalPrice: Number(inv.amount) || 0
-              }
-            ] : [],
-            subtotal: Number(inv.amount) || 0,
-            freight: 0,
-            gst: 0,
-            totalInc: Number(inv.amount) || 0,
-            paidToDate: inv.payment_status === 'paid' ? Number(inv.amount) : 0,
-            balanceDue: inv.payment_status === 'paid' ? 0 : Number(inv.amount),
-            status: (inv.payment_status || inv.status || 'unpaid') as 'paid' | 'unpaid' | 'partial',
-            permitType: isInspectionFee ? 'Inspection Fee' : 'Environment Permit',
-            activityLevel: '',
-            prescribedActivity: isInspectionFee ? 'Site Inspection' : '',
-            receiptUrl: inv.document_path
-          };
-        });
-        setInvoices(mappedInvoices);
-      } else {
-        // No invoices in DB - seed with mock data
-        console.log('No invoices found, seeding mock data...');
-        await seedMockInvoices();
       }
+
+      // Fetch assigned officer profiles separately
+      const officerIds = (data || [])
+        .filter(inv => inv.assigned_officer_id)
+        .map(inv => inv.assigned_officer_id);
+      
+      let officersMap: Record<string, any> = {};
+      if (officerIds.length > 0) {
+        const { data: officers } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email')
+          .in('id', officerIds);
+        
+        if (officers) {
+          officersMap = officers.reduce((acc, o) => ({ ...acc, [o.id]: o }), {});
+        }
+      }
+      
+      // Transform the data to match the Invoice interface
+      const transformedData = (data || []).map(invoice => {
+        const permitData = invoice.permit_id ? permitsMap[invoice.permit_id] : null;
+        const officerData = invoice.assigned_officer_id ? officersMap[invoice.assigned_officer_id] : null;
+        
+        return {
+          ...invoice,
+          permit: permitData ? {
+            title: permitData.title,
+            permit_number: permitData.permit_number,
+            permit_type: permitData.permit_type
+          } : undefined,
+          entity: invoice.entities && typeof invoice.entities === 'object' ? {
+            name: (invoice.entities as any).name,
+            entity_type: (invoice.entities as any).entity_type
+          } : (permitData ? {
+            name: permitData.entity_name,
+            entity_type: permitData.entity_type
+          } : undefined),
+          inspection: invoice.inspections && typeof invoice.inspections === 'object' ? {
+            id: (invoice.inspections as any).id,
+            inspection_type: (invoice.inspections as any).inspection_type,
+            scheduled_date: (invoice.inspections as any).scheduled_date,
+            province: (invoice.inspections as any).province,
+            number_of_days: (invoice.inspections as any).number_of_days
+          } : undefined,
+          intent_registration: invoice.intent_registrations && typeof invoice.intent_registrations === 'object' ? {
+            id: (invoice.intent_registrations as any).id,
+            activity_description: (invoice.intent_registrations as any).activity_description,
+            status: (invoice.intent_registrations as any).status
+          } : undefined,
+          assigned_officer: officerData ? {
+            full_name: `${officerData.first_name || ''} ${officerData.last_name || ''}`.trim() || null,
+            email: officerData.email
+          } : undefined,
+          payment_status: invoice.payment_status || invoice.status,
+        };
+      });
+      
+      setInvoices(transformedData);
     } catch (err) {
       console.error('Error in fetchInvoices:', err);
-      setInvoices(MOCK_INVOICES);
+      setInvoices([]);
     } finally {
       setLoading(false);
     }
   }, [user]);
-
-  // Seed mock invoices to database
-  const seedMockInvoices = async () => {
-    if (!user) return;
-
-    try {
-      for (const mockInv of MOCK_INVOICES) {
-        const { error } = await supabase.from('invoices').insert({
-          user_id: user.id,
-          invoice_number: mockInv.invoice_number,
-          amount: mockInv.totalInc,
-          currency: 'PGK',
-          status: mockInv.status,
-          payment_status: mockInv.status,
-          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        });
-
-        if (error) {
-          console.error('Error seeding invoice:', error);
-        }
-      }
-
-      // Fetch again after seeding
-      const { data: dbInvoices } = await supabase
-        .from('invoices')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (dbInvoices) {
-        // Merge DB data with mock data for display
-        const mergedInvoices = MOCK_INVOICES.map(mock => {
-          const dbInv = dbInvoices.find(db => db.invoice_number === mock.invoice_number);
-          if (dbInv) {
-            return {
-              ...mock,
-              id: dbInv.id,
-              status: (dbInv.payment_status || dbInv.status || mock.status) as 'paid' | 'unpaid' | 'partial',
-              paidToDate: dbInv.payment_status === 'paid' ? mock.totalInc : mock.paidToDate,
-              balanceDue: dbInv.payment_status === 'paid' ? 0 : mock.balanceDue,
-              receiptUrl: dbInv.document_path
-            };
-          }
-          return mock;
-        });
-        setInvoices(mergedInvoices);
-      }
-    } catch (err) {
-      console.error('Error seeding invoices:', err);
-      setInvoices(MOCK_INVOICES);
-    }
-  };
 
   // Refresh a specific invoice from database
   const refreshInvoice = useCallback(async (invoiceNumber: string) => {
     try {
       const { data, error } = await supabase
         .from('invoices')
-        .select('*')
+        .select(`
+          *,
+          inspections (
+            id,
+            inspection_type,
+            scheduled_date,
+            province,
+            number_of_days
+          ),
+          intent_registrations (
+            id,
+            activity_description,
+            status
+          ),
+          entities (
+            id,
+            name,
+            entity_type
+          )
+        `)
         .eq('invoice_number', invoiceNumber)
         .maybeSingle();
 
@@ -290,20 +220,51 @@ export function useInvoices() {
       }
 
       if (data) {
+        // Fetch permit if needed
+        let permitData = null;
+        if (data.permit_id) {
+          const { data: permit } = await supabase
+            .from('permit_applications')
+            .select('id, title, permit_number, permit_type, entity_name, entity_type')
+            .eq('id', data.permit_id)
+            .maybeSingle();
+          permitData = permit;
+        }
+
+        const updatedInvoice: Invoice = {
+          ...data,
+          permit: permitData ? {
+            title: permitData.title,
+            permit_number: permitData.permit_number,
+            permit_type: permitData.permit_type
+          } : undefined,
+          entity: data.entities && typeof data.entities === 'object' ? {
+            name: (data.entities as any).name,
+            entity_type: (data.entities as any).entity_type
+          } : (permitData ? {
+            name: permitData.entity_name,
+            entity_type: permitData.entity_type
+          } : undefined),
+          inspection: data.inspections && typeof data.inspections === 'object' ? {
+            id: (data.inspections as any).id,
+            inspection_type: (data.inspections as any).inspection_type,
+            scheduled_date: (data.inspections as any).scheduled_date,
+            province: (data.inspections as any).province,
+            number_of_days: (data.inspections as any).number_of_days
+          } : undefined,
+          intent_registration: data.intent_registrations && typeof data.intent_registrations === 'object' ? {
+            id: (data.intent_registrations as any).id,
+            activity_description: (data.intent_registrations as any).activity_description,
+            status: (data.intent_registrations as any).status
+          } : undefined,
+          payment_status: data.payment_status || data.status,
+        };
+
         setInvoices(prev => prev.map(inv => 
-          inv.invoice_number === invoiceNumber
-            ? {
-                ...inv,
-                id: data.id,
-                status: (data.payment_status || data.status || 'unpaid') as 'paid' | 'unpaid' | 'partial',
-                paidToDate: data.payment_status === 'paid' ? inv.totalInc : inv.paidToDate,
-                balanceDue: data.payment_status === 'paid' ? 0 : inv.balanceDue,
-                receiptUrl: data.document_path
-              }
-            : inv
+          inv.invoice_number === invoiceNumber ? updatedInvoice : inv
         ));
 
-        if (data.payment_status === 'paid') {
+        if (data.status === 'paid' || data.payment_status === 'paid') {
           toast({
             title: "Payment Confirmed",
             description: `Invoice ${invoiceNumber} has been marked as paid.`,

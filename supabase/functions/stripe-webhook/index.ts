@@ -106,15 +106,20 @@ serve(async (req) => {
     let invData = null;
     let invoiceUpdateError = null;
 
+    // Build the update payload with payment_receipt for Stripe receipt storage
+    const invoiceUpdatePayload = {
+      status: 'paid',
+      payment_status: 'paid',
+      paid_date: new Date().toISOString(),
+      document_path: receiptUrl,
+      stripe_receipt_url: receiptUrl,
+      payment_receipt: receiptUrl, // Store receipt URL in new payment_receipt column
+    };
+
     // Try updating by invoice_number
     const { data: invByNumber, error: errByNumber } = await supabase
       .from('invoices')
-      .update({
-        status: 'paid',
-        payment_status: 'paid',
-        paid_date: new Date().toISOString(),
-        document_path: receiptUrl,
-      })
+      .update(invoiceUpdatePayload)
       .eq('invoice_number', invoiceNumber)
       .select();
 
@@ -132,12 +137,7 @@ serve(async (req) => {
     if (!invData || invData.length === 0) {
       const { data: invById, error: errById } = await supabase
         .from('invoices')
-        .update({
-          status: 'paid',
-          payment_status: 'paid',
-          paid_date: new Date().toISOString(),
-          document_path: receiptUrl,
-        })
+        .update(invoiceUpdatePayload)
         .eq('id', invoiceId)
         .select();
 

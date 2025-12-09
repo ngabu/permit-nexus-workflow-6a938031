@@ -16,6 +16,7 @@ import { Building, User, FileText, AlertCircle, CheckCircle, XCircle, Clock, Map
 import { format } from 'date-fns';
 import { IntentRegistrationReadOnlyView } from './IntentRegistrationReadOnlyView';
 import { PermitApplicationsMap } from './PermitApplicationsMap';
+import { calculateBoundaryCenter } from '@/utils/mapUtils';
 
 export function IntentRegistrationList() {
   const { user } = useAuth();
@@ -269,10 +270,7 @@ export function IntentRegistrationList() {
                                   showAllApplications={false}
                                   existingBoundary={selectedIntentData.project_boundary}
                                   onBoundarySave={() => {}}
-                                  coordinates={{ 
-                                    lat: selectedIntentData.project_boundary?.coordinates?.[0]?.[0]?.[1] || -6.314993, 
-                                    lng: selectedIntentData.project_boundary?.coordinates?.[0]?.[0]?.[0] || 147.1494 
-                                  }}
+                                  coordinates={calculateBoundaryCenter(selectedIntentData.project_boundary)}
                                   onCoordinatesChange={() => {}}
                                   readOnly={true}
                                   district={selectedIntentData.district}

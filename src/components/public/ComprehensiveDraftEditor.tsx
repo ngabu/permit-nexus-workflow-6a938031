@@ -176,36 +176,30 @@ export function ComprehensiveDraftEditor({ permitId, onSave, onCancel }: Compreh
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1 mb-6 h-auto">
-              <TabsTrigger value="basic" className="flex items-center gap-2 py-2">
+            <TabsList className="flex flex-wrap h-auto gap-1 p-1 w-full justify-start mb-6">
+              <TabsTrigger value="basic" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <User className="w-4 h-4" />
                 <span className="hidden sm:inline">Basic Info</span>
-                <span className="sm:hidden">Basic</span>
               </TabsTrigger>
-              <TabsTrigger value="details" className="flex items-center gap-2 py-2">
+              <TabsTrigger value="details" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <FileText className="w-4 h-4" />
                 <span className="hidden sm:inline">Details</span>
-                <span className="sm:hidden">Details</span>
               </TabsTrigger>
-              <TabsTrigger value="activity" className="flex items-center gap-2 py-2">
+              <TabsTrigger value="activity" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <Building className="w-4 h-4" />
                 <span className="hidden sm:inline">Activity</span>
-                <span className="sm:hidden">Activity</span>
               </TabsTrigger>
-              <TabsTrigger value="documents" className="flex items-center gap-2 py-2">
+              <TabsTrigger value="documents" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <Upload className="w-4 h-4" />
-                <span className="hidden sm:inline">Documents</span>
-                <span className="sm:hidden">Docs</span>
+                <span className="hidden sm:inline">Docs</span>
               </TabsTrigger>
-              <TabsTrigger value="period" className="flex items-center gap-2 py-2">
+              <TabsTrigger value="period" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <MapPin className="w-4 h-4" />
                 <span className="hidden sm:inline">Period</span>
-                <span className="sm:hidden">Period</span>
               </TabsTrigger>
-              <TabsTrigger value="fee" className="flex items-center gap-2 py-2">
+              <TabsTrigger value="fee" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <Calculator className="w-4 h-4" />
                 <span className="hidden sm:inline">Fee</span>
-                <span className="sm:hidden">Fee</span>
               </TabsTrigger>
             </TabsList>
 

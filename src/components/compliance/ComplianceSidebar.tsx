@@ -35,7 +35,8 @@ import {
   FileX,
   ArrowRightLeft,
   ClipboardList,
-  Eye
+  Eye,
+  BookOpen
 } from "lucide-react"
 import { useState } from "react"
 import { useUnitNotifications } from "@/hooks/useUnitNotifications"
@@ -54,9 +55,13 @@ const complianceNavigationItems: ComplianceNavigationItem[] = [
 ]
 
 const endMenuItems: ComplianceNavigationItem[] = [
-  { title: "Team Management", value: "team", icon: Users, managerOnly: true },
-  { title: "Analytics and Reporting", value: "analytics-reporting", icon: BarChart3 },
   { title: "Notifications", value: "notifications", icon: Bell },
+]
+
+const managementItems: ComplianceNavigationItem[] = [
+  { title: "Staff Management", value: "team", icon: Users, managerOnly: true },
+  { title: "Analytics and Reporting", value: "analytics-reporting", icon: BarChart3 },
+  { title: "User Guide", value: "user-guide", icon: BookOpen },
 ]
 
 const accountItems: ComplianceNavigationItem[] = [
@@ -100,6 +105,10 @@ export function ComplianceSidebar({ activeTab, onTabChange }: ComplianceSidebarP
   )
 
   const filteredEndItems = endMenuItems.filter(item => 
+    !item.managerOnly || isManager
+  )
+
+  const filteredManagementItems = managementItems.filter(item => 
     !item.managerOnly || isManager
   )
 
@@ -323,6 +332,27 @@ export function ComplianceSidebar({ activeTab, onTabChange }: ComplianceSidebarP
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+          <SidebarGroup className="mt-6">
+            {!isCollapsed && <SidebarGroupLabel className="text-white/60 text-xs uppercase tracking-wider mb-2">Management</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {filteredManagementItems.map((item) => (
+                  <SidebarMenuItem key={item.value}>
+                    <SidebarMenuButton asChild>
+                      <button
+                        onClick={() => onTabChange(item.value)}
+                        className={`w-full ${getNavCls(activeTab === item.value)}`}
+                      >
+                        <item.icon className="w-5 h-5 shrink-0" />
+                        {!isCollapsed && <span className="ml-3 flex-1 text-left">{item.title}</span>}
+                      </button>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
 
           <SidebarGroup className="mt-6">
             {!isCollapsed && <SidebarGroupLabel className="text-white/60 text-xs uppercase tracking-wider mb-2">Account</SidebarGroupLabel>}

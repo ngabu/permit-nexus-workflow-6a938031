@@ -106,26 +106,26 @@ export function PermitReadOnlyView({
         
         <ScrollArea className="max-h-[calc(90vh-200px)]">
           <Tabs defaultValue="basic-info" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="basic-info" className="flex items-center gap-2">
+            <TabsList className="flex flex-wrap h-auto gap-1 p-1 w-full justify-start">
+              <TabsTrigger value="basic-info" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <User className="w-4 h-4" />
-                Basic Info
+                <span className="hidden sm:inline">Basic Info</span>
               </TabsTrigger>
-              <TabsTrigger value="project-details" className="flex items-center gap-2">
+              <TabsTrigger value="project-details" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <Building className="w-4 h-4" />
-                Project Details
+                <span className="hidden sm:inline">Project</span>
               </TabsTrigger>
-              <TabsTrigger value="location" className="flex items-center gap-2">
+              <TabsTrigger value="location" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <MapPin className="w-4 h-4" />
-                Location
+                <span className="hidden sm:inline">Location</span>
               </TabsTrigger>
-              <TabsTrigger value="documents" className="flex items-center gap-2">
+              <TabsTrigger value="documents" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <Upload className="w-4 h-4" />
-                Documents
+                <span className="hidden sm:inline">Documents</span>
               </TabsTrigger>
-              <TabsTrigger value="compliance" className="flex items-center gap-2">
+              <TabsTrigger value="compliance" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <Shield className="w-4 h-4" />
-                Compliance
+                <span className="hidden sm:inline">Compliance</span>
               </TabsTrigger>
             </TabsList>
             

@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { IntentRegistrationReadOnlyView } from '@/components/public/IntentRegistrationReadOnlyView';
 import { PermitApplicationsMap } from '@/components/public/PermitApplicationsMap';
 import { IntentRegistryReviewTab, IntentComplianceReviewTab, IntentMDReviewTab, IntentInvoicePaymentsTab } from '@/components/registry/intent-review';
+import { calculateBoundaryCenter } from '@/utils/mapUtils';
 
 interface IntentRegistration {
   id: string;
@@ -385,13 +386,28 @@ export function ManagingDirectorIntentsList() {
                         <TableCell colSpan={7} className="p-0">
                           <div className="border-t border-glass/30 bg-white/80 dark:bg-primary/5 backdrop-blur-md p-6">
                             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                              <TabsList className="grid w-full grid-cols-6">
-                                <TabsTrigger value="mapping">Site Mapping</TabsTrigger>
-                                <TabsTrigger value="details">Registration Details</TabsTrigger>
-                                <TabsTrigger value="registry-review">Registry Review</TabsTrigger>
-                                <TabsTrigger value="compliance-review">Compliance Review</TabsTrigger>
-                                <TabsTrigger value="invoice-payments">Invoice & Payments</TabsTrigger>
-                                <TabsTrigger value="md-review">MD Review & Approval</TabsTrigger>
+                              <TabsList className="flex flex-wrap h-auto gap-1 p-1 w-full justify-start">
+                                <TabsTrigger value="mapping" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+                                  <span className="hidden sm:inline">Site Mapping</span>
+                                  <span className="sm:hidden">Map</span>
+                                </TabsTrigger>
+                                <TabsTrigger value="details" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">Details</TabsTrigger>
+                                <TabsTrigger value="registry-review" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+                                  <span className="hidden sm:inline">Registry Review</span>
+                                  <span className="sm:hidden">Registry</span>
+                                </TabsTrigger>
+                                <TabsTrigger value="compliance-review" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+                                  <span className="hidden sm:inline">Compliance Review</span>
+                                  <span className="sm:hidden">Compliance</span>
+                                </TabsTrigger>
+                                <TabsTrigger value="invoice-payments" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+                                  <span className="hidden sm:inline">Invoice & Payments</span>
+                                  <span className="sm:hidden">Invoice</span>
+                                </TabsTrigger>
+                                <TabsTrigger value="md-review" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+                                  <span className="hidden sm:inline">MD Review & Approval</span>
+                                  <span className="sm:hidden">MD Review</span>
+                                </TabsTrigger>
                               </TabsList>
 
                               <TabsContent value="mapping" className="mt-4">
@@ -400,10 +416,7 @@ export function ManagingDirectorIntentsList() {
                                   showAllApplications={false} 
                                   existingBoundary={intent.project_boundary} 
                                   onBoundarySave={() => {}} 
-                                  coordinates={{
-                                    lat: intent.project_boundary?.coordinates?.[0]?.[0]?.[1] || -6.314993,
-                                    lng: intent.project_boundary?.coordinates?.[0]?.[0]?.[0] || 147.1494
-                                  }} 
+                                  coordinates={calculateBoundaryCenter(intent.project_boundary)}
                                   onCoordinatesChange={() => {}} 
                                   readOnly={true}
                                   district={intent.district}

@@ -9,8 +9,8 @@ import { ComplianceApplicationsList } from "@/components/compliance/ComplianceAp
 import { ProfileSettings } from "@/components/public/ProfileSettings";
 import { AppSettings } from "@/components/public/AppSettings";
 import ComplianceReports from "@/components/compliance/ComplianceReports";
-import ComplianceAnalyticsReports from "@/components/compliance/ComplianceAnalyticsReports";
-import { TeamManagement } from "@/components/compliance/TeamManagement";
+import ComplianceAnalyticsReportsNew from "@/components/compliance/ComplianceAnalyticsReportsNew";
+import { StaffManagement } from '@/components/shared/StaffManagement';
 import { IntentRegistrationComplianceReview } from "@/components/compliance/IntentRegistrationComplianceReview";
 import { PermitRenewalComplianceReview } from "@/components/compliance/PermitRenewalComplianceReview";
 import { PermitTransferComplianceReview } from "@/components/compliance/PermitTransferComplianceReview";
@@ -21,6 +21,7 @@ import { PermitComplianceReportReview } from "@/components/compliance/PermitComp
 import { PermitEnforcementComplianceReview } from "@/components/compliance/PermitEnforcementComplianceReview";
 import { InspectionsManagement } from "@/components/compliance/InspectionsManagement";
 import { ComplianceReportingManagement } from "@/components/compliance/ComplianceReportingManagement";
+import { ComplianceUserGuide } from "@/components/compliance/ComplianceUserGuide";
 import { Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -64,9 +65,9 @@ const ComplianceDashboardView = () => {
             {activeTab === 'inspections' && <InspectionsManagement />}
             {activeTab === 'compliance-reports' && <ComplianceReportingManagement />}
             {activeTab === 'permit-applications' && <ComplianceApplicationsList />}
-            {activeTab === 'team' && isManager && <TeamManagement />}
+            {activeTab === 'team' && isManager && <StaffManagement unit="compliance" />}
             {activeTab === 'reports' && <ComplianceReports />}
-            {activeTab === 'analytics-reporting' && <ComplianceAnalyticsReports />}
+            {activeTab === 'analytics-reporting' && <ComplianceAnalyticsReportsNew />}
             {activeTab === 'profile' && <ProfileSettings readOnly />}
             {activeTab === 'settings' && <AppSettings />}
             {/* Assessment submenu views with Registry + Compliance review sections */}
@@ -78,6 +79,7 @@ const ComplianceDashboardView = () => {
             {activeTab === 'permit-renewal' && <PermitRenewalComplianceReview />}
             {activeTab === 'permit-surrender' && <PermitSurrenderComplianceReview />}
             {activeTab === 'permit-transfer' && <PermitTransferComplianceReview />}
+            {activeTab === 'user-guide' && <ComplianceUserGuide />}
           </main>
         </div>
       </div>

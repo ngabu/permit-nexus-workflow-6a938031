@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Eye, Receipt, Loader2 } from 'lucide-react';
+import { Search, Eye, Receipt, Loader2, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { InvoiceDetailView } from './InvoiceDetailView';
 import { useInvoices, Invoice } from '@/hooks/useInvoices';
+import { format } from 'date-fns';
 
 export function InvoiceManagement() {
   const { invoices, loading, refreshInvoice, updateLocalInvoice } = useInvoices();
@@ -26,9 +27,8 @@ export function InvoiceManagement() {
       // Update local invoice state immediately
       updateLocalInvoice(invoiceNumber, {
         status: 'paid',
-        paidToDate: invoices.find(i => i.invoice_number === invoiceNumber)?.totalInc || 0,
-        balanceDue: 0,
-        receiptUrl: receiptUrl
+        payment_status: 'paid',
+        stripe_receipt_url: receiptUrl
       });
 
       // Also refresh from database to ensure we have the latest
@@ -48,9 +48,8 @@ export function InvoiceManagement() {
             // Update local state immediately
             updateLocalInvoice(invoiceNumber, {
               status: 'paid',
-              paidToDate: invoices.find(i => i.invoice_number === invoiceNumber)?.totalInc || 0,
-              balanceDue: 0,
-              receiptUrl: receiptUrl
+              payment_status: 'paid',
+              stripe_receipt_url: receiptUrl
             });
 
             // Refresh from database
@@ -93,21 +92,49 @@ export function InvoiceManagement() {
   }, [toast, invoices, updateLocalInvoice, refreshInvoice]);
 
   const getStatusColor = (status: string) => {
-    const colors = {
-      unpaid: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-      paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      partial: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-    };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    switch (status) {
+      case 'paid': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'unpaid': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'overdue': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'partial': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'suspended': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+      case 'cancelled': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+      default: return 'bg-muted text-muted-foreground';
+    }
   };
 
   const getStatusLabel = (status: string) => {
-    const labels = {
+    const labels: Record<string, string> = {
       unpaid: 'Unpaid',
       paid: 'Paid',
       partial: 'Partial Payment',
+      pending: 'Pending',
+      overdue: 'Overdue',
+      suspended: 'Suspended',
+      cancelled: 'Cancelled',
     };
-    return labels[status as keyof typeof labels] || status;
+    return labels[status] || status;
+  };
+
+  const getInvoiceTypeLabel = (invoice: Invoice) => {
+    if (invoice.invoice_type === 'inspection_fee') return 'Inspection Fee';
+    if (invoice.invoice_type === 'intent_fee') return 'Intent Fee';
+    if (invoice.invoice_type === 'permit_fee') return 'Permit Fee';
+    if (invoice.inspection) return 'Inspection Fee';
+    if (invoice.intent_registration) return 'Intent Fee';
+    if (invoice.permit) return 'Permit Fee';
+    return 'Fee';
+  };
+
+  const getReference = (invoice: Invoice) => {
+    if (invoice.permit?.permit_number) return invoice.permit.permit_number;
+    if (invoice.inspection?.inspection_type) return invoice.inspection.inspection_type;
+    if (invoice.intent_registration?.activity_description) {
+      return invoice.intent_registration.activity_description.substring(0, 30) + 
+        (invoice.intent_registration.activity_description.length > 30 ? '...' : '');
+    }
+    return '-';
   };
 
   const handlePayment = (invoice: Invoice) => {
@@ -117,22 +144,25 @@ export function InvoiceManagement() {
     });
   };
 
-  const filteredInvoices = invoices.filter(invoice => {
-    const matchesSearch = 
-      invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.prescribedActivity.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter(invoice => {
+      const matchesSearch = 
+        invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        invoice.entity?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        invoice.item_description?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const invoiceStatus = invoice.payment_status || invoice.status;
+      const matchesStatus = statusFilter === 'all' || invoiceStatus === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [invoices, searchTerm, statusFilter]);
 
   // Keep selected invoice in sync with latest data
   useEffect(() => {
     if (selectedInvoice) {
       const updated = invoices.find(i => i.invoice_number === selectedInvoice.invoice_number);
-      if (updated && (updated.status !== selectedInvoice.status || updated.receiptUrl !== selectedInvoice.receiptUrl)) {
+      if (updated && (updated.status !== selectedInvoice.status || updated.stripe_receipt_url !== selectedInvoice.stripe_receipt_url)) {
         setSelectedInvoice(updated);
       }
     }
@@ -161,7 +191,10 @@ export function InvoiceManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Invoice Management</h2>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <FileText className="w-6 h-6" />
+            Invoice Management
+          </h2>
           <p className="text-muted-foreground">View and manage your permit-related invoices</p>
         </div>
       </div>
@@ -169,25 +202,27 @@ export function InvoiceManagement() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex gap-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search by invoice number, client, or activity..."
+                placeholder="Search by invoice number, entity, or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="unpaid">Unpaid</SelectItem>
                 <SelectItem value="partial">Partial Payment</SelectItem>
                 <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -198,6 +233,7 @@ export function InvoiceManagement() {
       {filteredInvoices.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
+            <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
             <p className="text-muted-foreground">No invoices found matching your criteria</p>
           </CardContent>
         </Card>
@@ -207,56 +243,63 @@ export function InvoiceManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead>Invoice Number</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Prescribed Activity</TableHead>
-                <TableHead>Activity Level</TableHead>
-                <TableHead>Permit Type</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Entity</TableHead>
+                <TableHead>Reference</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
+                <TableHead>Due Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredInvoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
-                  <TableCell>{invoice.client}</TableCell>
-                  <TableCell>{invoice.prescribedActivity}</TableCell>
-                  <TableCell>{invoice.activityLevel}</TableCell>
-                  <TableCell>{invoice.permitType}</TableCell>
-                  <TableCell className="text-right font-semibold">
-                    K{invoice.balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(invoice.status)}>
-                      {getStatusLabel(invoice.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedInvoice(invoice)}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        View
-                      </Button>
-                      {invoice.status === 'paid' && invoice.receiptUrl && (
+              {filteredInvoices.map((invoice) => {
+                const invoiceStatus = invoice.payment_status || invoice.status;
+                const receiptUrl = invoice.stripe_receipt_url || invoice.cepa_receipt_path;
+                
+                return (
+                  <TableRow key={invoice.id}>
+                    <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                    <TableCell>{getInvoiceTypeLabel(invoice)}</TableCell>
+                    <TableCell>{invoice.entity?.name || '-'}</TableCell>
+                    <TableCell className="max-w-[150px] truncate">{getReference(invoice)}</TableCell>
+                    <TableCell className="text-right font-semibold">
+                      K{invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell>
+                      {invoice.due_date ? format(new Date(invoice.due_date), 'dd/MM/yyyy') : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(invoiceStatus)}>
+                        {getStatusLabel(invoiceStatus)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-green-600 border-green-600 hover:bg-green-50"
-                          onClick={() => window.open(invoice.receiptUrl!, '_blank')}
+                          onClick={() => setSelectedInvoice(invoice)}
                         >
-                          <Receipt className="w-4 h-4 mr-1" />
-                          Receipt
+                          <Eye className="w-4 h-4 mr-1" />
+                          View
                         </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        {invoiceStatus === 'paid' && receiptUrl && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-green-600 border-green-600 hover:bg-green-50"
+                            onClick={() => window.open(receiptUrl, '_blank')}
+                          >
+                            <Receipt className="w-4 h-4 mr-1" />
+                            Receipt
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Card>

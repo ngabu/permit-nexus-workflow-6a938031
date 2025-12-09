@@ -127,7 +127,10 @@ export function EntityForm({ entity, onSuccess, onCancel }: EntityFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`space-y-6 ${formData.entity_type === 'company' ? 'max-w-7xl' : 'max-w-4xl'}`}>
+    <form 
+      onSubmit={handleSubmit} 
+      className={`space-y-6 ${formData.entity_type === 'company' ? 'max-w-7xl max-h-[70vh] overflow-y-auto pr-2' : 'max-w-4xl'}`}
+    >
       <div className="space-y-3">
         <Label className="text-card-foreground">Entity Type</Label>
         <RadioGroup

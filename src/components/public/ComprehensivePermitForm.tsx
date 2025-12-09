@@ -788,42 +788,35 @@ export function ComprehensivePermitForm({ permitId, onSuccess, onCancel, isStand
 
       <div className="bg-card rounded-lg border border-border p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className={`grid w-full grid-cols-5 md:grid-cols-8 ${isStandalone ? 'mb-8' : 'mb-6'} bg-muted/50 h-auto p-1`}>
-        <TabsTrigger value="project" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+      <TabsList className={`flex flex-wrap h-auto gap-1 p-1 w-full justify-start ${isStandalone ? 'mb-8' : 'mb-6'} bg-muted/50`}>
+        <TabsTrigger value="project" className="flex items-center gap-1 text-xs sm:text-sm h-auto py-1.5 px-2 sm:px-3">
           <Building className="w-4 h-4" />
           <span className="hidden sm:inline">Project</span>
-          <span className="sm:hidden">Project</span>
         </TabsTrigger>
-        <TabsTrigger value="location" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+        <TabsTrigger value="location" className="flex items-center gap-1 text-xs sm:text-sm h-auto py-1.5 px-2 sm:px-3">
           <MapPin className="w-4 h-4" />
           <span className="hidden sm:inline">Location</span>
-          <span className="sm:hidden">Location</span>
         </TabsTrigger>
-        <TabsTrigger value="classification" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+        <TabsTrigger value="classification" className="flex items-center gap-1 text-xs sm:text-sm h-auto py-1.5 px-2 sm:px-3">
           <Activity className="w-4 h-4" />
           <span className="hidden sm:inline">Classification</span>
-          <span className="sm:hidden">Class</span>
         </TabsTrigger>
-        <TabsTrigger value="consultation" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+        <TabsTrigger value="consultation" className="flex items-center gap-1 text-xs sm:text-sm h-auto py-1.5 px-2 sm:px-3">
           <Users className="w-4 h-4" />
           <span className="hidden sm:inline">Consultation</span>
-          <span className="sm:hidden">Consult</span>
         </TabsTrigger>
-        <TabsTrigger value="documents" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
+        <TabsTrigger value="documents" className="flex items-center gap-1 text-xs sm:text-sm h-auto py-1.5 px-2 sm:px-3">
           <Upload className="w-4 h-4" />
           <span className="hidden sm:inline">Documents</span>
-          <span className="sm:hidden">Docs</span>
         </TabsTrigger>
-            <TabsTrigger value="fees" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
-              <DollarSign className="w-4 h-4" />
-              <span className="hidden sm:inline">Fees</span>
-              <span className="sm:hidden">Fees</span>
-            </TabsTrigger>
-            <TabsTrigger value="review" className="flex flex-col items-center gap-1 text-xs h-auto py-2">
-              <Eye className="w-4 h-4" />
-              <span className="hidden sm:inline">Review</span>
-              <span className="sm:hidden">Review</span>
-            </TabsTrigger>
+        <TabsTrigger value="fees" className="flex items-center gap-1 text-xs sm:text-sm h-auto py-1.5 px-2 sm:px-3">
+          <DollarSign className="w-4 h-4" />
+          <span className="hidden sm:inline">Fees</span>
+        </TabsTrigger>
+        <TabsTrigger value="review" className="flex items-center gap-1 text-xs sm:text-sm h-auto py-1.5 px-2 sm:px-3">
+          <Eye className="w-4 h-4" />
+          <span className="hidden sm:inline">Review</span>
+        </TabsTrigger>
           </TabsList>
 
           {Object.entries(tabComponents).map(([tabKey, TabComponent]) => (

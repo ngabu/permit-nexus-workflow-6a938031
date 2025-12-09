@@ -31,25 +31,42 @@ export function ComplianceInspectionsView() {
     queryFn: async () => {
       if (!user?.id) return [];
       
-      // Get user's permit applications first
+      // Get user's permit applications
       const { data: permits, error: permitsError } = await supabase
         .from('permit_applications')
         .select('id')
         .eq('user_id', user.id);
       
       if (permitsError) throw permitsError;
-      if (!permits || permits.length === 0) return [];
       
-      const permitIds = permits.map(p => p.id);
+      // Get user's intent registrations
+      const { data: intents, error: intentsError } = await supabase
+        .from('intent_registrations')
+        .select('id')
+        .eq('user_id', user.id);
       
-      // Get inspections for user's permits with invoice information
-      const { data, error } = await supabase
+      if (intentsError) throw intentsError;
+      
+      const permitIds = permits?.map(p => p.id) || [];
+      const intentIds = intents?.map(i => i.id) || [];
+      
+      // If user has no permits or intents, return empty
+      if (permitIds.length === 0 && intentIds.length === 0) return [];
+      
+      // Build query for inspections - either by permit_application_id OR intent_registration_id
+      let query = supabase
         .from('inspections')
         .select(`
           *,
           permit_applications (
             permit_number,
             title,
+            entity_id,
+            entities (name)
+          ),
+          intent_registrations (
+            id,
+            activity_description,
             entity_id,
             entities (name)
           ),
@@ -62,8 +79,20 @@ export function ComplianceInspectionsView() {
             currency
           )
         `)
-        .in('permit_application_id', permitIds)
         .order('scheduled_date', { ascending: false });
+      
+      // Apply OR filter for permit_application_id or intent_registration_id
+      const filters: string[] = [];
+      if (permitIds.length > 0) {
+        filters.push(`permit_application_id.in.(${permitIds.join(',')})`);
+      }
+      if (intentIds.length > 0) {
+        filters.push(`intent_registration_id.in.(${intentIds.join(',')})`);
+      }
+      
+      query = query.or(filters.join(','));
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       return data || [];
@@ -208,7 +237,7 @@ export function ComplianceInspectionsView() {
             Scheduled Inspections
           </CardTitle>
           <CardDescription>
-            Inspections scheduled by compliance officers for your permit applications
+            Inspections scheduled by compliance officers for your permits and intent registrations
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -217,7 +246,7 @@ export function ComplianceInspectionsView() {
               <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">No Inspections Yet</h3>
               <p className="text-muted-foreground max-w-sm mx-auto">
-                Inspections will appear here once they are scheduled for your permits by compliance officers.
+                Inspections will appear here once they are scheduled for your permits or intent registrations by compliance officers.
               </p>
             </div>
           ) : (
@@ -238,14 +267,14 @@ export function ComplianceInspectionsView() {
                         <div className="space-y-2 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium">
-                              {inspection.permit_applications?.title || 'Permit Inspection'}
+                              {inspection.permit_applications?.title || inspection.intent_registrations?.activity_description || 'Inspection'}
                             </span>
                             {getStatusBadge(inspection.status)}
                           </div>
                           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <FileText className="h-4 w-4" />
-                              {inspection.permit_applications?.permit_number || 'N/A'}
+                              {inspection.permit_applications?.permit_number || (inspection.intent_registration_id ? `Intent: ${inspection.intent_registration_id.slice(0, 8)}...` : 'N/A')}
                             </span>
                             <span className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
@@ -413,12 +442,12 @@ export function ComplianceInspectionsView() {
                 <h3 className="font-semibold">Inspection Details</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-muted-foreground">Permit:</p>
-                    <p className="font-medium">{selectedInspection.permit_applications?.title || 'N/A'}</p>
+                    <p className="text-muted-foreground">{selectedInspection.intent_registration_id ? 'Intent Registration:' : 'Permit:'}</p>
+                    <p className="font-medium">{selectedInspection.permit_applications?.title || selectedInspection.intent_registrations?.activity_description || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Permit Number:</p>
-                    <p className="font-medium">{selectedInspection.permit_applications?.permit_number || 'N/A'}</p>
+                    <p className="text-muted-foreground">{selectedInspection.intent_registration_id ? 'Reference:' : 'Permit Number:'}</p>
+                    <p className="font-medium">{selectedInspection.permit_applications?.permit_number || (selectedInspection.intent_registration_id ? `Intent: ${selectedInspection.intent_registration_id.slice(0, 8)}...` : 'N/A')}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Inspection Type:</p>

@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useInvoices } from './hooks/useInvoices';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, XCircle, AlertTriangle, Search, Upload, FileText, Calendar, Eye, Shield, ExternalLink } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Search, Upload, FileText, Calendar, Eye, Shield, ExternalLink, Save, BanknoteIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
@@ -26,6 +26,7 @@ export function PaymentVerification() {
   
   // Verification form state
   const [verificationNotes, setVerificationNotes] = useState('');
+  const [transactionNumber, setTransactionNumber] = useState('');
   const [cepaReceiptFile, setCepaReceiptFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -36,17 +37,33 @@ export function PaymentVerification() {
     const matchesSearch = 
       invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.entity?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesVerification = verificationFilter === 'all' || 
-      (invoice as any).verification_status === verificationFilter;
+    
+    let matchesVerification = true;
+    if (verificationFilter === 'verified') {
+      matchesVerification = (invoice as any).accounts_verified === true;
+    } else if (verificationFilter === 'pending') {
+      matchesVerification = !(invoice as any).accounts_verified;
+    } else if (verificationFilter === 'with_receipt') {
+      matchesVerification = !!(invoice as any).payment_receipt || !!(invoice as any).stripe_receipt_url;
+    }
+    
     return matchesSearch && matchesVerification;
   });
 
-  const pendingVerification = paidInvoices.filter(inv => 
-    !(inv as any).verification_status || (inv as any).verification_status === 'pending'
-  );
+  const pendingVerification = paidInvoices.filter(inv => !(inv as any).accounts_verified);
+  const verifiedCount = paidInvoices.filter(inv => (inv as any).accounts_verified === true).length;
 
-  const handleVerifyPayment = async (status: 'verified' | 'rejected') => {
+  const handleVerifyPayment = async () => {
     if (!selectedInvoice || !user) return;
+    
+    if (!transactionNumber.trim()) {
+      toast({
+        title: 'Transaction Number Required',
+        description: 'Please enter the bank transaction number to verify this payment',
+        variant: 'destructive'
+      });
+      return;
+    }
     
     try {
       setUploading(true);
@@ -74,11 +91,13 @@ export function PaymentVerification() {
         cepaReceiptPath = filePath;
       }
 
-      // Update invoice verification status
+      // Update invoice with transaction number and set accounts_verified to true
       const updateData: any = {
-        verification_status: status,
+        transaction_number: transactionNumber.trim(),
+        accounts_verified: true, // Set to true when transaction number is saved
         verified_by: user.id,
         verified_at: new Date().toISOString(),
+        verification_status: 'verified',
         verification_notes: verificationNotes,
         updated_at: new Date().toISOString()
       };
@@ -95,16 +114,15 @@ export function PaymentVerification() {
       if (error) throw error;
 
       toast({
-        title: status === 'verified' ? 'Payment Verified' : 'Payment Rejected',
-        description: status === 'verified' 
-          ? 'Payment has been verified successfully' 
-          : 'Payment verification has been rejected',
+        title: 'Payment Verified',
+        description: 'Payment has been verified with bank transaction number',
       });
 
       // Reset form
       setVerifyDialogOpen(false);
       setSelectedInvoice(null);
       setVerificationNotes('');
+      setTransactionNumber('');
       setCepaReceiptFile(null);
       refetch();
     } catch (error) {
@@ -136,13 +154,18 @@ export function PaymentVerification() {
     }
   };
 
-  const getVerificationColor = (status: string | null | undefined) => {
-    switch (status) {
-      case 'verified': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'rejected': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'pending': 
-      default: return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
+  const getVerificationColor = (accountsVerified: boolean | null | undefined) => {
+    if (accountsVerified === true) {
+      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
     }
+    return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
+  };
+
+  const openVerifyDialog = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setTransactionNumber(invoice.transaction_number || '');
+    setVerificationNotes(invoice.verification_notes || '');
+    setVerifyDialogOpen(true);
   };
 
   return (
@@ -166,8 +189,8 @@ export function PaymentVerification() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Paid Invoices</p>
-                  <p className="text-2xl font-bold text-foreground">{paidInvoices.length}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Accounts Verified</p>
+                  <p className="text-2xl font-bold text-foreground">{verifiedCount}</p>
                 </div>
                 <CheckCircle className="w-8 h-8 text-green-500" />
               </div>
@@ -178,13 +201,8 @@ export function PaymentVerification() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Verified Today</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {paidInvoices.filter(inv => 
-                      (inv as any).verified_at && 
-                      new Date((inv as any).verified_at).toDateString() === new Date().toDateString()
-                    ).length}
-                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Paid Invoices</p>
+                  <p className="text-2xl font-bold text-foreground">{paidInvoices.length}</p>
                 </div>
                 <Shield className="w-8 h-8 text-primary" />
               </div>
@@ -199,7 +217,7 @@ export function PaymentVerification() {
               <Shield className="w-5 h-5" />
               Payment Verification
             </CardTitle>
-            <CardDescription>Verify paid invoices with CEPA accounts confirmation</CardDescription>
+            <CardDescription>Verify paid invoices with bank transaction numbers for accounts reconciliation</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -219,8 +237,8 @@ export function PaymentVerification() {
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="pending">Pending Verification</SelectItem>
-                  <SelectItem value="verified">Verified</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="verified">Accounts Verified</SelectItem>
+                  <SelectItem value="with_receipt">With Payment Receipt</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -238,7 +256,7 @@ export function PaymentVerification() {
                 <p className="text-muted-foreground">No paid invoices found</p>
               </div>
             ) : (
-              <div className="border rounded-lg">
+              <div className="border rounded-lg overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -246,8 +264,9 @@ export function PaymentVerification() {
                       <TableHead>Entity</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Paid Date</TableHead>
-                      <TableHead>Stripe Receipt</TableHead>
-                      <TableHead>Verification</TableHead>
+                      <TableHead>Payment Receipt</TableHead>
+                      <TableHead>Transaction #</TableHead>
+                      <TableHead>Accounts Verified</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -263,13 +282,13 @@ export function PaymentVerification() {
                             : 'N/A'}
                         </TableCell>
                         <TableCell>
-                          {(invoice as any).stripe_receipt_url || invoice.document_path ? (
+                          {(invoice as any).payment_receipt || (invoice as any).stripe_receipt_url ? (
                             <Button 
                               size="sm" 
                               variant="ghost"
                               onClick={() => handleViewReceipt(
-                                invoice.document_path || null, 
-                                (invoice as any).stripe_receipt_url || null
+                                null, 
+                                (invoice as any).payment_receipt || (invoice as any).stripe_receipt_url
                               )}
                             >
                               <Eye className="w-4 h-4 mr-1" />
@@ -280,8 +299,15 @@ export function PaymentVerification() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge className={getVerificationColor((invoice as any).verification_status)}>
-                            {(invoice as any).verification_status || 'pending'}
+                          {(invoice as any).transaction_number ? (
+                            <span className="font-mono text-sm">{(invoice as any).transaction_number}</span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getVerificationColor((invoice as any).accounts_verified)}>
+                            {(invoice as any).accounts_verified ? 'Verified' : 'Pending'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
@@ -298,14 +324,12 @@ export function PaymentVerification() {
                             )}
                             <Button
                               size="sm"
-                              onClick={() => {
-                                setSelectedInvoice(invoice);
-                                setVerifyDialogOpen(true);
-                              }}
-                              disabled={(invoice as any).verification_status === 'verified'}
+                              onClick={() => openVerifyDialog(invoice)}
+                              disabled={(invoice as any).accounts_verified === true}
+                              variant={(invoice as any).accounts_verified ? "outline" : "default"}
                             >
-                              <Shield className="w-4 h-4 mr-2" />
-                              Verify
+                              <BanknoteIcon className="w-4 h-4 mr-2" />
+                              {(invoice as any).accounts_verified ? 'Verified' : 'Add Transaction #'}
                             </Button>
                           </div>
                         </TableCell>
@@ -323,9 +347,9 @@ export function PaymentVerification() {
       <Dialog open={verifyDialogOpen} onOpenChange={setVerifyDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Verify Payment</DialogTitle>
+            <DialogTitle>Verify Payment - Add Bank Transaction Number</DialogTitle>
             <DialogDescription>
-              Verify payment for invoice {selectedInvoice?.invoice_number} with CEPA Accounts confirmation
+              Verify payment for invoice {selectedInvoice?.invoice_number} by entering the bank transaction number
             </DialogDescription>
           </DialogHeader>
 
@@ -351,15 +375,15 @@ export function PaymentVerification() {
                     </p>
                   </div>
                   <div>
-                    <p className="font-medium text-muted-foreground">Stripe Receipt</p>
-                    {(selectedInvoice as any)?.stripe_receipt_url || selectedInvoice?.document_path ? (
+                    <p className="font-medium text-muted-foreground">Payment Receipt</p>
+                    {(selectedInvoice as any)?.payment_receipt || (selectedInvoice as any)?.stripe_receipt_url ? (
                       <Button 
                         size="sm" 
                         variant="link" 
                         className="p-0 h-auto"
                         onClick={() => handleViewReceipt(
-                          selectedInvoice?.document_path || null,
-                          (selectedInvoice as any)?.stripe_receipt_url || null
+                          null,
+                          (selectedInvoice as any)?.payment_receipt || (selectedInvoice as any)?.stripe_receipt_url
                         )}
                       >
                         <ExternalLink className="w-3 h-3 mr-1" />
@@ -373,9 +397,28 @@ export function PaymentVerification() {
               </CardContent>
             </Card>
 
+            {/* Bank Transaction Number - Required */}
+            <div className="space-y-2">
+              <Label htmlFor="transactionNumber" className="flex items-center gap-1">
+                <BanknoteIcon className="w-4 h-4" />
+                Bank Transaction Number <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="transactionNumber"
+                placeholder="Enter bank transaction number..."
+                value={transactionNumber}
+                onChange={(e) => setTransactionNumber(e.target.value)}
+                className="font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter the bank transaction/reference number for accounts reconciliation. 
+                This will mark the invoice as accounts verified.
+              </p>
+            </div>
+
             {/* CEPA Receipt Upload */}
             <div className="space-y-2">
-              <Label htmlFor="cepaReceiptFile">CEPA Accounts Confirmation Receipt</Label>
+              <Label htmlFor="cepaReceiptFile">CEPA Accounts Confirmation Receipt (Optional)</Label>
               <div className="flex items-center gap-2">
                 <Input
                   id="cepaReceiptFile"
@@ -390,10 +433,10 @@ export function PaymentVerification() {
 
             {/* Verification Notes */}
             <div className="space-y-2">
-              <Label htmlFor="verificationNotes">Verification Notes</Label>
+              <Label htmlFor="verificationNotes">Verification Notes (Optional)</Label>
               <Textarea
                 id="verificationNotes"
-                placeholder="Add verification notes, transaction reference, or remarks..."
+                placeholder="Add verification notes or remarks..."
                 value={verificationNotes}
                 onChange={(e) => setVerificationNotes(e.target.value)}
                 rows={3}
@@ -406,19 +449,11 @@ export function PaymentVerification() {
               Cancel
             </Button>
             <Button 
-              variant="destructive" 
-              onClick={() => handleVerifyPayment('rejected')}
-              disabled={uploading}
+              onClick={handleVerifyPayment}
+              disabled={uploading || !transactionNumber.trim()}
             >
-              <XCircle className="w-4 h-4 mr-2" />
-              Reject
-            </Button>
-            <Button 
-              onClick={() => handleVerifyPayment('verified')}
-              disabled={uploading}
-            >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              {uploading ? 'Verifying...' : 'Verify Payment'}
+              <Save className="w-4 h-4 mr-2" />
+              {uploading ? 'Saving...' : 'Save & Verify'}
             </Button>
           </DialogFooter>
         </DialogContent>

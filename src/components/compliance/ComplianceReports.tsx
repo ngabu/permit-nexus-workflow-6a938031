@@ -140,12 +140,12 @@ const ComplianceReports = () => {
 
       {/* Report Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="assessments">Assessments</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="violations">Violations</TabsTrigger>
+        <TabsList className="flex flex-wrap h-auto gap-1 p-1 w-full justify-start">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">Overview</TabsTrigger>
+          <TabsTrigger value="assessments" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">Assessments</TabsTrigger>
+          <TabsTrigger value="compliance" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">Compliance</TabsTrigger>
+          <TabsTrigger value="performance" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">Performance</TabsTrigger>
+          <TabsTrigger value="violations" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">Violations</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}

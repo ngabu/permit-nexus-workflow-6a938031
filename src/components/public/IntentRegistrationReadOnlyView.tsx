@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { exportIntentRegistrationPDF } from '@/utils/pdfExport';
-import { IntentBoundaryMapDisplay } from '@/components/registry/read-only/IntentBoundaryMapDisplay';
+
 
 interface IntentRegistrationReadOnlyViewProps {
   intent: IntentRegistration;

@@ -133,12 +133,13 @@ export function ReviewSubmitStep({ data, onChange }: ReviewSubmitStepProps) {
     <div className="space-y-6">
       {/* Tabbed Section for Completeness Check and Summary */}
       <Tabs defaultValue="completeness" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="completeness" className="gap-2">
+        <TabsList className="flex flex-wrap h-auto gap-1 p-1 w-full justify-start">
+          <TabsTrigger value="completeness" className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
             <ClipboardCheck className="w-4 h-4" />
-            Completeness Check
+            <span className="hidden sm:inline">Completeness Check</span>
+            <span className="sm:hidden">Check</span>
           </TabsTrigger>
-          <TabsTrigger value="summary" className="gap-2">
+          <TabsTrigger value="summary" className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
             <List className="w-4 h-4" />
             Summary
           </TabsTrigger>

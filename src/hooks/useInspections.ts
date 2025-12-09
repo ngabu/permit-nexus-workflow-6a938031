@@ -25,6 +25,7 @@ export interface Inspection {
   province: string | null;
   permit_category: string | null;
   created_by: string | null;
+  report_path?: string | null;
   permit_number?: string;
   permit_title?: string;
   entity_name?: string;
@@ -107,6 +108,7 @@ export function useInspections() {
           province: inspection.province,
           permit_category: inspection.permit_category,
           created_by: inspection.created_by,
+          report_path: inspection.report_path,
           permit_number: inspection.permit_applications?.permit_number || `Intent: ${inspection.intent_registrations?.id?.slice(0, 8)}`,
           permit_title: inspection.permit_applications?.title || inspection.intent_registrations?.activity_description,
           entity_name: permitEntity?.name || intentEntity?.name,
@@ -285,7 +287,7 @@ export function useInspections() {
           inspection_type: inspectionData.inspection_type,
           scheduled_date: inspectionData.scheduled_date,
           inspector_id: inspectionData.inspector_id,
-          status: inspectionData.status || 'scheduled',
+          status: 'pending',
           notes: inspectionData.notes,
           accommodation_cost: inspectionData.accommodation_cost || 0,
           transportation_cost: inspectionData.transportation_cost || 0,
@@ -363,11 +365,90 @@ export function useInspections() {
     }
   };
 
+  const suspendInspection = async (id: string, reason?: string) => {
+    try {
+      const { error } = await supabase
+        .from('inspections')
+        .update({ 
+          status: 'suspended',
+          notes: reason ? `Suspended: ${reason}` : 'Suspended'
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Inspection suspended successfully');
+      await fetchInspections();
+      return true;
+    } catch (error) {
+      console.error('Error suspending inspection:', error);
+      toast.error('Failed to suspend inspection');
+      return false;
+    }
+  };
+
+  const reactivateInspection = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('inspections')
+        .update({ 
+          status: 'scheduled',
+          notes: 'Reactivated from suspended status'
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Inspection reactivated successfully');
+      await fetchInspections();
+      return true;
+    } catch (error) {
+      console.error('Error reactivating inspection:', error);
+      toast.error('Failed to reactivate inspection');
+      return false;
+    }
+  };
+
+  const deleteInspection = async (id: string) => {
+    try {
+      // First verify inspection is suspended
+      const inspection = inspections.find(i => i.id === id);
+      if (!inspection || inspection.status !== 'suspended') {
+        toast.error('Only suspended inspections can be deleted');
+        return false;
+      }
+
+      // Delete associated invoice first
+      await supabase
+        .from('invoices')
+        .delete()
+        .eq('inspection_id', id);
+
+      const { error } = await supabase
+        .from('inspections')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Inspection deleted successfully');
+      await fetchInspections();
+      return true;
+    } catch (error) {
+      console.error('Error deleting inspection:', error);
+      toast.error('Failed to delete inspection');
+      return false;
+    }
+  };
+
   return {
     inspections,
     loading,
     refetch: fetchInspections,
     createInspection,
-    updateInspection
+    updateInspection,
+    suspendInspection,
+    reactivateInspection,
+    deleteInspection
   };
 }

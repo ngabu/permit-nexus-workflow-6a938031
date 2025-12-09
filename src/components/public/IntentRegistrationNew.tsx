@@ -460,9 +460,15 @@ export function IntentRegistrationNew() {
       </Alert>
 
       <Tabs defaultValue="mapping" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="mapping">Proposed Project Site Mapping</TabsTrigger>
-          <TabsTrigger value="details">Registration Details</TabsTrigger>
+        <TabsList className="flex flex-wrap h-auto gap-1 p-1 w-full justify-start">
+          <TabsTrigger value="mapping" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+            <span className="hidden sm:inline">Proposed Project Site Mapping</span>
+            <span className="sm:hidden">Site Mapping</span>
+          </TabsTrigger>
+          <TabsTrigger value="details" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+            <span className="hidden sm:inline">Registration Details</span>
+            <span className="sm:hidden">Details</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="mapping">
@@ -487,7 +493,7 @@ export function IntentRegistrationNew() {
                   Provide details about your intended preparatory work
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className={`space-y-6 ${entities.find(e => e.id === formData.entity_id)?.entity_type === 'company' ? 'max-h-[70vh] overflow-y-auto pr-2' : ''}`}>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Label htmlFor="entity_id">

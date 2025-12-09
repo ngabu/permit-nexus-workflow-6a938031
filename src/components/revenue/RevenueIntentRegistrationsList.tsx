@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { IntentRegistrationReadOnlyView } from '@/components/public/IntentRegistrationReadOnlyView';
 import { PermitApplicationsMap } from '@/components/public/PermitApplicationsMap';
 import { IntentRegistryReviewTab, IntentComplianceReviewTab, IntentMDReviewTab, IntentInvoicePaymentsTab } from '@/components/registry/intent-review';
+import { calculateBoundaryCenter } from '@/utils/mapUtils';
 
 interface IntentRegistration {
   id: string;
@@ -382,10 +383,7 @@ export function RevenueIntentRegistrationsList() {
                                   showAllApplications={false} 
                                   existingBoundary={intent.project_boundary} 
                                   onBoundarySave={() => {}} 
-                                  coordinates={{
-                                    lat: intent.project_boundary?.coordinates?.[0]?.[0]?.[1] || -6.314993,
-                                    lng: intent.project_boundary?.coordinates?.[0]?.[0]?.[0] || 147.1494
-                                  }} 
+                                  coordinates={calculateBoundaryCenter(intent.project_boundary)}
                                   onCoordinatesChange={() => {}} 
                                   readOnly={true}
                                   district={intent.district}

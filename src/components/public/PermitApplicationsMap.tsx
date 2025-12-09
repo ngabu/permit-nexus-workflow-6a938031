@@ -1619,13 +1619,18 @@ export function PermitApplicationsMap({
       if (!existingBoundary) return;
 
       try {
+        // Normalize boundary - handle both Feature and direct Polygon geometry formats
+        const geometry = existingBoundary.type === 'Feature' 
+          ? existingBoundary.geometry 
+          : existingBoundary;
+
         // Add the boundary as a GeoJSON source
         map.current.addSource('readonly-boundary', {
           type: 'geojson',
           data: {
             type: 'Feature',
             properties: {},
-            geometry: existingBoundary
+            geometry: geometry
           }
         });
 
@@ -1653,9 +1658,9 @@ export function PermitApplicationsMap({
         });
 
         // Zoom to boundary at street level
-        if (existingBoundary.type === 'Polygon' && existingBoundary.coordinates?.[0]) {
+        if (geometry.type === 'Polygon' && geometry.coordinates?.[0]) {
           const bounds = new mapboxgl.LngLatBounds();
-          existingBoundary.coordinates[0].forEach((coord: [number, number]) => {
+          geometry.coordinates[0].forEach((coord: [number, number]) => {
             bounds.extend(coord);
           });
           map.current.fitBounds(bounds, { padding: 50, maxZoom: 17, duration: 1000 });
@@ -1667,7 +1672,7 @@ export function PermitApplicationsMap({
             .addTo(map.current);
 
           // Calculate area using turf
-          const turfPolygon = polygon(existingBoundary.coordinates);
+          const turfPolygon = polygon(geometry.coordinates);
           const areaSqMeters = area(turfPolygon);
           const areaSqKm = (areaSqMeters / 1_000_000).toFixed(2);
           const areaHectares = (areaSqMeters / 10_000).toFixed(2);
@@ -1825,11 +1830,16 @@ export function PermitApplicationsMap({
     }
 
     try {
+      // Normalize boundary - handle both Feature and direct Polygon geometry formats
+      const geometry = existingBoundary.type === 'Feature' 
+        ? existingBoundary.geometry 
+        : existingBoundary;
+
       // Generate a unique feature ID for this boundary
       const featureId = `uploaded-aoi-${Date.now()}`;
       
-      // Set the uploaded AOI state
-      setUploadedAOI(existingBoundary);
+      // Set the uploaded AOI state (store the normalized geometry)
+      setUploadedAOI(geometry);
       setUploadedAOIFeatureId(featureId);
       
       // Add a visible GeoJSON layer for the boundary (similar to read-only mode)
@@ -1839,7 +1849,7 @@ export function PermitApplicationsMap({
         data: {
           type: 'Feature',
           properties: {},
-          geometry: existingBoundary
+          geometry: geometry
         }
       });
 
@@ -1871,15 +1881,15 @@ export function PermitApplicationsMap({
           type: 'Feature',
           id: featureId,
           properties: {},
-          geometry: existingBoundary
+          geometry: geometry
         };
         draw.current.add(feature);
       }
       
       // Zoom to boundary
-      if (existingBoundary.type === 'Polygon' && existingBoundary.coordinates?.[0]) {
+      if (geometry.type === 'Polygon' && geometry.coordinates?.[0]) {
         const bounds = new mapboxgl.LngLatBounds();
-        existingBoundary.coordinates[0].forEach((coord: [number, number]) => {
+        geometry.coordinates[0].forEach((coord: [number, number]) => {
           bounds.extend(coord);
         });
         map.current.fitBounds(bounds, { padding: 80, duration: 1000, maxZoom: 17 });

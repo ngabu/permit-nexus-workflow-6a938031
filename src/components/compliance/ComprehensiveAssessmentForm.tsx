@@ -310,10 +310,16 @@ function OriginalComprehensiveAssessmentForm({ assessmentId, onComplete }: Compr
 
         {/* Application Details */}
         <Tabs defaultValue="details" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="details">Application Details</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="registry">Registry Feedback</TabsTrigger>
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1 w-full justify-start">
+            <TabsTrigger value="details" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+              <span className="hidden sm:inline">Application Details</span>
+              <span className="sm:hidden">Details</span>
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">Documents</TabsTrigger>
+            <TabsTrigger value="registry" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+              <span className="hidden sm:inline">Registry Feedback</span>
+              <span className="sm:hidden">Registry</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="details">
@@ -392,11 +398,23 @@ function OriginalComprehensiveAssessmentForm({ assessmentId, onComplete }: Compr
 
         {/* Assessment Tabs */}
         <Tabs defaultValue="compliance" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="compliance">Compliance Checks</TabsTrigger>
-            <TabsTrigger value="violations">Violations & Issues</TabsTrigger>
-            <TabsTrigger value="assessment">Assessment Notes</TabsTrigger>
-            <TabsTrigger value="decision">Final Decision</TabsTrigger>
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1 w-full justify-start">
+            <TabsTrigger value="compliance" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+              <span className="hidden sm:inline">Compliance Checks</span>
+              <span className="sm:hidden">Compliance</span>
+            </TabsTrigger>
+            <TabsTrigger value="violations" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+              <span className="hidden sm:inline">Violations & Issues</span>
+              <span className="sm:hidden">Violations</span>
+            </TabsTrigger>
+            <TabsTrigger value="assessment" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+              <span className="hidden sm:inline">Assessment Notes</span>
+              <span className="sm:hidden">Notes</span>
+            </TabsTrigger>
+            <TabsTrigger value="decision" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+              <span className="hidden sm:inline">Final Decision</span>
+              <span className="sm:hidden">Decision</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="compliance" className="space-y-4">
